@@ -8,6 +8,37 @@ const fr = {
     invite: "Inviter",
     logout: "Déconnexion",
   },
+  landing: {
+    helloAnon: "Bienvenue !",
+    helloUser: "Salut {name} 👋",
+    subAnon: "Une petite app pour préparer les cadeaux sans se spoiler.",
+    subUser: "Ravi de te revoir. On s’organise pour Noël ?",
+
+    // états
+    youAreIn: "Tu es dans la famille {fam}.",
+    yourInviteCode: "Ton code d’invitation",
+    copy: "Copier",
+    copied: "Code copié",
+    share: "Partager…",
+
+    // actions
+    start: "Créer un compte",
+    login: "Se connecter",
+    goMyList: "Aller à ma liste",
+    createFamily: "Créer une famille",
+    joinFamily: "Rejoindre une famille",
+
+    // petites features très simples
+    fPrivacyT: "Pas de spoiler",
+    fPrivacyD: "Le propriétaire ne voit jamais les réservations.",
+    fSimpleT: "Juste ce qu’il faut",
+    fSimpleD: "Un titre, un lien, une note, un prix. Et voilà.",
+    fFamilyT: "Pensé pour la famille",
+    fFamilyD: "Un code à partager, et tout le monde est dedans.",
+
+    // footer
+    footer: "Fait maison pour la famille • {github}",
+  },
   family: {
     badge: "Famille",
     code: "Code",
