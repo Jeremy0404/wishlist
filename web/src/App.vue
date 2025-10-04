@@ -1,13 +1,3 @@
-<script setup lang="ts">
-import { RouterLink, useRoute } from "vue-router";
-import FamilyBadge from "./components/FamilyBadge.vue";
-import ToastContainer from "./components/ui/ToastContainer.vue";
-import { useAuth } from "./stores/auth";
-
-const route = useRoute();
-const auth = useAuth();
-</script>
-
 <template>
   <div class="min-h-screen bg-white text-zinc-900">
     <nav class="border-b border-zinc-200">
@@ -16,30 +6,48 @@ const auth = useAuth();
       >
         <RouterLink to="/" class="font-semibold">🎄 Wishlist</RouterLink>
 
-        <FamilyBadge v-if="route.path !== '/'" class="ml-2" />
-
         <div class="ml-auto flex items-center gap-2">
-          <template v-if="route.path === '/'">
+          <RouterLink class="px-3 py-1.5 rounded hover:bg-zinc-100" to="/">{{
+            t("nav.home")
+          }}</RouterLink>
+
+          <template v-if="auth.user">
             <RouterLink
               class="px-3 py-1.5 rounded hover:bg-zinc-100"
-              to="/auth/register"
-              >Créer un compte</RouterLink
+              to="/me"
+              >{{ t("nav.myList") }}</RouterLink
             >
+            <RouterLink
+              v-if="auth.inFamily"
+              class="px-3 py-1.5 rounded hover:bg-zinc-100"
+              to="/wishlists"
+              >{{ t("nav.others") }}</RouterLink
+            >
+            <RouterLink
+              v-if="auth.inFamily"
+              class="px-3 py-1.5 rounded hover:bg-zinc-100"
+              to="/family/invite"
+              >{{ t("nav.invite") }}</RouterLink
+            >
+
+            <button
+              class="px-3 py-1.5 rounded hover:bg-zinc-100"
+              @click="onLogout"
+            >
+              {{ t("nav.logout") }}
+            </button>
+          </template>
+
+          <template v-else>
             <RouterLink
               class="px-3 py-1.5 rounded hover:bg-zinc-100"
               to="/auth/login"
-              >Se connecter</RouterLink
-            >
-          </template>
-          <template v-else>
-            <RouterLink class="px-3 py-1.5 rounded hover:bg-zinc-100" to="/me"
-              >Ma liste</RouterLink
+              >{{ t("nav.login") }}</RouterLink
             >
             <RouterLink
-              class="px-3 py-1.5 rounded hover:bg-zinc-100"
-              to="/wishlists"
-              v-if="auth.inFamily"
-              >Les autres</RouterLink
+              class="px-3 py-1.5 rounded bg-brand text-white hover:bg-brand-700"
+              to="/auth/register"
+              >{{ t("nav.register") }}</RouterLink
             >
           </template>
         </div>
@@ -52,6 +60,30 @@ const auth = useAuth();
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+import { RouterLink, useRouter } from "vue-router";
+import ToastContainer from "./components/ui/ToastContainer.vue";
+import { useToasts } from "./components/ui/useToasts";
+import { useAuth } from "./stores/auth";
+import { onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+const auth = useAuth();
+const router = useRouter();
+const { push } = useToasts();
+
+async function onLogout() {
+  await auth.logout();
+  push("À bientôt !", "info");
+  router.push("/");
+}
+
+onMounted(() => {
+  if (auth.user === undefined) auth.hydrate();
+});
+</script>
 
 <style>
 body {

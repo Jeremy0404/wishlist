@@ -1,35 +1,51 @@
 <template>
-  <nav style="border-bottom: 1px solid #eee; padding: .75rem 1rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
-    <strong>🎄 Wishlist</strong>
+  <div class="min-h-screen bg-white text-zinc-900">
+    <nav class="border-b border-zinc-200">
+      <div
+        class="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3 flex-wrap"
+      >
+        <RouterLink to="/" class="font-semibold">🎄 Wishlist</RouterLink>
 
-    <FamilyBadge style="margin-left: .5rem;" />
+        <FamilyBadge class="ml-2" v-if="route.path !== '/'" />
 
-    <div style="flex:1"></div>
+        <div class="ml-auto flex items-center gap-2">
+          <RouterLink class="px-3 py-1.5 rounded hover:bg-zinc-100" to="/">{{
+            t("nav.home") ?? "Accueil"
+          }}</RouterLink>
+          <RouterLink class="px-3 py-1.5 rounded hover:bg-zinc-100" to="/me">{{
+            t("nav.myList")
+          }}</RouterLink>
+          <RouterLink
+            v-if="auth.inFamily"
+            class="px-3 py-1.5 rounded hover:bg-zinc-100"
+            to="/wishlists"
+            >{{ t("nav.others") }}</RouterLink
+          >
+          <RouterLink
+            v-if="auth.inFamily"
+            class="px-3 py-1.5 rounded hover:bg-zinc-100"
+            to="/family/invite"
+            >{{ t("nav.invite") }}</RouterLink
+          >
+        </div>
+      </div>
+    </nav>
 
-    <template v-if="auth.isLogged">
-      <RouterLink to="/me">My list</RouterLink>
-      <RouterLink to="/wishlists" v-if="auth.inFamily">Others</RouterLink>
-      <RouterLink to="/family/new" v-if="!auth.inFamily">New family</RouterLink>
-      <RouterLink to="/family/join" v-if="!auth.inFamily">Join</RouterLink>
-      <RouterLink to="/family/invite" v-if="auth.inFamily">Invite</RouterLink>
-      <button @click="logout" style="margin-left: 1rem;">Logout</button>
-    </template>
-    <template v-else>
-      <RouterLink to="/auth/login">Login</RouterLink>
-      <RouterLink to="/auth/register">Register</RouterLink>
-    </template>
-  </nav>
+    <main class="max-w-5xl mx-auto px-4 py-6">
+      <ToastContainer />
+      <router-view />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '../stores/auth';
-import { RouterLink, useRouter } from 'vue-router';
-import FamilyBadge from './FamilyBadge.vue';
+import { RouterLink, useRoute } from "vue-router";
+import FamilyBadge from "./FamilyBadge.vue";
+import { useAuth } from "../stores/auth.ts";
+import ToastContainer from "./ui/ToastContainer.vue";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const auth = useAuth();
-const router = useRouter();
-async function logout() {
-  await auth.logout();
-  await router.push('/auth/login');
-}
+const route = useRoute();
 </script>

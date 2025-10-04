@@ -3,10 +3,14 @@ import { createI18n } from "vue-i18n";
 const fr = {
   app: { title: "🎄 Liste de Noël" },
   nav: {
+    home: "Accueil",
     myList: "Ma liste",
     others: "Les autres",
     invite: "Inviter",
+    login: "Se connecter",
+    register: "Créer un compte",
     logout: "Déconnexion",
+    profile: "Profil",
   },
   landing: {
     helloAnon: "Bienvenue !",

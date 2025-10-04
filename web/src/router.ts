@@ -29,17 +29,11 @@ export const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach(async (to) => {
   const auth = useAuth();
-  // hydrate si nécessaire (tu as déjà une action hydrate())
-  if (auth.user === null && !to.meta.public) {
+  if (auth.user === null) {
     try {
       await auth.hydrate();
     } catch {}
   }
-  if (to.path === "/") {
-    try {
-      if (auth.user == null) await auth.hydrate();
-    } catch {}
-    if (auth.user) return "/me";
-  }
+  if (!to.meta.public && !auth.user) return "/auth/login";
   return true;
 });

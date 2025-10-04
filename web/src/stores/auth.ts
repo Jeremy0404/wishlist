@@ -1,49 +1,94 @@
-import {defineStore} from 'pinia';
-import {api} from '../services/api';
+import { defineStore } from "pinia";
+import { api, type Family, type User } from "../services/api";
 
-export const useAuth = defineStore('auth', {
-    state: () => ({
-        user: null as null | { id: string; email: string; name?: string },
-        families: [] as Array<{ id: string; name: string; invite_code: string; role: string }>,
-        loading: false,
-    }),
-    getters: {
-        isLogged: (s) => !!s.user,
-        inFamily: (s) => s.families.length > 0,
-        myFamily: (s) => s.families[0] ?? null,
-        inviteCode: (s) => s.families[0]?.invite_code ?? null
+export const useAuth = defineStore("auth", {
+  state: () => ({
+    user: undefined as User | null | undefined,
+    myFamily: null as Family | null,
+    hydrated: false as boolean,
+  }),
+
+  getters: {
+    inFamily(state): boolean {
+      return !!state.myFamily;
     },
-    actions: {
-        async hydrate() {
-            try {
-                this.user = await api.me();
-                this.families = await api.myFamilies().catch(() => []);
-            } catch {
-                this.user = null;
-                this.families = [];
-            }
-        },
-        async register(email: string, password: string, name: string) {
-            this.loading = true;
-            try {
-                this.user = await api.register({email, password, name});
-                await this.hydrate();
-            } finally { this.loading = false; }
-        },
-        async login(email: string, password: string) {
-            this.loading = true;
-            try {
-                this.user = await api.login({email, password});
-                await this.hydrate();
-            } finally { this.loading = false; }
-        },
-        async logout() {
-            await api.logout();
-            this.user = null;
-            this.families = [];
-        },
-        async refreshFamilies() {
-            this.families = await api.myFamilies().catch(() => []);
+    inviteCode(state): string {
+      return state.myFamily?.invite_code ?? "";
+    },
+  },
+
+  actions: {
+    /** Load current session and family (tolerant to /auth/me shape) */
+    async hydrate(): Promise<void> {
+      try {
+        this.user = await api.me();
+      } catch {
+        this.user = null;
+      } finally {
+        this.hydrated = true;
+      }
+
+      if (this.user) {
+        try {
+          this.myFamily = await api.getMyFamily();
+        } catch {
+          this.myFamily = null;
         }
-    }
+      } else {
+        this.myFamily = null;
+      }
+    },
+
+    async refreshFamilies(): Promise<void> {
+      if (!this.user) {
+        this.myFamily = null;
+        return;
+      }
+      try {
+        this.myFamily = await api.getMyFamily();
+      } catch {
+        this.myFamily = null;
+      }
+    },
+
+    setUser(user: User | null) {
+      this.user = user;
+      if (!user) this.myFamily = null;
+    },
+
+    async login(email: string, password: string) {
+      const res = await api.login(email, password);
+      const user = (
+        res && typeof res === "object" && "user" in res
+          ? (res as any).user
+          : res
+      ) as User;
+      this.user = user ?? null;
+      await this.refreshFamilies();
+      return this.user;
+    },
+
+    async register(name: string, email: string, password: string) {
+      const res = await api.register(name, email, password);
+      const user = (
+        res && typeof res === "object" && "user" in res
+          ? (res as any).user
+          : res
+      ) as User;
+      this.user = user ?? null;
+      await this.refreshFamilies();
+      return this.user;
+    },
+
+    async logout(): Promise<void> {
+      try {
+        await api.logout();
+      } catch {
+        // ignore
+      }
+      this.user = null;
+      this.myFamily = null;
+      this.hydrated = true;
+    },
+  },
 });

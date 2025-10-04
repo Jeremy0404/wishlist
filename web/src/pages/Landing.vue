@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Hero / entête chaleureux -->
     <section class="pt-10 pb-6">
       <div
         class="max-w-5xl mx-auto px-4 grid md:grid-cols-2 gap-8 items-center"
@@ -17,9 +16,7 @@
             {{ !auth.user ? t("landing.subAnon") : t("landing.subUser") }}
           </p>
 
-          <!-- Actions selon l’état -->
           <div class="mt-6 flex flex-wrap gap-3">
-            <!-- Déconnecté -->
             <template v-if="!auth.user">
               <RouterLink
                 to="/auth/register"
@@ -35,7 +32,6 @@
               </RouterLink>
             </template>
 
-            <!-- Connecté, sans famille -->
             <template v-else-if="auth.user && !auth.inFamily">
               <RouterLink
                 to="/family/new"
@@ -57,7 +53,6 @@
               </RouterLink>
             </template>
 
-            <!-- Connecté, avec famille -->
             <template v-else>
               <RouterLink
                 to="/me"
@@ -75,7 +70,6 @@
           </div>
         </div>
 
-        <!-- Petit visuel “maison” (placeholder) -->
         <div class="relative">
           <div
             class="aspect-[4/3] rounded-2xl border border-zinc-200 shadow-[0_8px_30px_rgba(0,0,0,.06)] bg-white overflow-hidden"
@@ -127,7 +121,6 @@
       </div>
     </section>
 
-    <!-- Bloc famille si connecté -->
     <section v-if="auth.user" class="pb-4">
       <div class="max-w-5xl mx-auto px-4">
         <div
@@ -179,7 +172,6 @@
       </div>
     </section>
 
-    <!-- Trois mini “raisons” amicales -->
     <section class="py-8 bg-zinc-50 border-t border-b border-zinc-200">
       <div class="max-w-5xl mx-auto px-4 grid md:grid-cols-3 gap-6">
         <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-soft">
@@ -197,7 +189,6 @@
       </div>
     </section>
 
-    <!-- Footer tout simple -->
     <footer class="py-8 text-center text-sm text-zinc-500">
       {{ t("landing.footer", { github: "GitHub" }) }}
       •

@@ -1,8 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL as string;
+// web/src/services/api.ts
+const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 type Method = "GET" | "POST" | "PATCH" | "DELETE";
 
-async function request<T>(
+async function request<T = any>(
   path: string,
   opts: { method?: Method; body?: unknown } = {},
 ): Promise<T> {
@@ -13,95 +14,77 @@ async function request<T>(
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
 
+  const text = await res.text();
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
-      const j = await res.json();
+      const j = JSON.parse(text);
       if (j?.error) msg = j.error;
-    } catch {}
+    } catch {
+      if (text) msg = text.slice(0, 200);
+    }
     throw new Error(msg);
   }
-  return res.status === 204 ? (undefined as T) : res.json();
+  return text ? (JSON.parse(text) as T) : (undefined as T);
 }
 
+export type User = { id: string; name: string; email: string };
+export type Family = { id: string; name: string; invite_code?: string | null };
+
 export const api = {
-  // Auth
-  register: (data: { email: string; password: string; name: string }) =>
-    request<{ id: string; email: string }>("/auth/register", {
+  // --- Auth ---
+  // Tolerant: accepts either { user } or the user object directly
+  async me(): Promise<User | null> {
+    const data = await request<any>("/auth/me");
+    if (data && typeof data === "object" && "user" in data)
+      return (data.user as User) ?? null;
+    return (data as User) ?? null;
+  },
+  login: (email: string, password: string) =>
+    request<User | { user: User }>("/auth/login", {
       method: "POST",
-      body: data,
+      body: { email, password },
     }),
-  login: (data: { email: string; password: string }) =>
-    request<{ id: string; email: string }>("/auth/login", {
+  register: (name: string, email: string, password: string) =>
+    request<User | { user: User }>("/auth/register", {
       method: "POST",
-      body: data,
+      body: { name, email, password },
     }),
-  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+  logout: () => request("/auth/logout", { method: "POST" }),
 
-  // Families
+  // --- Family ---
+  getMyFamily: async () => {
+    const fam = await request<Family | null>("/families/me");
+    console.log(fam);
+    return fam ?? null;
+  },
   createFamily: (name: string) =>
-    request<{ id: string; name: string; invite_code: string }>("/families", {
-      method: "POST",
-      body: { name },
-    }),
-  joinFamily: (invite_code: string) =>
-    request<{ family_id: string; name: string }>("/families/join", {
-      method: "POST",
-      body: { invite_code },
-    }),
-  myFamilies: () =>
-    request<
-      Array<{ id: string; name: string; invite_code: string; role: string }>
-    >("/families/me"),
+    request<Family>("/families", { method: "POST", body: { name } }),
+  joinFamily: (code: string) =>
+    request<Family>("/families/join", { method: "POST", body: { code } }),
 
-  // Wishlists (me)
-  ensureMyWishlist: () => request("/wishlists/me", { method: "POST" }),
-  getMyWishlist: () =>
-    request<{ wishlist: any; items: any[] }>("/wishlists/me"),
+  // --- Wishlist (mine) ---
+  ensureMyWishlist: () => request("/wishlists/me/ensure", { method: "POST" }),
+  getMyWishlist: () => request<any>("/wishlists/me"),
   addMyItem: (body: {
     title: string;
     url?: string;
     price_eur?: number;
     notes?: string;
     priority?: number;
-  }) => request("/wishlists/me/items", { method: "POST", body }),
-  updateMyItem: (
-    id: string,
-    body: Partial<{
-      title: string;
-      url?: string;
-      price_cents?: number;
-      notes?: string;
-      priority?: number;
-    }>,
-  ) => request(`/wishlists/me/items/${id}`, { method: "PATCH", body }),
+  }) => request<any>("/wishlists/me/items", { method: "POST", body }),
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
-  // Browse (gated)
-  others: () =>
-    request<
-      Array<{
-        wishlist_id: string;
-        user_id: string;
-        name: string;
-        created_at: string;
-      }>
-    >("/wishlists"),
-  viewWishlist: (userId: string) =>
-    request<{
-      wishlist: any;
-      owner: { id: string; name: string } | null;
-      items: Array<any>;
-    }>(`/wishlists/${userId}`),
-
-  // Gifting
+  // --- Others / viewing ---
+  others: () => request<any[]>("/wishlists"),
+  viewWishlist: (userId: string) => request<any>(`/wishlists/${userId}`),
   reserve: (itemId: string) =>
-    request(`/wishlists/items/${itemId}/reserve`, { method: "POST" }),
+    request(`/reservations/${itemId}`, { method: "POST" }),
   unreserve: (itemId: string) =>
-    request(`/wishlists/items/${itemId}/unreserve`, { method: "POST" }),
+    request(`/reservations/${itemId}`, { method: "DELETE" }),
   purchase: (itemId: string) =>
-    request(`/wishlists/items/${itemId}/purchase`, { method: "POST" }),
-
-  me: () => request<{ id: string; email: string; name: string }>("/auth/me"),
+    request(`/reservations/${itemId}/purchase`, { method: "POST" }),
 };
+
+export default api;
