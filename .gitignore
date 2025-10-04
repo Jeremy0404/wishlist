@@ -1,0 +1,49 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs & diagnostics
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node / build artifacts (any subfolder)
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+**/.vite/
+**/.nuxt/
+**/.svelte-kit/
+**/.turbo/
+
+# TypeScript
+**/*.tsbuildinfo
+
+# Coverage
+**/coverage/
+**/.nyc_output/
+
+# Env files (keep only examples)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Misc
+.tmp/
+temp/
+.cache/
+*.swp
+*.swcrc
+
+# Docker (local-only artifacts)
+docker-data/

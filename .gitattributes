@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Treat these as text for diffs even if executable bits change
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
