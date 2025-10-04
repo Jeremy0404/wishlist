@@ -1,89 +1,123 @@
 <template>
-  <h1>My wishlist</h1>
+  <h1 class="text-xl font-semibold mb-4">My wishlist</h1>
 
-  <form @submit.prevent="add" style="display:grid; gap:.5rem; max-width: 520px; margin-bottom:1rem;">
-    <input v-model="form.title" placeholder="Title" required />
-    <input v-model="form.url" placeholder="Link (optional)" />
-    <div style="display:flex; gap:.5rem;">
-      <input v-model.number="form.price_cents" type="number" min="0" step="1" placeholder="Price (cents)" />
-      <input v-model="form.currency" placeholder="CUR" maxlength="3" style="width:6rem;" />
-      <input v-model.number="form.priority" type="number" min="1" max="5" placeholder="Priority 1–5" />
-    </div>
-    <textarea v-model="form.notes" rows="3" placeholder="Notes"></textarea>
-    <button>Add item</button>
-    <p v-if="error" style="color:#b00">{{ error }}</p>
-  </form>
-
-  <div v-if="items.length === 0" style="opacity:.7;">No items yet — add your first to unlock others’ lists.</div>
-
-  <ul style="list-style:none; padding:0; display:grid; gap:.5rem;">
-    <li v-for="it in items" :key="it.id" style="border:1px solid #eee; padding:.75rem; border-radius:8px;">
-      <div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
-        <div>
-          <strong>{{ it.title }}</strong>
-          <span v-if="it.priority"> • P{{ it.priority }}</span>
-          <div v-if="it.url"><a :href="it.url" target="_blank">{{ it.url }}</a></div>
-          <div v-if="it.price_cents != null">
-            {{ (it.price_cents/100).toFixed(2) }} {{ it.currency ?? 'EUR' }}
-          </div>
-          <div v-if="it.notes" style="white-space:pre-wrap; opacity:.85;">{{ it.notes }}</div>
-        </div>
-        <div style="display:flex; gap:.5rem;">
-          <button @click="removeItem(it.id)">Delete</button>
-        </div>
+  <Card class="mb-4">
+    <template #header><h2 class="font-semibold">Add an item</h2></template>
+    <form @submit.prevent="add" class="grid gap-3 sm:grid-cols-2">
+      <Input v-model="form.title" label="Title" required />
+      <Input v-model="form.url" label="Link (optional)" />
+      <Input
+        v-model.number="form.price_cents"
+        type="number"
+        label="Price (cents)"
+      />
+      <Input
+        v-model.number="form.priority"
+        type="number"
+        label="Priority (1–5)"
+      />
+      <div class="sm:col-span-2">
+        <label class="block text-sm mb-1" for="notes">Notes</label>
+        <textarea
+          v-model="form.notes"
+          rows="3"
+          class="w-full rounded-lg border-zinc-300 bg-white text-sm focus:ring-brand-500 focus:border-brand-500"
+          placeholder="Notes"
+        ></textarea>
       </div>
+      <div class="sm:col-span-2">
+        <Button variant="primary" :loading="submitting">Add item</Button>
+      </div>
+    </form>
+  </Card>
+
+  <div v-if="items.length === 0" class="text-zinc-600">
+    No items yet — add your first to unlock others’ lists.
+  </div>
+
+  <ul class="grid gap-3">
+    <li v-for="it in items" :key="it.id">
+      <Card>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-medium">
+              {{ it.title }}
+              <span v-if="it.priority" class="text-xs text-zinc-500"
+                >• P{{ it.priority }}</span
+              >
+            </div>
+            <div v-if="it.url" class="text-sm text-brand-700">
+              <a :href="it.url" target="_blank">{{ it.url }}</a>
+            </div>
+            <div v-if="it.price_cents != null" class="text-sm text-zinc-600">
+              {{ (it.price_cents / 100).toFixed(2) }} EUR
+            </div>
+            <div
+              v-if="it.notes"
+              class="text-sm text-zinc-700 whitespace-pre-wrap mt-1"
+            >
+              {{ it.notes }}
+            </div>
+          </div>
+          <Button variant="ghost" @click="removeItem(it.id)">Delete</Button>
+        </div>
+      </Card>
     </li>
   </ul>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
-import { api } from '../services/api';
+import { onMounted, reactive, ref } from "vue";
+import { api } from "../services/api";
+import Card from "../components/ui/Card.vue";
+import Button from "../components/ui/Button.vue";
+import Input from "../components/ui/Input.vue";
+import { useToasts } from "../components/ui/useToasts";
+
+const { push } = useToasts();
 
 const items = ref<any[]>([]);
-const error = ref('');
-
+const submitting = ref(false);
 const form = reactive({
-  title: '',
-  url: '',
+  title: "",
+  url: "",
   price_cents: undefined as number | undefined,
-  currency: 'EUR',
-  notes: '',
-  priority: 3
+  notes: "",
+  priority: 3,
 });
 
 async function load() {
-  error.value = '';
   await api.ensureMyWishlist().catch(() => {});
-  const data = await api.getMyWishlist();
+  const data = await api.getMyWishlist(); // server returns NO reservation info for owner
   items.value = data.items ?? [];
 }
 
 async function add() {
-  error.value = '';
+  submitting.value = true;
   try {
     const created = await api.addMyItem({
-      title: form.title,
+      title: form.title || "",
       url: form.url || undefined,
       price_cents: form.price_cents ? Number(form.price_cents) : undefined,
-      currency: form.currency || undefined,
       notes: form.notes || undefined,
-      priority: form.priority
+      priority: form.priority,
     });
     items.value.unshift(created);
-    form.title = '';
-    form.url = '';
+    form.title = "";
+    form.url = "";
     form.price_cents = undefined;
-    form.notes = '';
+    form.notes = "";
     form.priority = 3;
-  } catch (e: any) {
-    error.value = e.message ?? 'Failed to add';
+    push("Item added", "success");
+  } finally {
+    submitting.value = false;
   }
 }
 
 async function removeItem(id: string) {
   await api.deleteMyItem(id);
-  items.value = items.value.filter(i => i.id !== id);
+  items.value = items.value.filter((i) => i.id !== id);
+  push("Item removed", "info");
 }
 
 onMounted(load);
