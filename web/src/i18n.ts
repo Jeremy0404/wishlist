@@ -41,7 +41,7 @@ const fr = {
     fFamilyD: "Un code à partager, et tout le monde est dedans.",
 
     // footer
-    footer: "Fait maison pour la famille • {github}",
+    footer: "Fait maison • {github}",
   },
   family: {
     badge: "Famille",
