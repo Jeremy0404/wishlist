@@ -45,10 +45,14 @@ export const api = {
 
     // Browse (gated)
     others: () => request<Array<{ wishlist_id: string; user_id: string; name: string; created_at: string }>>('/wishlists'),
-    viewWishlist: (userId: string) => request<{ wishlist: any; items: Array<any> }>(`/wishlists/${userId}`),
+    viewWishlist: (userId: string) =>
+        request<{ wishlist: any; owner: { id: string; name: string } | null; items: Array<any> }>(`/wishlists/${userId}`),
 
     // Gifting
     reserve: (itemId: string) => request(`/wishlists/items/${itemId}/reserve`, { method: 'POST' }),
     unreserve: (itemId: string) => request(`/wishlists/items/${itemId}/unreserve`, { method: 'POST' }),
     purchase: (itemId: string) => request(`/wishlists/items/${itemId}/purchase`, { method: 'POST' }),
+
+    me: () => request<{ id: string; email: string; name: string }>('/auth/me'),
+
 };

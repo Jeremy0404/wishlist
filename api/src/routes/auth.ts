@@ -3,6 +3,8 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { db } from '../db/knex.js';
 import { authCookie, signUser } from '../auth/jwt.js';
+import { authRequired } from '../middleware/auth.js';
+
 
 const router = Router();
 
@@ -52,6 +54,12 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (_req, res) => {
     res.clearCookie(authCookie.name, { ...authCookie.options, maxAge: 0 });
     res.json({ ok: true });
+});
+
+router.get('/me', authRequired, async (req, res) => {
+    const u = await db('users').select('id', 'email', 'name').where({ id: req.user!.id }).first();
+    if (!u) return res.status(404).json({ error: 'not found' });
+    res.json(u);
 });
 
 export default router;

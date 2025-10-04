@@ -14,9 +14,17 @@ router.post('/me', authRequired, familyContext, async (req, res) => {
 });
 
 router.get('/me', authRequired, familyContext, async (req, res) => {
-    const wl = await db('wishlists').where({ user_id: req.user!.id, family_id: req.familyId! }).first();
+    const wl = await db('wishlists')
+        .where({ user_id: req.user!.id, family_id: req.familyId! })
+        .first();
+
     if (!wl) return res.json({ wishlist: null, items: [] });
-    const items = await db('wishlist_items').where({ wishlist_id: wl.id }).orderBy('created_at', 'desc');
+
+    // No join on reservations = no way to infer reserved state
+    const items = await db('wishlist_items')
+        .where({ wishlist_id: wl.id })
+        .orderBy('created_at', 'desc');
+
     res.json({ wishlist: wl, items });
 });
 
@@ -81,22 +89,29 @@ router.get('/', authRequired, familyContext, mustHaveWishlistWithItem, async (re
 // View another member’s wishlist (hide reserver identity if owner views own list—handled below)
 router.get('/:userId', authRequired, familyContext, mustHaveWishlistWithItem, async (req, res) => {
     const { userId } = req.params;
-    // must be in same family and not yourself (you already have /me)
-    const wl = await db('wishlists').where({ user_id: userId, family_id: req.familyId! }).first();
+
+    // owner (userId) must be in same family
+    const wl = await db('wishlists')
+        .where({ user_id: userId, family_id: req.familyId! })
+        .first();
     if (!wl) return res.status(404).json({ error: 'not found' });
+
+    const owner = await db('users').select('id','name','email').where({ id: userId }).first();
 
     const items = await db('wishlist_items as i')
         .leftJoin('reservations as r', 'r.item_id', 'i.id')
+        .leftJoin('users as ur', 'ur.id', 'r.reserver_user_id')
         .select(
             'i.*',
             db.raw('CASE WHEN r.id IS NULL THEN false ELSE true END AS reserved'),
-            'r.status as reservation_status'
+            'r.status as reservation_status',
+            'ur.id as reserver_user_id',
+            'ur.name as reserver_name'
         )
         .where('i.wishlist_id', wl.id)
         .orderBy('i.created_at', 'desc');
 
-    // Never reveal who reserved to the owner; but here we’re viewing others so it’s fine.
-    res.json({ wishlist: wl, items });
+    res.json({ wishlist: wl, owner: owner ? { id: owner.id, name: owner.name } : null, items });
 });
 
 // Reserve / unreserve / purchase
