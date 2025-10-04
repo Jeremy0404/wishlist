@@ -57,7 +57,7 @@ const fr = {
     form: {
       title: "Titre",
       url: "Lien (optionnel)",
-      price: "Prix (centimes)",
+      price: "Prix (€)",
       priority: "Priorité (1–5)",
       notes: "Notes",
     },

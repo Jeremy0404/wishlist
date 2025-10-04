@@ -40,29 +40,28 @@ router.get("/me", authRequired, familyContext, async (req, res) => {
 const Item = z.object({
   title: z.string().min(1),
   url: z.string().url().optional().or(z.literal("")),
-  price_cents: z.number().int().positive().optional(),
+  price_eur: z.coerce.number().min(0).max(99_999_999.99).optional(),
   currency: z.string().length(3).optional(),
   notes: z.string().max(1000).optional(),
   priority: z.number().int().min(1).max(5).optional(),
 });
 
 router.post("/me/items", authRequired, familyContext, async (req, res) => {
-  const parse = Item.safeParse(req.body);
-  if (!parse.success) return res.status(400).json(parse.error.flatten());
-
-  let wl = await db("wishlists")
+  const wl = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
-  if (!wl)
-    [wl] = await db("wishlists")
-      .insert({ user_id: req.user!.id, family_id: req.familyId! })
-      .returning("*");
+  if (!wl) return res.status(400).json({ error: "Données invalides" });
 
+  const parse = Item.safeParse(req.body);
+  if (!parse.success)
+    return res.status(400).json({ error: "Données invalides" });
+
+  const body = { ...parse.data };
   const [it] = await db("wishlist_items")
-    .insert({ wishlist_id: wl.id, ...parse.data })
+    .insert({ wishlist_id: wl.id, ...body })
     .returning("*");
 
-  res.json(it);
+  res.status(201).json(it);
 });
 
 router.patch("/me/items/:id", authRequired, familyContext, async (req, res) => {

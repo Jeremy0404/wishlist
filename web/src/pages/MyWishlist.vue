@@ -9,10 +9,14 @@
       <Input v-model="form.title" :label="t('my.form.title')" required />
       <Input v-model="form.url" :label="t('my.form.url')" />
       <Input
-        v-model.number="form.price_cents"
+        v-model.number="form.price_eur"
         type="number"
+        step="0.50"
+        min="0"
+        :max="1000000"
         :label="t('my.form.price')"
       />
+
       <Input
         v-model.number="form.priority"
         type="number"
@@ -55,8 +59,8 @@
             <div v-if="it.url" class="text-sm text-brand-700">
               <a :href="it.url" target="_blank">{{ it.url }}</a>
             </div>
-            <div v-if="it.price_cents != null" class="text-sm text-zinc-600">
-              {{ (it.price_cents / 100).toFixed(2) }} EUR
+            <div v-if="it.price_eur != null" class="text-sm text-zinc-600">
+              {{ fmtEUR.format(it.price_eur) }}
             </div>
             <div
               v-if="it.notes"
@@ -82,6 +86,7 @@ import Button from "../components/ui/Button.vue";
 import Input from "../components/ui/Input.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useI18n } from "vue-i18n";
+import { fmtEUR } from "../utils/money.ts";
 
 const { push } = useToasts();
 const { t } = useI18n();
@@ -91,7 +96,7 @@ const submitting = ref(false);
 const form = reactive({
   title: "",
   url: "",
-  price_cents: undefined as number | undefined,
+  price_eur: undefined as number | undefined,
   notes: "",
   priority: 3,
 });
@@ -108,14 +113,15 @@ async function add() {
     const created = await api.addMyItem({
       title: form.title || "",
       url: form.url || undefined,
-      price_cents: form.price_cents ? Number(form.price_cents) : undefined,
+      price_eur: form.price_eur,
       notes: form.notes || undefined,
       priority: form.priority,
     });
+
     items.value.unshift(created);
     form.title = "";
     form.url = "";
-    form.price_cents = undefined;
+    form.price_eur = undefined;
     form.notes = "";
     form.priority = 3;
     push(t("toast.added"), "success");

@@ -18,8 +18,8 @@
             <div v-if="it.url" class="text-sm text-brand-700">
               <a :href="it.url" target="_blank">{{ it.url }}</a>
             </div>
-            <div v-if="it.price_cents != null" class="text-sm text-zinc-600">
-              {{ (it.price_cents / 100).toFixed(2) }} EUR
+            <div v-if="it.price_eur != null" class="text-sm text-zinc-600">
+              {{ fmtEUR.format(it.price_eur) }}
             </div>
             <div
               v-if="it.notes"
@@ -66,6 +66,7 @@ import { api } from "../services/api";
 import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
 import { useToasts } from "../components/ui/useToasts";
+import { fmtEUR } from "../utils/money.ts";
 
 const { t } = useI18n();
 const { push } = useToasts();
