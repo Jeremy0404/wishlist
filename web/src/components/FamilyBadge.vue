@@ -4,35 +4,39 @@
       👨‍👩‍👧 {{ auth.myFamily?.name }}
     </span>
     <span class="hidden sm:inline text-zinc-600">
-      Code: <code class="bg-zinc-100 px-1 rounded">{{ auth.inviteCode }}</code>
+      {{ t("family.code") }} :
+      <code class="bg-zinc-100 px-1 rounded">{{ auth.inviteCode }}</code>
     </span>
-    <Button variant="ghost" @click="copy">Copy</Button>
-    <Button v-if="canShare" variant="ghost" @click="share">Share…</Button>
+    <Button variant="ghost" @click="copy">{{ t("family.code") }}</Button>
+    <Button v-if="canShare" variant="ghost" @click="share">Partager…</Button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import Button from './ui/Button.vue';
-import { useToasts } from './ui/useToasts';
-import { useAuth } from '../stores/auth';
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import Button from "./ui/Button.vue";
+import { useToasts } from "./ui/useToasts";
+import { useAuth } from "../stores/auth";
 
+const { t } = useI18n();
 const auth = useAuth();
 const { push } = useToasts();
-const canShare = computed(() => typeof navigator !== 'undefined' && !!(navigator as any).share);
-
-async function copy(){
+const canShare = computed(
+  () => typeof navigator !== "undefined" && !!(navigator as any).share,
+);
+async function copy() {
   if (!auth.inviteCode) return;
   await navigator.clipboard.writeText(auth.inviteCode);
-  push('Invite code copied','success');
+  push(t("family.copied"), "success");
 }
-async function share(){
+async function share() {
   const fam = auth.myFamily;
   if (!fam?.invite_code) return;
   try {
     await (navigator as any).share({
-      title: 'Join my family on Wishlist',
-      text: `Family: ${fam.name}\nInvite code: ${fam.invite_code}`
+      title: t("family.shareTitle"),
+      text: t("family.shareText", { name: fam.name, code: fam.invite_code }),
     });
   } catch {}
 }

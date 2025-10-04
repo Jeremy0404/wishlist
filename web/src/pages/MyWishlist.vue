@@ -1,23 +1,27 @@
 <template>
-  <h1 class="text-xl font-semibold mb-4">My wishlist</h1>
+  <h1 class="text-xl font-semibold mb-4">{{ t("my.title") }}</h1>
 
   <Card class="mb-4">
-    <template #header><h2 class="font-semibold">Add an item</h2></template>
+    <template #header
+      ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
+    >
     <form @submit.prevent="add" class="grid gap-3 sm:grid-cols-2">
-      <Input v-model="form.title" label="Title" required />
-      <Input v-model="form.url" label="Link (optional)" />
+      <Input v-model="form.title" :label="t('my.form.title')" required />
+      <Input v-model="form.url" :label="t('my.form.url')" />
       <Input
         v-model.number="form.price_cents"
         type="number"
-        label="Price (cents)"
+        :label="t('my.form.price')"
       />
       <Input
         v-model.number="form.priority"
         type="number"
-        label="Priority (1–5)"
+        :label="t('my.form.priority')"
       />
       <div class="sm:col-span-2">
-        <label class="block text-sm mb-1" for="notes">Notes</label>
+        <label class="block text-sm mb-1" for="notes">{{
+          t("my.form.notes")
+        }}</label>
         <textarea
           v-model="form.notes"
           rows="3"
@@ -26,13 +30,15 @@
         ></textarea>
       </div>
       <div class="sm:col-span-2">
-        <Button variant="primary" :loading="submitting">Add item</Button>
+        <Button variant="primary" :loading="submitting">{{
+          t("my.addBtn")
+        }}</Button>
       </div>
     </form>
   </Card>
 
   <div v-if="items.length === 0" class="text-zinc-600">
-    No items yet — add your first to unlock others’ lists.
+    {{ t("my.empty") }}
   </div>
 
   <ul class="grid gap-3">
@@ -59,7 +65,9 @@
               {{ it.notes }}
             </div>
           </div>
-          <Button variant="ghost" @click="removeItem(it.id)">Delete</Button>
+          <Button variant="ghost" @click="removeItem(it.id)">{{
+            t("my.delete")
+          }}</Button>
         </div>
       </Card>
     </li>
@@ -73,8 +81,10 @@ import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
 import Input from "../components/ui/Input.vue";
 import { useToasts } from "../components/ui/useToasts";
+import { useI18n } from "vue-i18n";
 
 const { push } = useToasts();
+const { t } = useI18n();
 
 const items = ref<any[]>([]);
 const submitting = ref(false);
@@ -108,7 +118,7 @@ async function add() {
     form.price_cents = undefined;
     form.notes = "";
     form.priority = 3;
-    push("Item added", "success");
+    push(t("toast.added"), "success");
   } finally {
     submitting.value = false;
   }
@@ -117,7 +127,7 @@ async function add() {
 async function removeItem(id: string) {
   await api.deleteMyItem(id);
   items.value = items.value.filter((i) => i.id !== id);
-  push("Item removed", "info");
+  push(t("toast.removed"), "info");
 }
 
 onMounted(load);

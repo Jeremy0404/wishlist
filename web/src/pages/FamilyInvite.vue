@@ -1,50 +1,64 @@
 <template>
-  <h1>Invite to your family</h1>
-  <div v-if="auth.inFamily" class="card">
-    <p><strong>{{ auth.myFamily?.name }}</strong></p>
-    <p>Invite code:</p>
-    <p class="code"><code>{{ auth.inviteCode }}</code></p>
-    <div class="actions">
-      <button @click="copy">Copy</button>
-      <button v-if="canShare" @click="share">Share…</button>
-    </div>
-    <p v-if="copied" class="ok">Copied!</p>
-    <p v-if="err" class="err">{{ err }}</p>
+  <h1 class="text-xl font-semibold mb-4">{{ t("familyInvite.title") }}</h1>
+
+  <div v-if="auth.inFamily" class="max-w-xl">
+    <Card>
+      <p class="mb-2">
+        <strong>{{ t("familyInvite.famLabel") }} :</strong>
+        {{ auth.myFamily?.name }}
+      </p>
+      <p class="mb-2">
+        <strong>{{ t("familyInvite.codeLabel") }} :</strong>
+        <code class="bg-zinc-100 px-2 py-0.5 rounded">{{
+          auth.inviteCode
+        }}</code>
+      </p>
+      <div class="flex gap-2 mt-2">
+        <Button variant="ghost" @click="copy">{{
+          t("familyInvite.copy")
+        }}</Button>
+        <Button v-if="canShare" variant="ghost" @click="share">{{
+          t("familyInvite.share")
+        }}</Button>
+      </div>
+      <p v-if="copied" class="text-green-700 text-sm mt-2">
+        {{ t("familyInvite.copied") }}
+      </p>
+    </Card>
   </div>
-  <p v-else>Join or create a family first.</p>
+
+  <p v-else class="text-zinc-600">{{ t("familyInvite.noFamily") }}</p>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useAuth } from '../stores/auth';
+import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import Button from "../components/ui/Button.vue";
+import Card from "../components/ui/Card.vue";
+import { useAuth } from "../stores/auth";
+
+const { t } = useI18n();
 const auth = useAuth();
 const copied = ref(false);
-const err = ref('');
-const canShare = computed(() => !!(navigator as any).share);
+const canShare = computed(
+  () => typeof navigator !== "undefined" && !!(navigator as any).share,
+);
 
 async function copy() {
-  const code = auth.inviteCode;
-  if (!code) return;
-  try {
-    await navigator.clipboard.writeText(code);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch { err.value = 'Copy failed'; }
+  if (!auth.inviteCode) return;
+  await navigator.clipboard.writeText(auth.inviteCode);
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 1500);
 }
 
 async function share() {
   const fam = auth.myFamily;
   if (!fam?.invite_code) return;
   try {
-    await (navigator as any).share({ title: 'Join my family', text: `Family: ${fam.name}\nInvite code: ${fam.invite_code}` });
+    await (navigator as any).share({
+      title: t("family.shareTitle"),
+      text: t("family.shareText", { name: fam.name, code: fam.invite_code }),
+    });
   } catch {}
 }
 </script>
-
-<style scoped>
-.card { border:1px solid #eee; border-radius:10px; padding:1rem; max-width:480px; }
-.code { font-size:1.2rem; background:#f6f6f6; padding:.25rem .5rem; border-radius:6px; display:inline-block; }
-.actions { display:flex; gap:.5rem; margin-top:.5rem; }
-.ok { color:#0a0; }
-.err { color:#b00; }
-</style>

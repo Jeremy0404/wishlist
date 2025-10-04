@@ -1,32 +1,49 @@
 <template>
-  <h1>Join a family</h1>
-  <form @submit.prevent="submit" style="display:grid; gap:.5rem; max-width:420px;">
-    <input v-model="code" placeholder="Invite code" required />
-    <button>Join</button>
-  </form>
-  <p v-if="msg" :style="{color: ok ? '#070' : '#b00'}">{{ msg }}</p>
+  <h1 class="text-xl font-semibold mb-4">{{ $t("familyJoin.title") }}</h1>
+
+  <Card class="max-w-xl">
+    <form @submit.prevent="submit" class="grid gap-3">
+      <Input v-model="code" :label="$t('familyJoin.codeLabel')" required />
+      <div>
+        <Button variant="primary">{{ $t("familyJoin.joinBtn") }}</Button>
+      </div>
+    </form>
+
+    <p
+      v-if="msg"
+      :class="['mt-3 text-sm', ok ? 'text-green-700' : 'text-red-700']"
+    >
+      {{ msg }}
+    </p>
+  </Card>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { api } from '../services/api';
-import { useAuth } from '../stores/auth';
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { api } from "../services/api";
+import Card from "../components/ui/Card.vue";
+import Input from "../components/ui/Input.vue";
+import Button from "../components/ui/Button.vue";
+import { useAuth } from "../stores/auth";
 
-const code = ref('');
-const msg = ref('');
-const ok = ref(false);
+const { t } = useI18n();
 const auth = useAuth();
 
+const code = ref("");
+const msg = ref("");
+const ok = ref(false);
+
 async function submit() {
-  msg.value = '';
+  msg.value = "";
   try {
     const r = await api.joinFamily(code.value);
     ok.value = true;
-    msg.value = `Joined ${r.name}`;
+    msg.value = t("familyJoin.joined", { name: r.name });
     await auth.refreshFamilies();
   } catch (e: any) {
     ok.value = false;
-    msg.value = e.message ?? 'Join failed';
+    msg.value = `t("familyJoin.error"): ${e.message}`;
   }
 }
 </script>
