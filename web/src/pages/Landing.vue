@@ -114,7 +114,7 @@
           <div class="absolute -bottom-6 -left-6 rotate-[-6deg]">
             <span
               class="inline-block px-3 py-1 rounded-lg bg-amber-100 text-amber-800 text-xs shadow"
-              >Famille d’abord 🎁</span
+              >Famille 🎁</span
             >
           </div>
         </div>
@@ -136,10 +136,10 @@
               auth.inviteCode
             }}</code>
             <Button variant="ghost" @click="copy">{{
-              t("landing.copy")
+              t("common.copy")
             }}</Button>
             <Button v-if="canShare" variant="ghost" @click="share">{{
-              t("landing.share")
+              t("common.share")
             }}</Button>
             <span v-if="copied" class="text-green-700 text-sm"
               >✔ {{ t("landing.copied") }}</span

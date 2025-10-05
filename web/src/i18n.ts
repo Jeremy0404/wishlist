@@ -2,10 +2,14 @@ import { createI18n } from "vue-i18n";
 
 const fr = {
   app: { title: "🎄 Liste de Noël" },
+  common: {
+    share: "Partager…",
+    copy: "Copier",
+  },
   nav: {
     home: "Accueil",
     myList: "Ma liste",
-    others: "Les autres",
+    others: "Les listes de ma famille",
     invite: "Inviter",
     login: "Se connecter",
     register: "Créer un compte",
@@ -21,9 +25,7 @@ const fr = {
     // états
     youAreIn: "Tu es dans la famille {fam}.",
     yourInviteCode: "Ton code d’invitation",
-    copy: "Copier",
     copied: "Code copié",
-    share: "Partager…",
 
     // actions
     start: "Créer un compte",
@@ -71,8 +73,6 @@ const fr = {
     title: "Inviter dans ta famille",
     famLabel: "Famille",
     codeLabel: "Code d’invitation",
-    copy: "Copier",
-    share: "Partager…",
     copied: "Code copié",
     noFamily: "Crée ou rejoins d’abord une famille.",
   },

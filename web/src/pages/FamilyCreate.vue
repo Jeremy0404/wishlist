@@ -22,11 +22,9 @@
       }}</code>
     </p>
     <div class="flex gap-2">
-      <Button variant="ghost" @click="copy">{{
-        t("familyInvite.copy")
-      }}</Button>
+      <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
       <Button v-if="canShare" variant="ghost" @click="share">{{
-        t("familyInvite.share")
+        t("common.share")
       }}</Button>
       <RouterLink
         class="px-3 py-2 rounded bg-zinc-100 hover:bg-zinc-200"

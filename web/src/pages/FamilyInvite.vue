@@ -14,11 +14,9 @@
         }}</code>
       </p>
       <div class="flex gap-2 mt-2">
-        <Button variant="ghost" @click="copy">{{
-          t("familyInvite.copy")
-        }}</Button>
+        <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
         <Button v-if="canShare" variant="ghost" @click="share">{{
-          t("familyInvite.share")
+          t("common.share")
         }}</Button>
       </div>
       <p v-if="copied" class="text-green-700 text-sm mt-2">
