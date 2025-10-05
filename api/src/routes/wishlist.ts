@@ -51,8 +51,30 @@ const Item = z.object({
 
 router.post("/me/items", authRequired, familyContext, async (req, res) => {
   console.info(
-    `POST /wishlists/items - user: ${req.user!.id}; family_id: ${req.familyId!}`,
+    `POST /wishlists/me/items - user: ${req.user!.id}; family_id: ${req.familyId!}`,
   );
+
+  const parse = Item.safeParse(req.body);
+  if (!parse.success) return res.status(400).json(parse.error.flatten());
+
+  let wl = await db("wishlists")
+    .where({ user_id: req.user!.id, family_id: req.familyId! })
+    .first();
+
+  if (!wl) {
+    [wl] = await db("wishlists")
+      .insert({ user_id: req.user!.id, family_id: req.familyId! })
+      .returning("*");
+  }
+
+  const [it] = await db("wishlist_items")
+    .insert({ wishlist_id: wl.id, ...parse.data })
+    .returning("*");
+
+  res.json(it);
+});
+
+router.post("/me/items", authRequired, familyContext, async (req, res) => {
   const wl = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
@@ -137,7 +159,6 @@ router.get(
   },
 );
 
-// View another member’s wishlist (hide reserver identity if owner views own list—handled below)
 router.get(
   "/:userId",
   authRequired,
@@ -178,7 +199,6 @@ router.get(
   },
 );
 
-// Reserve / unreserve / purchase
 router.post(
   "/items/:id/reserve",
   authRequired,
