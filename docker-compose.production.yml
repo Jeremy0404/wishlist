@@ -23,8 +23,7 @@ services:
         condition: service_healthy
     expose:
       - "3000"
-    command: ["npm", "run", "migrate:latest && node", "dist/server.js"]
-
+    command: ["npm", "run", "start:prod"]
   web:
     build:
       context: ./web
