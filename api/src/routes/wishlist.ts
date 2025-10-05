@@ -9,8 +9,10 @@ import {
 
 const router = Router();
 
-// Ensure you have a wishlist in current family; create if missing
 router.post("/me", authRequired, familyContext, async (req, res) => {
+  console.info(
+    `POST /wishlists/me - user: ${req.user!.id}; family_id: ${req.familyId!}`,
+  );
   const existing = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
@@ -22,13 +24,15 @@ router.post("/me", authRequired, familyContext, async (req, res) => {
 });
 
 router.get("/me", authRequired, familyContext, async (req, res) => {
+  console.info(
+    `GET /wishlists/me - user: ${req.user!.id}; family_id: ${req.familyId!}`,
+  );
   const wl = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
 
   if (!wl) return res.json({ wishlist: null, items: [] });
 
-  // No join on reservations = no way to infer reserved state
   const items = await db("wishlist_items")
     .where({ wishlist_id: wl.id })
     .orderBy("created_at", "desc");
@@ -36,7 +40,6 @@ router.get("/me", authRequired, familyContext, async (req, res) => {
   res.json({ wishlist: wl, items });
 });
 
-// Add item to my wishlist (creates wishlist if missing)
 const Item = z.object({
   title: z.string().min(1),
   url: z.string().url().optional().or(z.literal("")),
@@ -47,6 +50,9 @@ const Item = z.object({
 });
 
 router.post("/me/items", authRequired, familyContext, async (req, res) => {
+  console.info(
+    `POST /wishlists/items - user: ${req.user!.id}; family_id: ${req.familyId!}`,
+  );
   const wl = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
@@ -65,8 +71,10 @@ router.post("/me/items", authRequired, familyContext, async (req, res) => {
 });
 
 router.patch("/me/items/:id", authRequired, familyContext, async (req, res) => {
+  console.info(
+    `PATCH /wishlists/me/items/:id - id: ${req.params.id} user: ${req.user!.id}; family_id: ${req.familyId!}`,
+  );
   const { id } = req.params;
-  // Ensure item belongs to me (and my family)
   const row = await db("wishlist_items as i")
     .join("wishlists as w", "w.id", "i.wishlist_id")
     .where({
