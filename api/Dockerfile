@@ -12,6 +12,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/migrations ./dist/migrations
+COPY knexfile.cjs ./knexfile.cjs
 ENV NODE_ENV=production
-CMD ["npm", "run", "start:prod"]
+CMD ["npm","run","start:prod"]
