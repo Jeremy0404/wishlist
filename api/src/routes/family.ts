@@ -30,14 +30,25 @@ router.get("/me", authRequired, async (req, res) => {
   return res.json(fam ?? null);
 });
 
+function generateInviteCode(name: string) {
+  const ascii = name
+    .normalize("NFD")
+    .replaceAll(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[^A-Za-z0-9]/g, "");
+
+  const prefix = ascii.slice(0, 3).toUpperCase().padEnd(3, "X");
+  const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  return `${prefix}-${suffix}`;
+}
+
 router.post("/", authRequired, async (req, res) => {
   const parse = createFamilySchema.safeParse(req.body);
   if (!parse.success)
     return res.status(400).json({ error: "Données invalides" });
 
   const { name } = parse.data;
-
-  const invite_code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const invite_code = generateInviteCode(name);
 
   const [fam] = await db("families")
     .insert({ name, invite_code })
@@ -45,33 +56,40 @@ router.post("/", authRequired, async (req, res) => {
 
   await db("family_memberships")
     .insert({ user_id: req.user!.id, family_id: fam.id })
-    .onConflict(["user_id"]) // if you enforce single-family per user
+    .onConflict(["user_id"])
     .merge({ family_id: fam.id });
 
   res.status(201).json(fam);
 });
 
 router.post("/join", authRequired, async (req, res) => {
-  const parse = joinFamilySchema.safeParse(req.body);
-  if (!parse.success)
+  const parsed = joinFamilySchema.safeParse(req.body);
+  if (!parsed.success)
     return res.status(400).json({ error: "Données invalides" });
 
-  const { code } = parse.data;
+  const code = String(parsed.data.code).trim().toUpperCase();
 
-  const family = await db("families")
-    .select("id", "name", "invite_code")
-    .whereRaw("upper(invite_code) = upper(?)", [code])
-    .first();
+  console.info(`POST /family/join - [${code}] (len=${code.length})`);
+  try {
+    const family = await db("families")
+      .select("id", "name", "invite_code")
+      .whereRaw("upper(trim(invite_code)) = ?", [code])
+      .first()
+      .debug(true);
 
-  if (!family)
-    return res.status(404).json({ error: "Code d’invitation invalide" });
+    if (!family)
+      return res.status(404).json({ error: "Code d’invitation invalide" });
 
-  await db("family_memberships")
-    .insert({ user_id: req.user!.id, family_id: family.id })
-    .onConflict(["user_id"])
-    .merge({ family_id: family.id });
+    await db("family_memberships")
+      .insert({ user_id: req.user!.id, family_id: family.id })
+      .onConflict(["user_id"])
+      .merge({ family_id: family.id });
 
-  res.status(200).json(family);
+    return res.status(200).json(family);
+  } catch (e) {
+    console.error("POST /family/join error:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 export default router;

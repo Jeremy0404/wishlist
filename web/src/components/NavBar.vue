@@ -4,7 +4,6 @@
   >
     <div class="max-w-5xl mx-auto px-4 py-2">
       <div class="flex items-center gap-2 flex-wrap">
-
         <RouterLink to="/" class="font-semibold me-2 focus-ring">
           🎄 Wishlist
         </RouterLink>
