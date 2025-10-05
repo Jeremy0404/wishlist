@@ -47,15 +47,14 @@ import Input from "../components/ui/Input.vue";
 import Button from "../components/ui/Button.vue";
 import { useAuth } from "../stores/auth";
 import { useToasts } from "../components/ui/useToasts";
+import type { Family } from "../types.ts";
 
 const { t } = useI18n();
 const auth = useAuth();
 const { push } = useToasts();
 
 const name = ref("Ma Famille");
-const family = ref<{ id: string; name: string; invite_code: string } | null>(
-  null,
-);
+const family = ref<Family | null>(null);
 const canShare = computed(
   () => typeof navigator !== "undefined" && !!(navigator as any).share,
 );
@@ -66,7 +65,7 @@ async function submit() {
 }
 
 async function copy() {
-  if (!family.value) return;
+  if (!family.value?.invite_code) return;
   await navigator.clipboard.writeText(family.value.invite_code);
   push(t("familyInvite.copied"), "success");
 }

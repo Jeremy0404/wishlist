@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
-import { api, type Family, type User } from "../services/api";
+import { api, type User } from "../services/api";
+import type { Family } from "../types.ts";
 
 export const useAuth = defineStore("auth", {
   state: () => ({

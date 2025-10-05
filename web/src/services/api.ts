@@ -1,4 +1,6 @@
 // web/src/services/api.ts
+import type { Family } from "../types.ts";
+
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 type Method = "GET" | "POST" | "PATCH" | "DELETE";
@@ -29,7 +31,6 @@ async function request<T = any>(
 }
 
 export type User = { id: string; name: string; email: string };
-export type Family = { id: string; name: string; invite_code?: string | null };
 
 export const api = {
   // --- Auth ---
