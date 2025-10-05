@@ -12,6 +12,8 @@ services:
       test: ["CMD", "pg_isready", "-U", "wishlist"]
       interval: 10s
       retries: 5
+    ports:
+      - "5432:5432"
 
   api:
     build:
