@@ -76,8 +76,6 @@ const fr = {
     copied: "Code copié",
     noFamily: "Crée ou rejoins d’abord une famille.",
   },
-
-  // Existant
   auth: {
     login: "Connexion",
     register: "Inscription",
@@ -109,12 +107,15 @@ const fr = {
   },
   view: {
     title: "Liste de {name}",
-    reserved: "Réservé",
     by: "par {name}",
     unreserve: "Annuler",
     purchase: "Marquer acheté",
     reserve: "Réserver",
     empty: "Aucun article ici pour le moment.",
+  },
+  status: {
+    reserved: "Réservé",
+    purchased: "Acheté",
   },
   toast: {
     added: "Article ajouté",

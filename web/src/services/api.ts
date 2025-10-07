@@ -34,7 +34,6 @@ export type User = { id: string; name: string; email: string };
 
 export const api = {
   // --- Auth ---
-  // Tolerant: accepts either { user } or the user object directly
   async me(): Promise<User | null> {
     const data = await request<any>("/auth/me");
     if (data && typeof data === "object" && "user" in data)

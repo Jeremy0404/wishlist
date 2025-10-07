@@ -31,18 +31,19 @@
 
           <div class="flex gap-2 items-center">
             <template v-if="it.reserved">
-              <span class="text-sm text-zinc-600">{{
-                it.reservation_status
-              }}</span>
-              <span v-if="it.reserver_name" class="text-sm text-zinc-600">{{
-                t("view.by", { name: it.reserver_name })
-              }}</span>
+              <span class="text-sm text-zinc-600">
+                {{ t(`status.${it.reservation_status}`) }}
+                {{ t("view.by", { name: it.reserver_name }) }}
+              </span>
               <Button variant="ghost" @click="unreserve(it.id)">{{
                 t("view.unreserve")
               }}</Button>
-              <Button variant="primary" @click="purchase(it.id)">{{
-                t("view.purchase")
-              }}</Button>
+              <Button
+                v-if="it.reservation_status !== 'purchased'"
+                variant="primary"
+                @click="purchase(it.id)"
+                >{{ t("view.purchase") }}</Button
+              >
             </template>
             <template v-else>
               <Button variant="primary" @click="reserve(it.id)">{{
@@ -69,7 +70,7 @@ import { useToasts } from "../components/ui/useToasts";
 import { fmtEUR } from "../utils/money.ts";
 import type { Item } from "../types.ts";
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const { push } = useToasts();
 
 const route = useRoute();
@@ -102,5 +103,10 @@ async function purchase(id: string) {
   push(t("toast.purchased"), "success");
   await load();
 }
+function statusLabel(s: string) {
+  const key = `status.${s}`;
+  return te(key) ? t(key) : s;
+}
+
 onMounted(load);
 </script>
