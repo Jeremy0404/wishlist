@@ -19,20 +19,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { api } from "../services/api";
-import Card from "../components/ui/Card.vue";
-import Input from "../components/ui/Input.vue";
-import Button from "../components/ui/Button.vue";
+import api from "../services/api";
 import { useAuth } from "../stores/auth";
+import Button from "../components/ui/Button.vue";
+import Input from "../components/ui/Input.vue";
+import Card from "../components/ui/Card.vue";
 
 const { t } = useI18n();
 const auth = useAuth();
+const route = useRoute();
 
 const code = ref("");
 const msg = ref("");
 const ok = ref(false);
+
+onMounted(() => {
+  const q = route.query.code;
+  if (typeof q === "string" && q.trim()) {
+    code.value = q.trim();
+  }
+});
 
 async function submit() {
   msg.value = "";
@@ -43,7 +52,7 @@ async function submit() {
     await auth.refreshFamilies();
   } catch (e: any) {
     ok.value = false;
-    msg.value = `t("familyJoin.error"): ${e.message}`;
+    msg.value = `${t("familyJoin.error")}: ${e.message}`;
   }
 }
 </script>
