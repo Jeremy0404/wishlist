@@ -29,11 +29,20 @@ export const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach(async (to) => {
   const auth = useAuth();
-  if (auth.user === null) {
+
+  if (!auth.hydrated) {
     try {
       await auth.hydrate();
     } catch {}
   }
-  if (!to.meta.public && !auth.user) return "/auth/login";
+
+  if (!to.meta?.public && !auth.user) {
+    return {
+      path: "/auth/login",
+      query: { redirect: to.fullPath },
+      replace: true,
+    };
+  }
+
   return true;
 });

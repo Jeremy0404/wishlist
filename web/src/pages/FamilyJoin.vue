@@ -1,11 +1,11 @@
 <template>
-  <h1 class="text-xl font-semibold mb-4">{{ $t("familyJoin.title") }}</h1>
+  <h1 class="text-xl font-semibold mb-4">{{ t("familyJoin.title") }}</h1>
 
   <Card class="max-w-xl">
     <form @submit.prevent="submit" class="grid gap-3">
-      <Input v-model="code" :label="$t('familyJoin.codeLabel')" required />
+      <Input v-model="code" :label="t('familyJoin.codeLabel')" required />
       <div>
-        <Button variant="primary">{{ $t("familyJoin.joinBtn") }}</Button>
+        <Button variant="primary">{{ t("familyJoin.joinBtn") }}</Button>
       </div>
     </form>
 
