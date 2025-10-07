@@ -45,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { computed, ref } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import Card from "../components/ui/Card.vue";
 import Input from "../components/ui/Input.vue";
@@ -55,9 +55,14 @@ import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth";
 
 const { t } = useI18n();
-const router = useRouter();
 const { push } = useToasts();
 const auth = useAuth();
+const route = useRoute();
+const router = useRouter();
+const redirect = computed(() => {
+  const r = route.query.redirect;
+  return typeof r === "string" && r ? r : "/me";
+});
 
 const name = ref("");
 const email = ref("");
@@ -69,10 +74,10 @@ async function submit() {
   submitting.value = true;
   try {
     await auth.register(name.value.trim(), email.value.trim(), password.value);
-    push("Compte créé 🎉", "success");
-    router.push("/me");
+    push(t("auth.registerSuccess"), "success");
+    await router.replace(redirect.value);
   } catch (e: any) {
-    push(e?.message ?? "Erreur d’inscription", "error");
+    push(e?.message, "error");
   } finally {
     submitting.value = false;
   }

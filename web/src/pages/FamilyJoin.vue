@@ -22,15 +22,15 @@
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import api from "../services/api";
-import { useAuth } from "../stores/auth";
+import { useAuth } from "../stores/auth.ts";
+import api from "../services/api.ts";
 import Button from "../components/ui/Button.vue";
 import Input from "../components/ui/Input.vue";
 import Card from "../components/ui/Card.vue";
 
 const { t } = useI18n();
-const auth = useAuth();
 const route = useRoute();
+const auth = useAuth();
 
 const code = ref("");
 const msg = ref("");
@@ -45,14 +45,15 @@ onMounted(() => {
 
 async function submit() {
   msg.value = "";
+  ok.value = false;
   try {
     const r = await api.joinFamily(code.value);
     ok.value = true;
-    msg.value = t("familyJoin.joined", { name: r.name });
+    msg.value = t("familyJoin.joined", { name: r.name ?? "" });
+
     await auth.refreshFamilies();
   } catch (e: any) {
-    ok.value = false;
-    msg.value = `${t("familyJoin.error")}: ${e.message}`;
+    msg.value = e?.message || t("familyJoin.error");
   }
 }
 </script>

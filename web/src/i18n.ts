@@ -84,7 +84,9 @@ const fr = {
   },
   auth: {
     login: "Connexion",
+    loginSuccess: "Bienvenue 👋",
     register: "Inscription",
+    registerSuccess: "Compte créé 🎉",
     email: "E-mail",
     password: "Mot de passe",
     name: "Nom",
