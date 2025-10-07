@@ -15,6 +15,9 @@ export const useAuth = defineStore("auth", {
     inviteCode(state): string {
       return state.myFamily?.invite_code ?? "";
     },
+    isLogged(state): boolean {
+      return !!state.user?.id;
+    },
   },
   actions: {
     async hydrate(): Promise<void> {

@@ -1,8 +1,4 @@
-import {
-  createRouter,
-  createWebHistory,
-  type RouteLocationNormalized,
-} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "./stores/auth";
 
 // Pages
@@ -20,12 +16,24 @@ const routes = [
   { path: "/", component: Landing, meta: { public: true } },
 
   // Auth
-  { path: "/auth/login", component: Login, meta: { public: true } },
-  { path: "/auth/register", component: Register, meta: { public: true } },
+  {
+    path: "/auth/login",
+    component: Login,
+    meta: { public: true, onlyGuest: true },
+  },
+  {
+    path: "/auth/register",
+    component: Register,
+    meta: { public: true, onlyGuest: true },
+  },
 
   // Family
   { path: "/family/create", component: FamilyCreate },
-  { path: "/family/join", component: FamilyJoin },
+  {
+    path: "/family/join",
+    component: FamilyJoin,
+    meta: { requireNoFamily: true },
+  },
 
   // Wishlists
   { path: "/me", component: MyWishlist },
@@ -41,25 +49,27 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to: RouteLocationNormalized) => {
+router.beforeEach(async (to) => {
   const auth = useAuth();
 
-  if (auth.user === null && typeof auth.hydrate === "function") {
+  if (!auth.hydrated) {
     try {
       await auth.hydrate();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }
 
   const isPublic = Boolean(to.meta?.public);
-  const isLogged = Boolean(auth.user);
 
-  if (!isPublic && !isLogged) {
-    return {
-      path: "/auth/login",
-      query: { redirect: to.fullPath },
-    };
+  if (to.meta?.onlyGuest && auth.isLogged) {
+    return { path: "/me", replace: true };
+  }
+
+  if (!isPublic && !auth.isLogged) {
+    return { path: "/auth/login", query: { redirect: to.fullPath } };
+  }
+
+  if (to.meta?.requireNoFamily && auth.isLogged && auth.inFamily) {
+    return { path: "/me", replace: true };
   }
 
   return true;
