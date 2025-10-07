@@ -13,11 +13,13 @@
           auth.inviteCode
         }}</code>
       </p>
-      <div class="flex gap-2 mt-2">
+      <div v-if="auth.myFamily" class="flex gap-2 mt-2">
         <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
-        <Button v-if="canShare" variant="ghost" @click="share">{{
-          t("common.share")
-        }}</Button>
+        <InviteShareButton
+          v-if="canShare"
+          :name="auth.myFamily.name"
+          :code="auth.myFamily.invite_code"
+        />
       </div>
       <p v-if="copied" class="text-green-700 text-sm mt-2">
         {{ t("familyInvite.copied") }}
@@ -29,11 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
 import { useAuth } from "../stores/auth";
+import InviteShareButton from "../components/InviteShareButton.vue";
 
 const { t } = useI18n();
 const auth = useAuth();
@@ -47,16 +50,5 @@ async function copy() {
   await navigator.clipboard.writeText(auth.inviteCode);
   copied.value = true;
   setTimeout(() => (copied.value = false), 1500);
-}
-
-async function share() {
-  const fam = auth.myFamily;
-  if (!fam?.invite_code) return;
-  try {
-    await (navigator as any).share({
-      title: t("family.shareTitle"),
-      text: t("family.shareText", { name: fam.name, code: fam.invite_code }),
-    });
-  } catch {}
 }
 </script>

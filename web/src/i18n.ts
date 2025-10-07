@@ -49,8 +49,14 @@ const fr = {
     badge: "Famille",
     code: "Code",
     copied: "Code copié",
-    shareTitle: "Rejoins ma famille sur Wishlist",
-    shareText: "Famille: {name}\nCode: {code}",
+    shareTitle: "Invitation à rejoindre {name}",
+    shareSubject: "Rejoins la famille {name} sur Wishlist",
+    shareCatchPhrase: "🧞‍♂️ Fais un vœu, on s'en charge !",
+    shareBody:
+      "Famille : {name}\n" +
+      "Code d'invitation : {code}\n" +
+      "Lien direct : {url}\n\n" +
+      "{catchPhrase}",
   },
 
   // --- PAGES ---

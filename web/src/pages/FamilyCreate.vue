@@ -23,9 +23,11 @@
     </p>
     <div class="flex gap-2">
       <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
-      <Button v-if="canShare" variant="ghost" @click="share">{{
-        t("common.share")
-      }}</Button>
+      <InviteShareButton
+        v-if="canShare"
+        :name="family.name"
+        :code="family.invite_code"
+      />
       <RouterLink
         class="px-3 py-2 rounded bg-zinc-100 hover:bg-zinc-200"
         to="/me"
@@ -36,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import { api } from "../services/api";
@@ -46,6 +48,7 @@ import Button from "../components/ui/Button.vue";
 import { useAuth } from "../stores/auth";
 import { useToasts } from "../components/ui/useToasts";
 import type { Family } from "../types.ts";
+import InviteShareButton from "../components/InviteShareButton.vue";
 
 const { t } = useI18n();
 const auth = useAuth();
@@ -66,18 +69,5 @@ async function copy() {
   if (!family.value?.invite_code) return;
   await navigator.clipboard.writeText(family.value.invite_code);
   push(t("familyInvite.copied"), "success");
-}
-
-async function share() {
-  if (!family.value) return;
-  try {
-    await (navigator as any).share({
-      title: t("family.shareTitle"),
-      text: t("family.shareText", {
-        name: family.value.name,
-        code: family.value.invite_code,
-      }),
-    });
-  } catch {}
 }
 </script>

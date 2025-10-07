@@ -138,9 +138,11 @@
             <Button variant="ghost" @click="copy">{{
               t("common.copy")
             }}</Button>
-            <Button v-if="canShare" variant="ghost" @click="share">{{
-              t("common.share")
-            }}</Button>
+            <InviteShareButton
+              v-if="canShare && auth.myFamily"
+              :name="auth.myFamily.name"
+              :code="auth.myFamily.invite_code"
+            />
             <span v-if="copied" class="text-green-700 text-sm"
               >✔ {{ t("landing.copied") }}</span
             >
@@ -209,6 +211,7 @@ import { useI18n } from "vue-i18n";
 import Button from "../components/ui/Button.vue";
 import { useAuth } from "../stores/auth";
 import { useToasts } from "../components/ui/useToasts";
+import InviteShareButton from "../components/InviteShareButton.vue";
 
 const { t } = useI18n();
 const auth = useAuth();
@@ -225,16 +228,5 @@ async function copy() {
   copied.value = true;
   push(t("landing.copied"), "success");
   setTimeout(() => (copied.value = false), 1500);
-}
-
-async function share() {
-  const fam = auth.myFamily;
-  if (!fam?.invite_code) return;
-  try {
-    await (navigator as any).share({
-      title: "Wishlist — famille",
-      text: `Famille: ${fam.name}\nCode: ${fam.invite_code}`,
-    });
-  } catch {}
 }
 </script>
