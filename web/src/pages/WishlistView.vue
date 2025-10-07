@@ -31,9 +31,9 @@
 
           <div class="flex gap-2 items-center">
             <template v-if="it.reserved">
-              <span class="text-sm text-zinc-600"
-                >{{ t("view.reserved") }} ({{ it.reservation_status }})</span
-              >
+              <span class="text-sm text-zinc-600">{{
+                it.reservation_status
+              }}</span>
               <span v-if="it.reserver_name" class="text-sm text-zinc-600">{{
                 t("view.by", { name: it.reserver_name })
               }}</span>
@@ -67,13 +67,14 @@ import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { fmtEUR } from "../utils/money.ts";
+import type { Item } from "../types.ts";
 
 const { t } = useI18n();
 const { push } = useToasts();
 
 const route = useRoute();
 const ownerName = ref("");
-const items = ref<any[]>([]);
+const items = ref<Item[]>([]);
 const error = ref("");
 
 async function load() {

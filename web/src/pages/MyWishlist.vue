@@ -103,7 +103,7 @@ const form = reactive({
 
 async function load() {
   await api.ensureMyWishlist().catch(() => {});
-  const data = await api.getMyWishlist(); // server returns NO reservation info for owner
+  const data = await api.getMyWishlist();
   items.value = data.items ?? [];
 }
 

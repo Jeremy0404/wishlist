@@ -137,7 +137,6 @@ router.delete(
   },
 );
 
-// Browse others (gate enforced)
 router.get(
   "/",
   authRequired,

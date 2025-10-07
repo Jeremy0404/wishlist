@@ -56,7 +56,7 @@ export const api = {
   // --- Family ---
   getMyFamily: async () => {
     const fam = await request<Family | null>("/families/me");
-    console.log(fam);
+
     return fam ?? null;
   },
   createFamily: (name: string) =>
@@ -81,11 +81,11 @@ export const api = {
   others: () => request<any[]>("/wishlists"),
   viewWishlist: (userId: string) => request<any>(`/wishlists/${userId}`),
   reserve: (itemId: string) =>
-    request(`/reservations/${itemId}`, { method: "POST" }),
+    request(`/wishlists/items/${itemId}/reserve`, { method: "POST" }),
   unreserve: (itemId: string) =>
-    request(`/reservations/${itemId}`, { method: "DELETE" }),
+    request(`/wishlists/items/${itemId}/unreserve`, { method: "POST" }),
   purchase: (itemId: string) =>
-    request(`/reservations/${itemId}/purchase`, { method: "POST" }),
+    request(`/wishlists/items/${itemId}/purchase`, { method: "POST" }),
 };
 
 export default api;
