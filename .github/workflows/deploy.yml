@@ -49,6 +49,8 @@ jobs:
         with:
           context: ./web
           push: true
+          build-args: |
+            COMMIT_SHA=${{ steps.meta.outputs.TAG }}
           tags: |
             ${{ env.IMAGE_WEB }}:${{ steps.meta.outputs.TAG }}
             ${{ env.IMAGE_WEB }}:${{ steps.meta.outputs.LATEST }}

@@ -3,6 +3,9 @@ FROM node:20-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+ARG COMMIT_SHA=unknown
+RUN echo "$COMMIT_SHA" > /app/dist/version.txt
+
 COPY . .
 
 ENV VITE_API_URL=/api
