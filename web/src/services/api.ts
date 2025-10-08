@@ -7,38 +7,50 @@ type Method = "GET" | "POST" | "PATCH" | "DELETE";
 type UnauthorizedHandler = () => void;
 const unauthorizedHandlers: UnauthorizedHandler[] = [];
 
-async function request<T = any>(
-  path: string,
-  opts: { method?: Method; body?: unknown } = {},
-): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: opts.method ?? "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
+type RequestOpts = {
+  method?: Method;
+  body?: unknown;
+  headers?: Record<string, string>;
+};
 
+function buildOptions({
+  method = "GET",
+  body,
+  headers = {},
+}: RequestOpts): RequestInit {
+  const h =
+    body === undefined
+      ? headers
+      : { "Content-Type": "application/json", ...headers };
+  return {
+    method,
+    credentials: "include",
+    headers: h,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  };
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
   if (res.status === 401) {
     for (const fn of unauthorizedHandlers) {
-      try {
-        fn();
-      } catch {}
+      fn();
     }
-    throw new Error("Unauthorized");
   }
-
-  const text = await res.text();
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try {
-      const j = JSON.parse(text);
-      if (j?.error) msg = j.error;
-    } catch {
-      if (text) msg = text.slice(0, 200);
-    }
-    throw new Error(msg);
+    const data = await res.json();
+    const msg = (data && (data.error || data.message)) || (await res.text());
+
+    throw new Error(msg || res.statusText);
   }
-  return text ? (JSON.parse(text) as T) : (undefined as T);
+  return await res.json();
+}
+
+export async function request<T>(
+  path: string,
+  opts: RequestOpts = {},
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, buildOptions(opts));
+  return handleResponse<T>(res);
 }
 
 export type User = { id: string; name: string; email: string };

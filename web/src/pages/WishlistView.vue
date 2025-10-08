@@ -32,7 +32,7 @@
           <div class="flex gap-2 items-center">
             <template v-if="it.reserved">
               <span class="text-sm text-zinc-600">
-                {{ t(`status.${it.reservation_status}`) }}
+                {{ statusLabel(it.reservation_status) }}
                 {{ t("view.by", { name: it.reserver_name }) }}
               </span>
               <Button variant="ghost" @click="unreserve(it.id)">{{
