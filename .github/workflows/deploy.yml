@@ -43,8 +43,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_WEB }}:${{ steps.meta.outputs.TAG }}
             ${{ env.IMAGE_WEB }}:${{ steps.meta.outputs.LATEST }}
-          cache-from: type=registry,ref=${{ env.IMAGE_WEB }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_WEB }}:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Build & push API
       - name: Build & push api
@@ -55,8 +55,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_API }}:${{ steps.meta.outputs.TAG }}
             ${{ env.IMAGE_API }}:${{ steps.meta.outputs.LATEST }}
-          cache-from: type=registry,ref=${{ env.IMAGE_API }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_API }}:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Save tag
         run: echo "${{ steps.meta.outputs.TAG }}" > tag.txt
