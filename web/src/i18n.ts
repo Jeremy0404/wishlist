@@ -7,6 +7,7 @@ const fr = {
     copy: "Copier",
   },
   nav: {
+    wishlist: "Wishlist",
     home: "Accueil",
     myList: "Ma liste",
     others: "Les listes de ma famille",

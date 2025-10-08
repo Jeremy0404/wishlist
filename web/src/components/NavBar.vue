@@ -4,8 +4,12 @@
   >
     <div class="max-w-5xl mx-auto px-4 py-2">
       <div class="flex items-center gap-2 flex-wrap">
-        <RouterLink to="/" class="font-semibold me-2 focus-ring">
-          🎄 Wishlist
+        <RouterLink
+          to="/"
+          class="nav-link--wishlist font-semibold me-2 focus-ring"
+        >
+          <span class="nav-emoji" aria-hidden="true">🎄</span>
+          <span>{{ t("nav.wishlist") }}</span>
         </RouterLink>
 
         <FamilyBadge class="shrink-0" />
@@ -93,9 +97,38 @@ onMounted(() => {
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1;
   padding: 0.375rem 0.75rem;
   border-radius: 0.5rem;
 }
+
+.nav-link--wishlist {
+  font-size: 1.1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .nav-link--wishlist {
+    font-size: 1.2rem;
+    padding: 0.7rem 1.1rem;
+  }
+}
+
+.nav-link[aria-current="page"] {
+  font-weight: 600;
+  background: rgb(228 228 231); /* a bit darker than :hover */
+  box-shadow: 0 0 0 2px rgb(212 212 216) inset;
+  transform: scale(1.03);
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
 .nav-link:hover {
   background: rgb(244 244 245);
 }

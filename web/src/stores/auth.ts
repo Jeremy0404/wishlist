@@ -74,11 +74,9 @@ export const useAuth = defineStore("auth", {
     },
     async register(name: string, email: string, password: string) {
       const res = await api.register(name, email, password);
-      const user = (
-        res && typeof res === "object" && "user" in res
-          ? (res as any).user
-          : res
-      ) as User;
+      // @todo rework res type
+      const user =
+        res && typeof res === "object" && "user" in res ? res.user : res;
       this.user = user ?? null;
       await this.refreshFamilies();
       return this.user;
@@ -89,6 +87,7 @@ export const useAuth = defineStore("auth", {
         this.myFamily = null;
         this.hydrated = true;
 
+        // @todo translate
         push("Votre sessison a expirée. Veuillez vous reconnecter.", "error");
       });
     },
