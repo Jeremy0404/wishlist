@@ -4,6 +4,8 @@ import type { Family } from "../types.ts";
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 type Method = "GET" | "POST" | "PATCH" | "DELETE";
+type UnauthorizedHandler = () => void;
+const unauthorizedHandlers: UnauthorizedHandler[] = [];
 
 async function request<T = any>(
   path: string,
@@ -15,6 +17,15 @@ async function request<T = any>(
     credentials: "include",
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
+
+  if (res.status === 401) {
+    for (const fn of unauthorizedHandlers) {
+      try {
+        fn();
+      } catch {}
+    }
+    throw new Error("Unauthorized");
+  }
 
   const text = await res.text();
   if (!res.ok) {
@@ -86,5 +97,9 @@ export const api = {
   purchase: (itemId: string) =>
     request(`/wishlists/items/${itemId}/purchase`, { method: "POST" }),
 };
+
+export function onUnauthorized(handler: UnauthorizedHandler) {
+  unauthorizedHandlers.push(handler);
+}
 
 export default api;

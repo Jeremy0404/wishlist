@@ -37,7 +37,7 @@ const routes = [
 
   // Wishlists
   { path: "/me", component: MyWishlist },
-  { path: "/others", component: Others },
+  { path: "/wishlists", component: Others },
   { path: "/wishlists/:userId", component: WishlistView, props: true },
 
   // Invites

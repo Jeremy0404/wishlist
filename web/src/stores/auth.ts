@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
-import api, { type User } from "../services/api.ts";
+import api, { onUnauthorized, type User } from "../services/api.ts";
 import type { Family } from "../types.ts";
+import { useToasts } from "../components/ui/useToasts.ts";
+
+const { push } = useToasts();
 
 export const useAuth = defineStore("auth", {
   state: () => ({
@@ -79,6 +82,15 @@ export const useAuth = defineStore("auth", {
       this.user = user ?? null;
       await this.refreshFamilies();
       return this.user;
+    },
+    installApiGuards() {
+      onUnauthorized(() => {
+        this.user = null;
+        this.myFamily = null;
+        this.hydrated = true;
+
+        push("Votre sessison a expirée. Veuillez vous reconnecter.", "error");
+      });
     },
   },
 });
