@@ -52,7 +52,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuth();
 
-  if (!auth.hydrated) {
+  const needsFreshSession = Boolean(to.meta?.onlyGuest || !to.meta?.public);
+  if (needsFreshSession) {
     try {
       await auth.hydrate();
     } catch {}
