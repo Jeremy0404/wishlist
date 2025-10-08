@@ -79,7 +79,7 @@ const { push } = useToasts();
 
 async function onLogout() {
   await auth.logout();
-  push("À bientôt !", "info");
+  push(t("toast.bye"), "info");
   await router.push("/");
 }
 
@@ -120,7 +120,7 @@ onMounted(() => {
 
 .nav-link[aria-current="page"] {
   font-weight: 600;
-  background: rgb(228 228 231); /* a bit darker than :hover */
+  background: rgb(228 228 231);
   box-shadow: 0 0 0 2px rgb(212 212 216) inset;
   transform: scale(1.03);
   transition:

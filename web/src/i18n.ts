@@ -132,6 +132,7 @@ const fr = {
     reserved: "Réservé",
     unreserved: "Réservation annulée",
     purchased: "Acheté",
+    bye: "À bientôt !",
   },
 };
 
