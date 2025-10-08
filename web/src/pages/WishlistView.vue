@@ -61,7 +61,6 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import Card from "../components/ui/Card.vue";
@@ -73,14 +72,15 @@ import type { Item } from "../types.ts";
 const { t, te } = useI18n();
 const { push } = useToasts();
 
-const route = useRoute();
 const ownerName = ref("");
 const items = ref<Item[]>([]);
 const error = ref("");
 
+const props = defineProps<{ userId: string }>();
+
 async function load() {
   try {
-    const userId = String(route.params.userId);
+    const userId = props.userId;
     const list = await api.viewWishlist(userId);
     ownerName.value = list.owner?.name ?? "";
     items.value = list.items ?? [];

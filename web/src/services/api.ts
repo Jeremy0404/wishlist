@@ -87,7 +87,6 @@ export const api = {
     request<Family>("/families/join", { method: "POST", body: { code } }),
 
   // --- Wishlist (mine) ---
-  ensureMyWishlist: () => request("/wishlists/me/ensure", { method: "POST" }),
   getMyWishlist: () => request<any>("/wishlists/me"),
   addMyItem: (body: {
     title: string;

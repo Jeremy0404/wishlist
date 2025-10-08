@@ -205,7 +205,6 @@ router.post(
   async (req, res) => {
     const { id } = req.params;
 
-    // Ensure the item belongs to same family and not my own
     const row = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
       .where({ "i.id": id, "w.family_id": req.familyId! })

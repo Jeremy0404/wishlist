@@ -34,7 +34,7 @@
 
             <template v-else-if="auth.user && !auth.inFamily">
               <RouterLink
-                to="/family/new"
+                to="/family/create"
                 class="px-5 py-2.5 rounded-lg bg-brand text-white hover:bg-brand-700"
               >
                 {{ t("landing.createFamily") }}
@@ -158,7 +158,7 @@
           </p>
           <div class="mt-3 flex gap-3">
             <RouterLink
-              to="/family/new"
+              to="/family/create"
               class="px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-700"
             >
               {{ t("landing.createFamily") }}

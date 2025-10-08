@@ -36,8 +36,8 @@ const routes = [
   },
 
   // Wishlists
-  { path: "/me", component: MyWishlist },
-  { path: "/wishlists", component: Others },
+  { path: "/me", component: MyWishlist, meta: { requireFamily: true } },
+  { path: "/wishlists", component: Others, meta: { requireFamily: true } },
   { path: "/wishlists/:userId", component: WishlistView, props: true },
 
   // Invites
@@ -71,6 +71,10 @@ router.beforeEach(async (to) => {
 
   if (to.meta?.requireNoFamily && auth.isLogged && auth.inFamily) {
     return { path: "/me", replace: true };
+  }
+
+  if (to.meta?.requireFamily && auth.isLogged && !auth.inFamily) {
+    return { path: "/family/create", query: { redirect: to.fullPath } };
   }
 
   return true;
