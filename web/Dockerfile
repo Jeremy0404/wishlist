@@ -4,12 +4,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 ARG COMMIT_SHA=unknown
-RUN echo "$COMMIT_SHA" > /app/dist/version.txt
+
+ENV VITE_API_URL=/api
 
 COPY . .
 
-ENV VITE_API_URL=/api
-RUN npm run build
+RUN npm run build && echo "$COMMIT_SHA" > /app/dist/version.txt
 
 # ---------- runtime ----------
 FROM nginx:1.27-alpine
