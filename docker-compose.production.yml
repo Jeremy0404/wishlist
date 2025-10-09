@@ -5,18 +5,17 @@ services:
       - api
     ports:
       - "8888:80"
-    env_file:
-      - ./web/.env.production
     restart: unless-stopped
 
   api:
     image: ghcr.io/jeremy0404/wishlist-api:${IMAGE_TAG:-latest}
     depends_on:
       - db
-    env_file:
-      - ./api/.env.production
-    expose:
-      - "3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set_in_env_file}
+      JWT_SECRET: ${JWT_SECRET:?set_in_env_file}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     restart: unless-stopped
 
   db:
