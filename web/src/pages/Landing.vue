@@ -64,7 +64,7 @@
                 to="/wishlists"
                 class="px-5 py-2.5 rounded-lg border border-zinc-300 hover:bg-zinc-100"
               >
-                Les autres
+                {{ t("nav.others") }}
               </RouterLink>
             </template>
           </div>
