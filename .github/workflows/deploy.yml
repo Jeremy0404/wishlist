@@ -21,20 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          install: true
-
       - name: Compute tags
         id: meta
         run: |
           echo "TAG=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           echo "LATEST=latest" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          install: true
 
       - name: Login to GHCR (with GITHUB_TOKEN)
         uses: docker/login-action@v3
@@ -97,19 +97,34 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ secrets.VPS_PATH }}
-            echo "Deploying tag ${{ steps.readtag.outputs.TAG }}"
+
+            echo "Logging into GHCR..."
+            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
             export IMAGE_TAG=${{ steps.readtag.outputs.TAG }}
+            echo "Deploying IMAGE_TAG=$IMAGE_TAG"
 
             # Login to GHCR to pull private images
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_READ_TOKEN }}
 
             # Pull & restart
             docker compose -f docker-compose.production.yml pull
-            docker compose -f docker-compose.production.yml up -d
+            docker compose -f docker-compose.production.yml up -d --force-recreate --remove-orphans
 
-            # Optional: clean old unused layers
-            docker image prune -f
+            # Cleanup
+            docker image prune -f || true
 
-            # Health checks
-            echo "Checking API health..."
-            curl -fsS http://localhost:8888/api/health || (echo "API healthcheck failed" && exit 1)
+            # Health check with retries (web → api proxy)
+            echo "Checking API health via web proxy..."
+            for i in {1..20}; do
+              if curl -fsS http://localhost:8888/api/health > /dev/null; then
+                echo "Health OK"
+                exit 0
+              fi
+              echo "Waiting for app to be ready (try $i/20)..."
+              sleep 2
+            done
+
+            echo "Healthcheck FAILED, dumping logs"
+            docker compose -f docker-compose.production.yml logs --tail=200 web api
+            exit 1
