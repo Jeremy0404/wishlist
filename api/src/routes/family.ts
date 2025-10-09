@@ -3,6 +3,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/knex.js";
 import { authRequired } from "../middleware/auth.js";
+import { logger } from "../logging/logger";
 
 const router = Router();
 
@@ -69,7 +70,6 @@ router.post("/join", authRequired, async (req, res) => {
 
   const code = String(parsed.data.code).trim().toUpperCase();
 
-  console.info(`POST /family/join - [${code}] (len=${code.length})`);
   try {
     const family = await db("families")
       .select("id", "name", "invite_code")
@@ -87,7 +87,7 @@ router.post("/join", authRequired, async (req, res) => {
 
     return res.status(200).json(family);
   } catch (e) {
-    console.error("POST /family/join error:", e);
+    logger.error(`POST /family/join error: ${e}`);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

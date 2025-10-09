@@ -6,13 +6,11 @@ import {
   familyContext,
   mustHaveWishlistWithItem,
 } from "../middleware/auth.js";
+import { logger } from "../logging/logger";
 
 const router = Router();
 
 router.get("/me", authRequired, familyContext, async (req, res) => {
-  console.info(
-    `GET /wishlists/me - user: ${req.user!.id}; family_id: ${req.familyId!}`,
-  );
   const wl = await db("wishlists")
     .where({ user_id: req.user!.id, family_id: req.familyId! })
     .first();
@@ -65,7 +63,7 @@ router.post("/me/items", authRequired, familyContext, async (req, res) => {
     return res.status(201).json(item);
   } catch (e) {
     await trx.rollback();
-    console.error("POST /wishlists/me/items failed:", e);
+    logger.error(`POST /wishlists/me/items failed: ${e}`);
     return res.status(500).json({ error: "Server error" });
   }
 });
@@ -89,9 +87,6 @@ router.post("/me/items", authRequired, familyContext, async (req, res) => {
 });
 
 router.patch("/me/items/:id", authRequired, familyContext, async (req, res) => {
-  console.info(
-    `PATCH /wishlists/me/items/:id - id: ${req.params.id} user: ${req.user!.id}; family_id: ${req.familyId!}`,
-  );
   const { id } = req.params;
   const row = await db("wishlist_items as i")
     .join("wishlists as w", "w.id", "i.wishlist_id")
