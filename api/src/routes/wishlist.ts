@@ -9,20 +9,6 @@ import {
 
 const router = Router();
 
-router.post("/me", authRequired, familyContext, async (req, res) => {
-  console.info(
-    `POST /wishlists/me - user: ${req.user!.id}; family_id: ${req.familyId!}`,
-  );
-  const existing = await db("wishlists")
-    .where({ user_id: req.user!.id, family_id: req.familyId! })
-    .first();
-  if (existing) return res.json(existing);
-  const [wl] = await db("wishlists")
-    .insert({ user_id: req.user!.id, family_id: req.familyId! })
-    .returning("*");
-  res.json(wl);
-});
-
 router.get("/me", authRequired, familyContext, async (req, res) => {
   console.info(
     `GET /wishlists/me - user: ${req.user!.id}; family_id: ${req.familyId!}`,
@@ -50,28 +36,38 @@ const Item = z.object({
 });
 
 router.post("/me/items", authRequired, familyContext, async (req, res) => {
-  console.info(
-    `POST /wishlists/me/items - user: ${req.user!.id}; family_id: ${req.familyId!}`,
-  );
+  const { id: user_id } = req.user!;
+  const family_id = req.familyId!;
 
   const parse = Item.safeParse(req.body);
   if (!parse.success) return res.status(400).json(parse.error.flatten());
 
-  let wl = await db("wishlists")
-    .where({ user_id: req.user!.id, family_id: req.familyId! })
-    .first();
+  const trx = await db.transaction();
+  try {
+    await trx("wishlists")
+      .insert({ user_id, family_id })
+      .onConflict(["user_id", "family_id"])
+      .ignore();
 
-  if (!wl) {
-    [wl] = await db("wishlists")
-      .insert({ user_id: req.user!.id, family_id: req.familyId! })
+    const wishlist = await trx("wishlists")
+      .where({ user_id, family_id })
+      .first();
+
+    if (!wishlist) {
+      throw new Error("Unable to ensure wishlist");
+    }
+
+    const [item] = await trx("wishlist_items")
+      .insert({ wishlist_id: wishlist.id, ...parse.data })
       .returning("*");
+
+    await trx.commit();
+    return res.status(201).json(item);
+  } catch (e) {
+    await trx.rollback();
+    console.error("POST /wishlists/me/items failed:", e);
+    return res.status(500).json({ error: "Server error" });
   }
-
-  const [it] = await db("wishlist_items")
-    .insert({ wishlist_id: wl.id, ...parse.data })
-    .returning("*");
-
-  res.json(it);
 });
 
 router.post("/me/items", authRequired, familyContext, async (req, res) => {
