@@ -16,7 +16,7 @@
       </Card>
     </li>
   </ul>
-  <div v-else class="text-zinc-600">{{ t("others.empty") }}</div>
+  <div v-else-if="!error" class="text-zinc-600">{{ t("others.empty") }}</div>
 
   <p v-if="error" class="text-red-600 mt-3">{{ error }}</p>
 </template>
