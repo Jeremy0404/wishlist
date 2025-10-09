@@ -11,11 +11,8 @@ services:
     image: ghcr.io/jeremy0404/wishlist-api:${IMAGE_TAG:-latest}
     depends_on:
       - db
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:?set_in_env_file}
-      JWT_SECRET: ${JWT_SECRET:?set_in_env_file}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+    env_file:
+      - api/.env.production
     restart: unless-stopped
 
   db:
