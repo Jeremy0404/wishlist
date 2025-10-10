@@ -35,8 +35,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
     "@types/pg": "^8.15.5",
-    "@types/pino": "^7.0.4",
-    "@types/pino-http": "^5.8.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.0",
     "typescript": "^5.9.3"
