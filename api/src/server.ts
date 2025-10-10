@@ -7,7 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import familyRoutes from "./routes/family.js";
 import wishlistRoutes from "./routes/wishlist.js";
-import { logger } from "./logging/logger";
+import { logger } from "./logging/logger.js";
 import pinoHttp from "pino-http";
 
 const app = express();
