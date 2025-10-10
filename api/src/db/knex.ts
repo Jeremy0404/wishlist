@@ -1,7 +1,7 @@
 import "dotenv/config";
 import pg from "pg";
 import knex, { Knex } from "knex";
-import { logger } from "../logging/logger";
+import { logger } from "../logging/logger.js";
 import config from "./knexConfig";
 
 const log = logger.child({ module: "db" }, { level: "debug" });

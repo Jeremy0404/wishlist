@@ -6,7 +6,7 @@ import {
   familyContext,
   mustHaveWishlistWithItem,
 } from "../middleware/auth.js";
-import { logger } from "../logging/logger";
+import { logger } from "../logging/logger.js";
 
 const router = Router();
 

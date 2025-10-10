@@ -1,9 +1,8 @@
-// api/src/routes/family.ts
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/knex.js";
 import { authRequired } from "../middleware/auth.js";
-import { logger } from "../logging/logger";
+import { logger } from "../logging/logger.js";
 
 const router = Router();
 
