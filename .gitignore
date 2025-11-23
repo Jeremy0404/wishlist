@@ -47,3 +47,5 @@ temp/
 
 # Docker (local-only artifacts)
 docker-data/
+playwright-report/
+test-results/

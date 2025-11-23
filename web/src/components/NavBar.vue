@@ -18,6 +18,7 @@
 
         <template v-if="auth.user">
           <button
+            data-test="logout"
             class="px-3 py-1.5 rounded hover:bg-zinc-100 focus-ring"
             @click="onLogout"
           >

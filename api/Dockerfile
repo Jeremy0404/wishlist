@@ -29,7 +29,7 @@ COPY migrations/ ./migrations/
 
 # healthcheck
 HEALTHCHECK --interval=20s --timeout=3s --retries=5 \
-  CMD node -e "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://localhost:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 # default port (internal)
 EXPOSE 3000

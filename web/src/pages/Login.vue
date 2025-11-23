@@ -7,6 +7,7 @@
         <Input
           v-model="email"
           type="email"
+          name="email"
           autocomplete="email"
           :label="t('auth.email')"
           required
@@ -14,6 +15,7 @@
         <Input
           v-model="password"
           type="password"
+          name="password"
           autocomplete="current-password"
           :label="t('auth.password')"
           required
