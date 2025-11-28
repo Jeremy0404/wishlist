@@ -9,6 +9,8 @@ import familyRoutes from "./routes/family.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import { logger } from "./logging/logger.js";
 import { pinoHttp } from "pino-http";
+import { notFoundHandler } from "./middleware/not-found.js";
+import { errorHandler } from "./middleware/error-handler.js";
 
 const app = express();
 app.use(helmet());
@@ -71,18 +73,8 @@ app.use("/families", familyRoutes);
 
 app.use("/wishlists", wishlistRoutes);
 
-app.use((err: any, req: any, res: any, _next: any) => {
-  const log = req?.log ?? logger;
-  log.error(
-    {
-      err,
-      route: req?.method + " " + req?.url,
-      userId: req?.user?.id,
-    },
-    "Unhandled error",
-  );
-  res.status(err?.status ?? 500).json({ error: "Erreur serveur" });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const port = process.env.PORT ?? 3001;
 app.listen(port, () => logger.info(`API on :${port}`));

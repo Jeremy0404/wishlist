@@ -6,23 +6,34 @@ import {
   familyContext,
   mustHaveWishlistWithItem,
 } from "../middleware/auth.js";
-import { logger } from "../logging/logger.js";
+import { asyncHandler } from "../middleware/async-handler.js";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../errors.js";
 
 const router = Router();
 
-router.get("/me", authRequired, familyContext, async (req, res) => {
-  const wl = await db("wishlists")
-    .where({ user_id: req.user!.id, family_id: req.familyId! })
-    .first();
+router.get(
+  "/me",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const wl = await db("wishlists")
+      .where({ user_id: req.user!.id, family_id: req.familyId! })
+      .first();
 
-  if (!wl) return res.json({ wishlist: null, items: [] });
+    if (!wl) return res.json({ wishlist: null, items: [] });
 
-  const items = await db("wishlist_items")
-    .where({ wishlist_id: wl.id })
-    .orderBy("created_at", "desc");
+    const items = await db("wishlist_items")
+      .where({ wishlist_id: wl.id })
+      .orderBy("created_at", "desc");
 
-  res.json({ wishlist: wl, items });
-});
+    res.json({ wishlist: wl, items });
+  }),
+);
 
 const Item = z.object({
   title: z.string().min(1),
@@ -33,73 +44,77 @@ const Item = z.object({
   priority: z.number().int().min(1).max(5).optional(),
 });
 
-router.post("/me/items", authRequired, familyContext, async (req, res) => {
-  const { id: user_id } = req.user!;
-  const family_id = req.familyId!;
+router.post(
+  "/me/items",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const { id: user_id } = req.user!;
+    const family_id = req.familyId!;
 
-  const parse = Item.safeParse(req.body);
-  if (!parse.success) return res.status(400).json(parse.error.flatten());
+    const parse = Item.safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
 
-  const trx = await db.transaction();
-  try {
-    await trx("wishlists")
-      .insert({ user_id, family_id })
-      .onConflict(["user_id", "family_id"])
-      .ignore();
+    const trx = await db.transaction();
+    try {
+      await trx("wishlists")
+        .insert({ user_id, family_id })
+        .onConflict(["user_id", "family_id"])
+        .ignore();
 
-    const wishlist = await trx("wishlists")
-      .where({ user_id, family_id })
-      .first();
+      const wishlist = await trx("wishlists")
+        .where({ user_id, family_id })
+        .first();
 
-    if (!wishlist) {
-      throw new Error("Unable to ensure wishlist");
+      if (!wishlist) {
+        throw new BadRequestError("Unable to ensure wishlist");
+      }
+
+      const [item] = await trx("wishlist_items")
+        .insert({ wishlist_id: wishlist.id, ...parse.data })
+        .returning("*");
+
+      await trx.commit();
+      return res.status(201).json(item);
+    } catch (e) {
+      await trx.rollback();
+      throw e;
     }
+  }),
+);
 
-    const [item] = await trx("wishlist_items")
-      .insert({ wishlist_id: wishlist.id, ...parse.data })
+router.patch(
+  "/me/items/:id",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const row = await db("wishlist_items as i")
+      .join("wishlists as w", "w.id", "i.wishlist_id")
+      .where({
+        "i.id": id,
+        "w.user_id": req.user!.id,
+        "w.family_id": req.familyId!,
+      })
+      .first();
+    if (!row) throw new NotFoundError("item not found");
+
+    const parse = Item.partial().safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+    const [updated] = await db("wishlist_items")
+      .where({ id })
+      .update(parse.data)
       .returning("*");
-
-    await trx.commit();
-    return res.status(201).json(item);
-  } catch (e) {
-    await trx.rollback();
-    logger.error(`POST /wishlists/me/items failed: ${e}`);
-    return res.status(500).json({
-      error: "Server error",
-      details: e instanceof Error ? e.message : String(e),
-    });
-  }
-});
-
-
-
-router.patch("/me/items/:id", authRequired, familyContext, async (req, res) => {
-  const { id } = req.params;
-  const row = await db("wishlist_items as i")
-    .join("wishlists as w", "w.id", "i.wishlist_id")
-    .where({
-      "i.id": id,
-      "w.user_id": req.user!.id,
-      "w.family_id": req.familyId!,
-    })
-    .first();
-  if (!row) return res.status(404).json({ error: "not found" });
-
-  const parse = Item.partial().safeParse(req.body);
-  if (!parse.success) return res.status(400).json(parse.error.flatten());
-
-  const [updated] = await db("wishlist_items")
-    .where({ id })
-    .update(parse.data)
-    .returning("*");
-  res.json(updated);
-});
+    res.json(updated);
+  }),
+);
 
 router.delete(
   "/me/items/:id",
   authRequired,
   familyContext,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const owned = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
@@ -109,10 +124,10 @@ router.delete(
         "w.family_id": req.familyId!,
       })
       .first();
-    if (!owned) return res.status(404).json({ error: "not found" });
+    if (!owned) throw new NotFoundError("item not found");
     await db("wishlist_items").where({ id }).del();
     res.json({ ok: true });
-  },
+  }),
 );
 
 router.get(
@@ -120,7 +135,7 @@ router.get(
   authRequired,
   familyContext,
   mustHaveWishlistWithItem,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const rows = await db("wishlists as w")
       .join("users as u", "u.id", "w.user_id")
       .where("w.family_id", req.familyId!)
@@ -133,7 +148,7 @@ router.get(
       )
       .orderBy("u.name", "asc");
     res.json(rows);
-  },
+  }),
 );
 
 router.get(
@@ -141,14 +156,13 @@ router.get(
   authRequired,
   familyContext,
   mustHaveWishlistWithItem,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { userId } = req.params;
 
-    // owner (userId) must be in same family
     const wl = await db("wishlists")
       .where({ user_id: userId, family_id: req.familyId! })
       .first();
-    if (!wl) return res.status(404).json({ error: "not found" });
+    if (!wl) throw new NotFoundError("wishlist not found");
 
     const owner = await db("users")
       .select("id", "name", "email")
@@ -173,30 +187,30 @@ router.get(
       owner: owner ? { id: owner.id, name: owner.name } : null,
       items,
     });
-  },
+  }),
 );
 
 router.post(
   "/items/:id/reserve",
   authRequired,
   familyContext,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const row = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
       .where({ "i.id": id, "w.family_id": req.familyId! })
       .first();
-    if (!row) return res.status(404).json({ error: "not found" });
+    if (!row) throw new NotFoundError("item not found");
 
     const myWl = await db("wishlists")
       .where({ user_id: req.user!.id, family_id: req.familyId! })
       .first();
     if (myWl && myWl.id === row.wishlist_id)
-      return res.status(400).json({ error: "cannot reserve your own item" });
+      throw new BadRequestError("cannot reserve your own item");
 
     const existing = await db("reservations").where({ item_id: id }).first();
-    if (existing) return res.status(409).json({ error: "already reserved" });
+    if (existing) throw new ConflictError("already reserved");
 
     const [r] = await db("reservations")
       .insert({
@@ -207,40 +221,40 @@ router.post(
       .returning("*");
 
     res.json(r);
-  },
+  }),
 );
 
 router.post(
   "/items/:id/unreserve",
   authRequired,
   familyContext,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
       .first();
-    if (!r) return res.status(404).json({ error: "not reserved by you" });
+    if (!r) throw new NotFoundError("not reserved by you");
     await db("reservations").where({ id: r.id }).del();
     res.json({ ok: true });
-  },
+  }),
 );
 
 router.post(
   "/items/:id/purchase",
   authRequired,
   familyContext,
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
       .first();
-    if (!r) return res.status(404).json({ error: "not reserved by you" });
+    if (!r) throw new NotFoundError("not reserved by you");
     const [u] = await db("reservations")
       .where({ id: r.id })
       .update({ status: "purchased" })
       .returning("*");
     res.json(u);
-  },
+  }),
 );
 
 export default router;
