@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/knex.js";
-import { authRequired } from "../middleware/auth.js";
+import { authRequired, familyContext } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { NotFoundError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
@@ -105,6 +105,70 @@ router.post(
 
     log.info({ familyId: family.id }, "User joined family");
     return res.status(200).json(family);
+  }),
+);
+
+router.get(
+  "/members",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "list-members" });
+
+    const members = await db("family_memberships as fm")
+      .join("users as u", "u.id", "fm.user_id")
+      .select("u.id", "u.name", "fm.role", db.raw("?? as joined_at", ["fm.created_at"]))
+      .where("fm.family_id", req.familyId)
+      .orderBy("fm.created_at", "asc");
+
+    log.info(
+      { familyId: req.familyId, memberCount: members.length },
+      "Returned family members",
+    );
+    return res.json(members);
+  }),
+);
+
+router.post(
+  "/rotate-invite",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "rotate-invite" });
+
+    const family = await db("families")
+      .select("id", "name")
+      .where({ id: req.familyId })
+      .first();
+
+    if (!family) throw new NotFoundError("Famille introuvable");
+
+    let invite_code: string;
+    let attempts = 0;
+
+    let foundUnique = false;
+
+    do {
+      invite_code = generateInviteCode(family.name);
+      const existing = await db("families").where({ invite_code }).first();
+      if (!existing) {
+        foundUnique = true;
+        break;
+      }
+      attempts += 1;
+    } while (attempts < 5);
+
+    if (!invite_code || !foundUnique)
+      throw new Error("Impossible de générer un code unique");
+
+    const [updatedFamily] = await db("families")
+      .where({ id: family.id })
+      .update({ invite_code })
+      .returning(["id", "name", "invite_code"]);
+
+    log.info({ familyId: family.id }, "Rotated invite code");
+
+    return res.json(updatedFamily);
   }),
 );
 

@@ -81,6 +81,13 @@ export const useAuth = defineStore("auth", {
       await this.refreshFamilies();
       return this.user;
     },
+    async rotateFamilyInvite() {
+      if (!this.user) return null;
+
+      const fam = await api.rotateInviteCode();
+      this.myFamily = fam;
+      return fam;
+    },
     installApiGuards() {
       onUnauthorized(() => {
         this.user = null;

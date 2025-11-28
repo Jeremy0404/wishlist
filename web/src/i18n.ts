@@ -5,6 +5,7 @@ const fr = {
   common: {
     share: "Partager…",
     copy: "Copier",
+    loading: "Chargement…",
   },
   nav: {
     wishlist: "Wishlist",
@@ -81,6 +82,18 @@ const fr = {
     famLabel: "Famille",
     codeLabel: "Code d’invitation",
     copied: "Code copié",
+    rotate: "Régénérer le code",
+    rotateConfirm:
+      "Le code d’invitation actuel ne sera plus valide. Continuer ?",
+    codeRotated: "Nouveau code d’invitation généré.",
+    rotateError: "Impossible de régénérer le code.",
+    membersTitle: "Membres de la famille",
+    refresh: "Actualiser",
+    loadingMembers: "Chargement des membres…",
+    roleLabel: "Rôle : {role}",
+    joinedAt: "Rejoint le {date}",
+    noMembers: "Aucun membre trouvé.",
+    membersError: "Impossible de charger les membres de la famille.",
     noFamily: "Crée ou rejoins d’abord une famille.",
   },
   auth: {

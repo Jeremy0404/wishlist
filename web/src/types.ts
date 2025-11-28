@@ -4,6 +4,13 @@ export interface Family {
   invite_code: string;
 }
 
+export interface FamilyMember {
+  id: string;
+  name: string;
+  role: string;
+  joined_at: string;
+}
+
 export interface Item {
   id: string;
   title: string;
