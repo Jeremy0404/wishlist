@@ -64,27 +64,14 @@ router.post("/me/items", authRequired, familyContext, async (req, res) => {
   } catch (e) {
     await trx.rollback();
     logger.error(`POST /wishlists/me/items failed: ${e}`);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(500).json({
+      error: "Server error",
+      details: e instanceof Error ? e.message : String(e),
+    });
   }
 });
 
-router.post("/me/items", authRequired, familyContext, async (req, res) => {
-  const wl = await db("wishlists")
-    .where({ user_id: req.user!.id, family_id: req.familyId! })
-    .first();
-  if (!wl) return res.status(400).json({ error: "Données invalides" });
 
-  const parse = Item.safeParse(req.body);
-  if (!parse.success)
-    return res.status(400).json({ error: "Données invalides" });
-
-  const body = { ...parse.data };
-  const [it] = await db("wishlist_items")
-    .insert({ wishlist_id: wl.id, ...body })
-    .returning("*");
-
-  res.status(201).json(it);
-});
 
 router.patch("/me/items/:id", authRequired, familyContext, async (req, res) => {
   const { id } = req.params;
