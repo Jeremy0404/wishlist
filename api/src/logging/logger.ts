@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import pino, { LoggerOptions } from "pino";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -52,4 +53,17 @@ export const logger = pino({
 
 export function getChildLogger(bindings: Record<string, unknown>) {
   return logger.child(bindings);
+}
+
+export function getRequestLogger(
+  req: Request,
+  bindings: Record<string, unknown> = {},
+) {
+  const requestId = req.id;
+  const userId = req.user?.id;
+  const familyId = req.familyId;
+
+  const base = req.log ?? logger;
+
+  return base.child({ requestId, userId, familyId, ...bindings });
 }
