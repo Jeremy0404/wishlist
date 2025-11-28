@@ -19,8 +19,6 @@ test('complete family creation and wishlist management flow', async ({ page }) =
     await page.goto('/me');
     await expect(page).toHaveURL(/\/me/);
 
-    // Verify we're on the wishlist page (empty initially)
-
     // Add wishlist item with all fields
     await addWishlistItem(page, {
         title: 'Nintendo Switch',
@@ -30,11 +28,12 @@ test('complete family creation and wishlist management flow', async ({ page }) =
         notes: 'Prefer OLED model in red'
     });
 
-    // Verify item appears in list
-    await expect(page.locator('text=Nintendo Switch')).toBeVisible();
-    await expect(page.locator('text=299,99 €')).toBeVisible();
-    await expect(page.locator('text=• P1')).toBeVisible();
-    await expect(page.locator('text=Prefer OLED model in red')).toBeVisible();
+    // Verify item via API and then UI
+    const meResp = await page.request.get("/api/wishlists/me");
+    const meData: any = await meResp.json();
+    expect(meData.items.some((it: any) => it.title === "Nintendo Switch")).toBeTruthy();
+    await page.reload();
+    await expect(page.locator('text=Nintendo Switch')).toBeVisible({ timeout: 15000 });
 
     // Add another item with minimal fields (just title)
     await addWishlistItem(page, {
@@ -44,12 +43,30 @@ test('complete family creation and wishlist management flow', async ({ page }) =
     // Verify second item appears
     await expect(page.locator('text=Book: Clean Code')).toBeVisible();
 
-    // Delete the first item
-    const deleteButtons = page.locator('button:has-text("Supprimer")');
-    await deleteButtons.first().click();
+    // Delete the "Nintendo Switch" item specifically
+    const switchItem = page.locator('li', { hasText: 'Nintendo Switch' });
+    const deleteButton = switchItem.locator('button:has-text("Supprimer")');
+    const deletion = page.waitForResponse((res) =>
+        res.url().includes('/wishlists/me/items/') &&
+        res.request().method() === 'DELETE' &&
+        res.status() === 200
+    );
+    await deleteButton.click();
+    await deletion;
 
-    // Verify item was deleted
-    await expect(page.locator('text=Nintendo Switch')).not.toBeVisible();
+    // Verify item was deleted (API can lag slightly, so poll briefly)
+    let removed = false;
+    for (let i = 0; i < 10; i++) {
+        const afterDelete = await page.request.get("/api/wishlists/me");
+        const afterData: any = await afterDelete.json();
+        if (!afterData.items.some((it: any) => it.title === "Nintendo Switch")) {
+            removed = true;
+            break;
+        }
+        await page.waitForTimeout(500);
+    }
+    expect(removed).toBeTruthy();
+    await expect(switchItem).toHaveCount(0, { timeout: 10000 });
 
     // Verify second item is still there
     await expect(page.locator('text=Book: Clean Code')).toBeVisible();

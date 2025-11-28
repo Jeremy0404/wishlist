@@ -6,14 +6,25 @@
       ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
     >
     <form @submit.prevent="add" class="grid gap-3 sm:grid-cols-2">
-      <Input v-model="form.title" name="title" data-test="item-title" :label="t('my.form.title')" required />
-      <Input v-model="form.url" name="url" data-test="item-url" :label="t('my.form.url')" />
+      <Input
+        v-model="form.title"
+        name="title"
+        data-test="item-title"
+        :label="t('my.form.title')"
+        required
+      />
+      <Input
+        v-model="form.url"
+        name="url"
+        data-test="item-url"
+        :label="t('my.form.url')"
+      />
       <Input
         v-model.number="form.price_eur"
         name="price_eur"
         data-test="item-price"
         type="number"
-        step="0.50"
+        step="5"
         min="0"
         :max="1000000"
         :label="t('my.form.price')"
@@ -40,7 +51,13 @@
         ></textarea>
       </div>
       <div class="sm:col-span-2">
-         <Button variant="primary" type="submit" data-test="wishlist-add-submit" :loading="submitting">{{ t("my.addBtn") }}</Button>
+        <Button
+          variant="primary"
+          type="submit"
+          data-test="wishlist-add-submit"
+          :loading="submitting"
+          >{{ t("my.addBtn") }}</Button
+        >
       </div>
     </form>
   </Card>
@@ -57,7 +74,7 @@
             <div class="font-medium">
               {{ it.title }}
               <span v-if="it.priority" class="text-xs text-zinc-500"
-                >• P{{ it.priority }}</span
+                >P{{ it.priority }}</span
               >
             </div>
             <div v-if="it.url" class="text-sm text-brand-700">

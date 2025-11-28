@@ -49,3 +49,4 @@ temp/
 docker-data/
 playwright-report/
 test-results/
+test-results-*/

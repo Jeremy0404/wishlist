@@ -54,7 +54,7 @@ services:
     environment:
       BASE_URL: http://web
       CI: "true"
-    command: sh -c "npm ci && npm install --no-save @playwright/test && npx playwright test"
+    command: sh -c "npm ci && npx playwright test"
     depends_on:
       web:
         condition: service_healthy
