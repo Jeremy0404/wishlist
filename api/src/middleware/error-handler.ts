@@ -5,7 +5,7 @@ import {
   UnexpectedError,
   ValidationError,
 } from "../errors.js";
-import { logger } from "../logging/logger.js";
+import { getRequestLogger } from "../logging/logger.js";
 
 export function errorHandler(
   err: unknown,
@@ -13,7 +13,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
-  const log = (req as any)?.log ?? logger;
+  const log = getRequestLogger(req, { module: "error" });
   const requestId = (req as any)?.id;
 
   let appError: AppError;

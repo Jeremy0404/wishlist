@@ -13,6 +13,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "../errors.js";
+import { getRequestLogger } from "../logging/logger.js";
 
 const router = Router();
 
@@ -21,16 +22,21 @@ router.get(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "get-own" });
     const wl = await db("wishlists")
       .where({ user_id: req.user!.id, family_id: req.familyId! })
       .first();
 
-    if (!wl) return res.json({ wishlist: null, items: [] });
+    if (!wl) {
+      log.info("No wishlist yet for user");
+      return res.json({ wishlist: null, items: [] });
+    }
 
     const items = await db("wishlist_items")
       .where({ wishlist_id: wl.id })
       .orderBy("created_at", "desc");
 
+    log.info({ wishlistId: wl.id, itemCount: items.length }, "Fetched wishlist");
     res.json({ wishlist: wl, items });
   }),
 );
@@ -49,6 +55,7 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "add-item" });
     const { id: user_id } = req.user!;
     const family_id = req.familyId!;
 
@@ -74,6 +81,7 @@ router.post(
         .insert({ wishlist_id: wishlist.id, ...parse.data })
         .returning("*");
 
+      log.info({ wishlistId: wishlist.id, itemId: item.id }, "Added wishlist item");
       await trx.commit();
       return res.status(201).json(item);
     } catch (e) {
@@ -88,6 +96,7 @@ router.patch(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "update-item" });
     const { id } = req.params;
     const row = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
@@ -106,6 +115,7 @@ router.patch(
       .where({ id })
       .update(parse.data)
       .returning("*");
+    log.info({ itemId: id }, "Updated wishlist item");
     res.json(updated);
   }),
 );
@@ -115,6 +125,7 @@ router.delete(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "delete-item" });
     const { id } = req.params;
     const owned = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
@@ -126,6 +137,7 @@ router.delete(
       .first();
     if (!owned) throw new NotFoundError("item not found");
     await db("wishlist_items").where({ id }).del();
+    log.info({ itemId: id }, "Deleted wishlist item");
     res.json({ ok: true });
   }),
 );
@@ -136,6 +148,7 @@ router.get(
   familyContext,
   mustHaveWishlistWithItem,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "list-family" });
     const rows = await db("wishlists as w")
       .join("users as u", "u.id", "w.user_id")
       .where("w.family_id", req.familyId!)
@@ -147,6 +160,7 @@ router.get(
         "w.created_at",
       )
       .orderBy("u.name", "asc");
+    log.info({ familyId: req.familyId, count: rows.length }, "Listed family wishlists");
     res.json(rows);
   }),
 );
@@ -157,6 +171,7 @@ router.get(
   familyContext,
   mustHaveWishlistWithItem,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "view-other" });
     const { userId } = req.params;
 
     const wl = await db("wishlists")
@@ -182,6 +197,7 @@ router.get(
       .where("i.wishlist_id", wl.id)
       .orderBy("i.created_at", "desc");
 
+    log.info({ wishlistId: wl.id, ownerId: owner?.id }, "Fetched wishlist for member");
     res.json({
       wishlist: wl,
       owner: owner ? { id: owner.id, name: owner.name } : null,
@@ -195,6 +211,7 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "reserve-item" });
     const { id } = req.params;
 
     const row = await db("wishlist_items as i")
@@ -220,6 +237,7 @@ router.post(
       })
       .returning("*");
 
+    log.info({ itemId: id, reservationId: r.id }, "Reserved wishlist item");
     res.json(r);
   }),
 );
@@ -229,12 +247,14 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "unreserve-item" });
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
       .first();
     if (!r) throw new NotFoundError("not reserved by you");
     await db("reservations").where({ id: r.id }).del();
+    log.info({ itemId: id }, "Unreserved wishlist item");
     res.json({ ok: true });
   }),
 );
@@ -244,6 +264,7 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "purchase-item" });
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
@@ -253,6 +274,7 @@ router.post(
       .where({ id: r.id })
       .update({ status: "purchased" })
       .returning("*");
+    log.info({ itemId: id, reservationId: u.id }, "Marked wishlist item as purchased");
     res.json(u);
   }),
 );

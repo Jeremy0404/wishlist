@@ -4,6 +4,7 @@ import { db } from "../db/knex.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { NotFoundError, ValidationError } from "../errors.js";
+import { getRequestLogger } from "../logging/logger.js";
 
 const router = Router();
 
@@ -19,18 +20,26 @@ router.get(
   "/me",
   authRequired,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "get-current" });
     const member = await db("family_memberships")
       .select("family_id")
       .where({ user_id: req.user!.id })
       .first();
 
-    if (!member) return res.json(null);
+    if (!member) {
+      log.info("User not part of a family");
+      return res.json(null);
+    }
 
     const fam = await db("families")
       .select("id", "name", "invite_code")
       .where({ id: member.family_id })
       .first();
 
+    log.info(
+      { familyId: fam?.id ?? member.family_id },
+      fam ? "Returning family" : "Family missing despite membership",
+    );
     return res.json(fam ?? null);
   }),
 );
@@ -51,6 +60,7 @@ router.post(
   "/",
   authRequired,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "create" });
     const parse = createFamilySchema.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
 
@@ -66,6 +76,7 @@ router.post(
       .onConflict(["user_id"])
       .merge({ family_id: fam.id });
 
+    log.info({ familyId: fam.id }, "Created family and added creator");
     res.status(201).json(fam);
   }),
 );
@@ -74,6 +85,7 @@ router.post(
   "/join",
   authRequired,
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "join" });
     const parsed = joinFamilySchema.safeParse(req.body);
     if (!parsed.success) throw ValidationError.fromZod(parsed.error);
 
@@ -91,6 +103,7 @@ router.post(
       .onConflict(["user_id"])
       .merge({ family_id: family.id });
 
+    log.info({ familyId: family.id }, "User joined family");
     return res.status(200).json(family);
   }),
 );

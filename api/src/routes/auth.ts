@@ -11,6 +11,7 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "../errors.js";
+import { getRequestLogger } from "../logging/logger.js";
 
 const router = Router();
 
@@ -23,6 +24,7 @@ const Register = z.object({
 router.post(
   "/register",
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "auth", action: "register" });
     const parse = Register.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
     const { email, password, name } = parse.data;
@@ -34,6 +36,8 @@ router.post(
     const [user] = await db("users")
       .insert({ email, password_hash, name })
       .returning(["id", "email"]);
+
+    log.info({ userId: user.id, email: user.email }, "User registered");
 
     const token = signUser({ id: user.id, email: user.email });
     res
@@ -50,15 +54,24 @@ const Login = z.object({
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "auth", action: "login" });
     const parse = Login.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
     const { email, password } = parse.data;
 
     const user = await db("users").where({ email }).first();
-    if (!user) throw new UnauthorizedError("invalid credentials");
+    if (!user) {
+      log.warn({ email }, "Login attempt for unknown user");
+      throw new UnauthorizedError("invalid credentials");
+    }
 
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) throw new UnauthorizedError("invalid credentials");
+    if (!ok) {
+      log.warn({ userId: user.id }, "Login attempt with bad password");
+      throw new UnauthorizedError("invalid credentials");
+    }
+
+    log.info({ userId: user.id }, "User logged in");
 
     const token = signUser({ id: user.id, email: user.email });
     res
@@ -70,6 +83,8 @@ router.post(
 router.post(
   "/logout",
   asyncHandler(async (_req, res) => {
+    const log = getRequestLogger(_req, { module: "auth", action: "logout" });
+    log.info({ userId: _req.user?.id }, "User logged out");
     res.clearCookie(authCookie.name, { ...authCookie.options, maxAge: 0 });
     res.json({ ok: true });
   }),
