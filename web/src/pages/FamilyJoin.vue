@@ -3,9 +3,9 @@
 
   <Card class="max-w-xl">
     <form @submit.prevent="submit" class="grid gap-3">
-      <Input v-model="code" :label="t('familyJoin.codeLabel')" required />
+      <Input v-model="code" name="code" data-test="family-code-input" :label="t('familyJoin.codeLabel')" required />
       <div>
-        <Button variant="primary">{{ t("familyJoin.joinBtn") }}</Button>
+        <Button variant="primary" type="submit" data-test="family-join-submit">{{ t("familyJoin.joinBtn") }}</Button>
       </div>
     </form>
 

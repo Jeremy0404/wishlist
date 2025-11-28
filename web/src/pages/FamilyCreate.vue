@@ -3,9 +3,9 @@
 
   <Card class="max-w-xl">
     <form @submit.prevent="submit" class="grid gap-3">
-      <Input v-model="name" :label="t('familyCreate.nameLabel')" required />
+      <Input v-model="name" name="name" data-test="family-name-input" class="test-family-name-input" :label="t('familyCreate.nameLabel')" required />
       <div>
-        <Button variant="primary">{{ t("familyCreate.createBtn") }}</Button>
+        <Button variant="primary" type="submit" data-test="family-create-submit">{{ t("familyCreate.createBtn") }}</Button>
       </div>
     </form>
   </Card>

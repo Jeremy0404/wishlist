@@ -6,10 +6,12 @@
       ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
     >
     <form @submit.prevent="add" class="grid gap-3 sm:grid-cols-2">
-      <Input v-model="form.title" :label="t('my.form.title')" required />
-      <Input v-model="form.url" :label="t('my.form.url')" />
+      <Input v-model="form.title" name="title" data-test="item-title" :label="t('my.form.title')" required />
+      <Input v-model="form.url" name="url" data-test="item-url" :label="t('my.form.url')" />
       <Input
         v-model.number="form.price_eur"
+        name="price_eur"
+        data-test="item-price"
         type="number"
         step="0.50"
         min="0"
@@ -19,6 +21,8 @@
 
       <Input
         v-model.number="form.priority"
+        name="priority"
+        data-test="item-priority"
         type="number"
         :label="t('my.form.priority')"
       />
@@ -28,15 +32,15 @@
         }}</label>
         <textarea
           v-model="form.notes"
+          name="notes"
+          data-test="item-notes"
           rows="3"
           class="w-full rounded-lg border-zinc-300 bg-white text-sm focus:ring-brand-500 focus:border-brand-500"
           placeholder="Notes"
         ></textarea>
       </div>
       <div class="sm:col-span-2">
-        <Button variant="primary" :loading="submitting">{{
-          t("my.addBtn")
-        }}</Button>
+         <Button variant="primary" type="submit" data-test="wishlist-add-submit" :loading="submitting">{{ t("my.addBtn") }}</Button>
       </div>
     </form>
   </Card>
