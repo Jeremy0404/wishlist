@@ -1,10 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
-import {
-  AppError,
-  UnexpectedError,
-  ValidationError,
-} from "../errors.js";
+import { AppError, UnexpectedError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
 
 export function errorHandler(
@@ -14,7 +10,7 @@ export function errorHandler(
   _next: NextFunction,
 ) {
   const log = getRequestLogger(req, { module: "error" });
-  const requestId = (req as any)?.id;
+  const requestId = req.id;
 
   let appError: AppError;
 

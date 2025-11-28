@@ -59,11 +59,11 @@ export function getRequestLogger(
   req: Request,
   bindings: Record<string, unknown> = {},
 ) {
-  const requestId = (req as any)?.id;
-  const userId = req?.user?.id;
-  const familyId = (req as any)?.familyId;
+  const requestId = req.id;
+  const userId = req.user?.id;
+  const familyId = req.familyId;
 
-  const base = (req as any)?.log ?? logger;
+  const base = req.log ?? logger;
 
   return base.child({ requestId, userId, familyId, ...bindings });
 }
