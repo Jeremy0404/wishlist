@@ -115,11 +115,22 @@ router.get(
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "family", action: "list-members" });
 
+    const hasMembershipCreatedAt = await db.schema.hasColumn(
+      "family_memberships",
+      "created_at",
+    );
+
+    const joinedAtField = hasMembershipCreatedAt
+      ? db.raw("?? as joined_at", ["fm.created_at"])
+      : db.raw("?? as joined_at", ["u.created_at"]);
+
+    const orderByField = hasMembershipCreatedAt ? "fm.created_at" : "u.created_at";
+
     const members = await db("family_memberships as fm")
       .join("users as u", "u.id", "fm.user_id")
-      .select("u.id", "u.name", "fm.role", db.raw("?? as joined_at", ["fm.created_at"]))
+      .select("u.id", "u.name", "fm.role", joinedAtField)
       .where("fm.family_id", req.familyId)
-      .orderBy("fm.created_at", "asc");
+      .orderBy(orderByField, "asc");
 
     log.info(
       { familyId: req.familyId, memberCount: members.length },
