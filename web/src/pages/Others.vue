@@ -4,16 +4,15 @@
 
   <ul v-if="rows.length" class="grid gap-3">
     <li v-for="r in rows" :key="r.user_id">
-      <Card>
-        <div class="flex items-center justify-between">
-          <div class="font-medium">{{ r.name }}</div>
+      <WishlistItemCard :item="{ title: r.name }">
+        <template #actions>
           <RouterLink
             class="px-3 py-1.5 rounded hover:bg-zinc-100"
             :to="`/wishlists/${r.user_id}`"
             >{{ t("others.open") }}</RouterLink
           >
-        </div>
-      </Card>
+        </template>
+      </WishlistItemCard>
     </li>
   </ul>
   <div v-else-if="!error" class="text-zinc-600">{{ t("others.empty") }}</div>
@@ -24,9 +23,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { api } from "../services/api";
-import Card from "../components/ui/Card.vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
+import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 
 const { t } = useI18n();
 const rows = ref<any[]>([]);
