@@ -81,22 +81,32 @@ export async function editWishlistItem(
     priority?: number | string;
   },
 ): Promise<void> {
-  const item = page
+  const item = page.locator(
+    `[data-test="wishlist-item"][data-title="${currentTitle}"]`,
+  );
+  const fallback = page
     .locator('[data-test="wishlist-item"]')
     .filter({ hasText: currentTitle });
-  await expect(item).toBeVisible();
 
-  await item.locator('[data-test="wishlist-edit"]').click();
+  const target = (await item.count()) > 0 ? item : fallback;
+  await expect(target).toBeVisible();
 
-  await item.locator('input[name="title"]').fill(updates.title);
+  await target.locator('[data-test="wishlist-edit"]').click();
+  await expect(target.locator('input[name="title"]')).toBeVisible();
+
+  await target.locator('input[name="title"]').fill(updates.title);
   if (updates.url !== undefined)
-    await item.locator('input[name="url"]').fill(updates.url);
+    await target.locator('input[name="url"]').fill(updates.url);
   if (updates.price !== undefined)
-    await item.locator('input[name="price_eur"]').fill(String(updates.price));
+    await target
+      .locator('input[name="price_eur"]')
+      .fill(String(updates.price));
   if (updates.priority !== undefined)
-    await item.locator('input[name="priority"]').fill(String(updates.priority));
+    await target
+      .locator('input[name="priority"]')
+      .fill(String(updates.priority));
   if (updates.notes !== undefined)
-    await item.locator('textarea[name="notes"]').fill(updates.notes);
+    await target.locator('textarea[name="notes"]').fill(updates.notes);
 
   const saveResponse = page.waitForResponse(
     (res) =>
@@ -104,10 +114,12 @@ export async function editWishlistItem(
       res.request().method() === "PATCH" &&
       res.status() === 200,
   );
-  await item.locator('[data-test="wishlist-edit-save"]').click();
+  await target.locator('[data-test="wishlist-edit-save"]').click();
   await saveResponse;
 
-  await expect(item.locator("text=" + updates.title)).toBeVisible({ timeout: 10000 });
+  await expect(target.locator("text=" + updates.title)).toBeVisible({
+    timeout: 10000,
+  });
 }
 
 /** Delete a wishlist item via UI and wait for it to disappear */
