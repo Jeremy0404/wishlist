@@ -98,6 +98,16 @@ export const api = {
     notes?: string;
     priority?: number;
   }) => request<any>("/wishlists/me/items", { method: "POST", body }),
+  updateMyItem: (
+    id: string,
+    body: {
+      title: string;
+      url?: string;
+      price_eur?: number;
+      notes?: string;
+      priority?: number;
+    },
+  ) => request<any>(`/wishlists/me/items/${id}`, { method: "PATCH", body }),
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
