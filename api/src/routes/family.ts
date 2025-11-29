@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { Knex } from "knex";
 import { z } from "zod";
 import { db } from "../db/knex.js";
 import { authRequired, familyContext } from "../middleware/auth.js";
@@ -115,22 +116,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "family", action: "list-members" });
 
-    const hasMembershipCreatedAt = await db.schema.hasColumn(
-      "family_memberships",
-      "created_at",
-    );
-
-    const joinedAtField = hasMembershipCreatedAt
-      ? db.raw("?? as joined_at", ["fm.created_at"])
-      : db.raw("?? as joined_at", ["u.created_at"]);
-
-    const orderByField = hasMembershipCreatedAt ? "fm.created_at" : "u.created_at";
-
-    const members = await db("family_memberships as fm")
-      .join("users as u", "u.id", "fm.user_id")
-      .select("u.id", "u.name", "fm.role", joinedAtField)
-      .where("fm.family_id", req.familyId)
-      .orderBy(orderByField, "asc");
+    const members = await listFamilyMembers(db, req.familyId);
 
     log.info(
       { familyId: req.familyId, memberCount: members.length },
@@ -184,3 +170,22 @@ router.post(
 );
 
 export default router;
+
+export async function listFamilyMembers(dbConn: Knex, familyId: string) {
+  const hasMembershipCreatedAt = await dbConn.schema.hasColumn(
+    "family_memberships",
+    "created_at",
+  );
+
+  const joinedAtField = hasMembershipCreatedAt
+    ? dbConn.raw("?? as joined_at", ["fm.created_at"])
+    : dbConn.raw("?? as joined_at", ["u.created_at"]);
+
+  const orderByField = hasMembershipCreatedAt ? "fm.created_at" : "u.created_at";
+
+  return dbConn("family_memberships as fm")
+    .join("users as u", "u.id", "fm.user_id")
+    .select("u.id", "u.name", "fm.role", joinedAtField)
+    .where("fm.family_id", familyId)
+    .orderBy(orderByField, "asc");
+}
