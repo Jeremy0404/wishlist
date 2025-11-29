@@ -1,5 +1,5 @@
 // web/src/services/api.ts
-import type { Family } from "../types.ts";
+import type { Family, FamilyMember } from "../types.ts";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -81,6 +81,9 @@ export const api = {
 
     return fam ?? null;
   },
+  getFamilyMembers: () => request<FamilyMember[]>("/families/members"),
+  rotateInviteCode: () =>
+    request<Family>("/families/rotate-invite", { method: "POST" }),
   createFamily: (name: string) =>
     request<Family>("/families", { method: "POST", body: { name } }),
   joinFamily: (code: string) =>

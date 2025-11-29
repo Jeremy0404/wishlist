@@ -1,7 +1,8 @@
 import { Router } from "express";
+import type { Knex } from "knex";
 import { z } from "zod";
 import { db } from "../db/knex.js";
-import { authRequired } from "../middleware/auth.js";
+import { authRequired, familyContext } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { NotFoundError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
@@ -44,7 +45,7 @@ router.get(
   }),
 );
 
-function generateInviteCode(name: string) {
+export function generateInviteCode(name: string) {
   const ascii = name
     .normalize("NFD")
     .replaceAll(/[\u0300-\u036f]/g, "")
@@ -108,4 +109,83 @@ router.post(
   }),
 );
 
+router.get(
+  "/members",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "list-members" });
+
+    const members = await listFamilyMembers(db, req.familyId!);
+
+    log.info(
+      { familyId: req.familyId, memberCount: members.length },
+      "Returned family members",
+    );
+    return res.json(members);
+  }),
+);
+
+router.post(
+  "/rotate-invite",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "family", action: "rotate-invite" });
+
+    const family = await db("families")
+      .select("id", "name")
+      .where({ id: req.familyId })
+      .first();
+
+    if (!family) throw new NotFoundError("Famille introuvable");
+
+    let invite_code: string;
+    let attempts = 0;
+
+    let foundUnique = false;
+
+    do {
+      invite_code = generateInviteCode(family.name);
+      const existing = await db("families").where({ invite_code }).first();
+      if (!existing) {
+        foundUnique = true;
+        break;
+      }
+      attempts += 1;
+    } while (attempts < 5);
+
+    if (!invite_code || !foundUnique)
+      throw new Error("Impossible de générer un code unique");
+
+    const [updatedFamily] = await db("families")
+      .where({ id: family.id })
+      .update({ invite_code })
+      .returning(["id", "name", "invite_code"]);
+
+    log.info({ familyId: family.id }, "Rotated invite code");
+
+    return res.json(updatedFamily);
+  }),
+);
+
 export default router;
+
+export async function listFamilyMembers(dbConn: Knex, familyId: string) {
+  const hasMembershipCreatedAt = await dbConn.schema.hasColumn(
+    "family_memberships",
+    "created_at",
+  );
+
+  const joinedAtField = hasMembershipCreatedAt
+    ? dbConn.raw("?? as joined_at", ["fm.created_at"])
+    : dbConn.raw("?? as joined_at", ["u.created_at"]);
+
+  const orderByField = hasMembershipCreatedAt ? "fm.created_at" : "u.created_at";
+
+  return dbConn("family_memberships as fm")
+    .join("users as u", "u.id", "fm.user_id")
+    .select("u.id", "u.name", "fm.role", joinedAtField)
+    .where("fm.family_id", familyId)
+    .orderBy(orderByField, "asc");
+}

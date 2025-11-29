@@ -10,7 +10,8 @@
     "migrate:make": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.ts migrate:make",
     "migrate:latest": "knex --knexfile knexfile.cjs migrate:latest",
     "migrate:rollback": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.cjs migrate:rollback",
-    "seed:run": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.ts seed:run"
+    "seed:run": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.ts seed:run",
+    "test": "node --test --import tsx src/routes/family.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
