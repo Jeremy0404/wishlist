@@ -20,7 +20,7 @@
           :name="auth.myFamily.name"
           :code="auth.myFamily.invite_code"
         />
-        <Button :disabled="rotating" variant="secondary" @click="rotate">
+        <Button :disabled="rotating" variant="primary" @click="rotate">
           {{ rotating ? t("common.loading") : t("familyInvite.rotate") }}
         </Button>
       </div>
