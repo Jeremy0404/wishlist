@@ -116,7 +116,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "family", action: "list-members" });
 
-    const members = await listFamilyMembers(db, req.familyId);
+    const members = await listFamilyMembers(db, req.familyId!);
 
     log.info(
       { familyId: req.familyId, memberCount: members.length },
