@@ -32,7 +32,7 @@
               </RouterLink>
             </template>
 
-            <template v-else-if="auth.user && !auth.inFamily">
+            <template v-else-if="!auth.inFamily">
               <RouterLink
                 to="/family/create"
                 class="px-5 py-2.5 rounded-lg bg-brand text-white hover:bg-brand-700"
@@ -123,31 +123,15 @@
 
     <section v-if="auth.user" class="pb-4">
       <div class="max-w-5xl mx-auto px-4">
-        <div
-          v-if="auth.inFamily"
-          class="rounded-xl border border-zinc-200 p-4 bg-white shadow-soft"
-        >
-          <p class="mb-1">
-            {{ t("landing.youAreIn", { fam: auth.myFamily?.name }) }}
-          </p>
-          <div class="flex flex-wrap items-center gap-2 mt-1">
-            <span class="text-sm">{{ t("landing.yourInviteCode") }} :</span>
-            <code class="bg-zinc-100 px-2 py-0.5 rounded">{{
-              auth.inviteCode
-            }}</code>
-            <Button variant="ghost" @click="copy">{{
-              t("common.copy")
-            }}</Button>
-            <InviteShareButton
-              v-if="canShare && auth.myFamily"
-              :name="auth.myFamily.name"
-              :code="auth.myFamily.invite_code"
-            />
-            <span v-if="copied" class="text-green-700 text-sm"
-              >✔ {{ t("landing.copied") }}</span
-            >
-          </div>
-        </div>
+        <InviteBanner
+          v-if="auth.inFamily && auth.myFamily"
+          :family-name="auth.myFamily.name"
+          :invite-code="auth.inviteCode"
+          :copied="copied"
+          :can-share="canShare"
+          @copy="copy"
+          @share="share"
+        />
 
         <div
           v-else
@@ -156,18 +140,24 @@
           <p class="text-zinc-700">
             {{ t("others.hint") }}
           </p>
-          <div class="mt-3 flex gap-3">
+          <div class="mt-3 flex flex-wrap gap-3">
             <RouterLink
               to="/family/create"
-              class="px-4 py-2 rounded-lg bg-brand text-white hover:bg-brand-700"
+              class="px-5 py-2.5 rounded-lg bg-brand text-white hover:bg-brand-700"
             >
               {{ t("landing.createFamily") }}
             </RouterLink>
             <RouterLink
               to="/family/join"
-              class="px-4 py-2 rounded-lg border border-zinc-300 hover:bg-zinc-100"
+              class="px-5 py-2.5 rounded-lg border border-zinc-300 hover:bg-zinc-100"
             >
               {{ t("landing.joinFamily") }}
+            </RouterLink>
+            <RouterLink
+              to="/me"
+              class="px-5 py-2.5 rounded-lg border border-zinc-300 hover:bg-zinc-100"
+            >
+              {{ t("landing.goMyList") }}
             </RouterLink>
           </div>
         </div>
@@ -176,18 +166,16 @@
 
     <section class="py-8 bg-zinc-50 border-t border-b border-zinc-200">
       <div class="max-w-5xl mx-auto px-4 grid md:grid-cols-3 gap-6">
-        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-soft">
-          <div class="text-2xl">🎁</div>
-          <h3 class="mt-2 font-semibold">{{ t("landing.fPrivacyT") }}</h3>
-          <p class="text-sm text-zinc-600 mt-1">
-            {{ t("landing.fPrivacyD") }}
-          </p>
-        </div>
-        <div class="p-5 bg-white rounded-xl border border-zinc-200 shadow-soft">
-          <div class="text-2xl">✨</div>
-          <h3 class="mt-2 font-semibold">{{ t("landing.fSimpleT") }}</h3>
-          <p class="text-sm text-zinc-600 mt-1">{{ t("landing.fSimpleD") }}</p>
-        </div>
+        <FeatureCard
+          emoji="🎁"
+          :title="t('landing.fPrivacyT')"
+          :description="t('landing.fPrivacyD')"
+        />
+        <FeatureCard
+          emoji="✨"
+          :title="t('landing.fSimpleT')"
+          :description="t('landing.fSimpleD')"
+        />
       </div>
     </section>
 
@@ -208,14 +196,16 @@
 import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
-import Button from "../components/ui/Button.vue";
+import FeatureCard from "../components/FeatureCard.vue";
+import InviteBanner from "../components/InviteBanner.vue";
+import { useInviteShare } from "../composables/useInviteShare";
 import { useAuth } from "../stores/auth";
 import { useToasts } from "../components/ui/useToasts";
-import InviteShareButton from "../components/InviteShareButton.vue";
 
 const { t } = useI18n();
 const auth = useAuth();
 const { push } = useToasts();
+const { shareFamily } = useInviteShare();
 
 const copied = ref(false);
 const canShare = computed(
@@ -228,5 +218,16 @@ async function copy() {
   copied.value = true;
   push(t("landing.copied"), "success");
   setTimeout(() => (copied.value = false), 1500);
+}
+
+async function share() {
+  if (!auth.myFamily?.invite_code) return;
+  const res = await shareFamily({
+    name: auth.myFamily.name,
+    code: auth.myFamily.invite_code,
+  });
+  if (res.ok && res.method === "clipboard") {
+    push(t("landing.copied"), "success");
+  }
 }
 </script>
