@@ -94,7 +94,7 @@ export async function addWishlistItem(
     notes?: string;
     priority?: number;
   },
-): Promise<void> {
+): Promise<any> {
   const payload: any = {
     title: item.title,
     url: item.url,
@@ -108,9 +108,13 @@ export async function addWishlistItem(
   });
   expect(createRes.status()).toBe(201);
 
+  const created = await createRes.json();
+
   await page.goto("/me");
   await page.waitForLoadState("networkidle");
   await expect(page.locator("text=" + item.title).first()).toBeVisible({
     timeout: 20000,
   });
+
+  return created;
 }

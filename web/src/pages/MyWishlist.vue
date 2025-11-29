@@ -67,9 +67,73 @@
   </div>
 
   <ul class="grid gap-3">
-    <li v-for="it in items" :key="it.id">
+    <li
+      v-for="it in items"
+      :key="it.id"
+      data-test="wishlist-item"
+      :data-title="it.original_title || it.title"
+      :data-id="it.id"
+    >
       <Card>
-        <div class="flex items-start justify-between gap-3">
+        <div v-if="editingId === it.id" class="grid gap-3 sm:grid-cols-2">
+          <Input
+            v-model="editForm.title"
+            name="title"
+            :label="t('my.form.title')"
+            required
+          />
+          <Input
+            v-model="editForm.url"
+            name="url"
+            :label="t('my.form.url')"
+          />
+          <Input
+            v-model.number="editForm.price_eur"
+            name="price_eur"
+            type="number"
+            step="5"
+            min="0"
+            :max="1000000"
+            :label="t('my.form.price')"
+          />
+
+          <Input
+            v-model.number="editForm.priority"
+            name="priority"
+            type="number"
+            :label="t('my.form.priority')"
+          />
+          <div class="sm:col-span-2">
+            <label class="block text-sm mb-1" for="notes">{{
+              t("my.form.notes")
+            }}</label>
+            <textarea
+              v-model="editForm.notes"
+              name="notes"
+              rows="3"
+              class="w-full rounded-lg border-zinc-300 bg-white text-sm focus:ring-brand-500 focus:border-brand-500"
+              placeholder="Notes"
+            ></textarea>
+          </div>
+          <div class="sm:col-span-2 flex gap-2">
+            <Button
+              variant="primary"
+              type="button"
+              data-test="wishlist-edit-save"
+              :loading="editSubmitting"
+              @click="saveEdit"
+              >{{ t("my.save") }}</Button
+            >
+            <Button
+              variant="ghost"
+              type="button"
+              data-test="wishlist-edit-cancel"
+              @click="cancelEdit"
+              >{{ t("my.cancel") }}</Button
+            >
+          </div>
+        </div>
+        <div v-else class="flex items-start justify-between gap-3">
           <div>
             <div class="font-medium">
               {{ it.title }}
@@ -90,9 +154,20 @@
               {{ it.notes }}
             </div>
           </div>
-          <Button variant="ghost" @click="removeItem(it.id)">{{
-            t("my.delete")
-          }}</Button>
+          <div class="flex flex-col gap-2">
+            <Button
+              variant="ghost"
+              data-test="wishlist-edit"
+              @click="beginEdit(it)"
+              >{{ t("my.edit") }}</Button
+            >
+            <Button
+              variant="ghost"
+              data-test="wishlist-delete"
+              @click="removeItem(it.id)"
+              >{{ t("my.delete") }}</Button
+            >
+          </div>
         </div>
       </Card>
     </li>
@@ -114,6 +189,7 @@ const { t } = useI18n();
 
 const items = ref<any[]>([]);
 const submitting = ref(false);
+const editSubmitting = ref(false);
 const form = reactive({
   title: "",
   url: "",
@@ -121,10 +197,22 @@ const form = reactive({
   notes: "",
   priority: 3,
 });
+const editingId = ref<string | null>(null);
+const editForm = reactive({
+  title: "",
+  url: "",
+  price_eur: undefined as number | undefined,
+  notes: "",
+  priority: undefined as number | undefined,
+});
+
+function normalizeItem(item: any) {
+  return { ...item, original_title: item.original_title ?? item.title };
+}
 
 async function load() {
   const data = await api.getMyWishlist();
-  items.value = data.items ?? [];
+  items.value = (data.items ?? []).map(normalizeItem);
 }
 
 async function add() {
@@ -138,13 +226,15 @@ async function add() {
       priority: form.priority,
     });
 
-    items.value.unshift(created);
+    items.value.unshift(normalizeItem(created));
     form.title = "";
     form.url = "";
     form.price_eur = undefined;
     form.notes = "";
     form.priority = 3;
     push(t("toast.added"), "success");
+  } catch (e: any) {
+    push(e?.message || t("toast.error"), "error");
   } finally {
     submitting.value = false;
   }
@@ -154,6 +244,49 @@ async function removeItem(id: string) {
   await api.deleteMyItem(id);
   items.value = items.value.filter((i) => i.id !== id);
   push(t("toast.removed"), "info");
+}
+
+function beginEdit(item: any) {
+  editingId.value = item.id;
+  editForm.title = item.title ?? "";
+  editForm.url = item.url ?? "";
+  editForm.price_eur = item.price_eur ?? undefined;
+  editForm.notes = item.notes ?? "";
+  editForm.priority = item.priority ?? undefined;
+}
+
+function cancelEdit() {
+  editingId.value = null;
+  editSubmitting.value = false;
+}
+
+async function saveEdit() {
+  if (!editingId.value) return;
+  if (!editForm.title.trim()) {
+    push(t("my.validation.titleRequired"), "error");
+    return;
+  }
+  editSubmitting.value = true;
+  try {
+    const updated = await api.updateMyItem(editingId.value, {
+      title: editForm.title.trim(),
+      url: editForm.url || undefined,
+      price_eur: editForm.price_eur,
+      notes: editForm.notes || undefined,
+      priority: editForm.priority,
+    });
+    items.value = items.value.map((it) =>
+      it.id === editingId.value
+        ? normalizeItem({ ...it, ...updated, original_title: it.original_title })
+        : it,
+    );
+    push(t("toast.updated"), "success");
+    cancelEdit();
+  } catch (e: any) {
+    push(e?.message || t("toast.error"), "error");
+  } finally {
+    editSubmitting.value = false;
+  }
 }
 
 onMounted(load);

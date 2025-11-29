@@ -117,6 +117,12 @@ const fr = {
       notes: "Notes",
     },
     addBtn: "Ajouter",
+    edit: "Modifier",
+    save: "Enregistrer",
+    cancel: "Annuler",
+    validation: {
+      titleRequired: "Le titre est obligatoire.",
+    },
     empty:
       "Aucun article — ajoute ton premier pour débloquer les listes des autres.",
     delete: "Supprimer",
@@ -145,6 +151,8 @@ const fr = {
     reserved: "Réservé",
     unreserved: "Réservation annulée",
     purchased: "Acheté",
+    updated: "Article mis à jour",
+    error: "Une erreur est survenue.",
     bye: "À bientôt !",
   },
 };
