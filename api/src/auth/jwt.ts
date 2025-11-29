@@ -10,19 +10,21 @@ export function signUser(user: JwtUser): string {
 
 export function verifyToken(token: string): JwtUser | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as JwtUser;
+        return jwt.verify<JwtUser>(token, JWT_SECRET);
     } catch {
         return null;
     }
 }
 
+const THIRTY_DAYS_MS = 1000 * 60 * 60 * 24 * 30;
+
 export const authCookie = {
     name: COOKIE_NAME,
     options: {
         httpOnly: true,
-        sameSite: 'lax' as const,
-        secure: false, // set true behind HTTPS in prod
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
         path: '/',
-        maxAge: 60 * 60 * 24 * 30
+        maxAge: THIRTY_DAYS_MS
     }
 };
