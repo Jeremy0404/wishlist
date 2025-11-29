@@ -44,7 +44,7 @@ router.get(
   }),
 );
 
-function generateInviteCode(name: string) {
+export function generateInviteCode(name: string) {
   const ascii = name
     .normalize("NFD")
     .replaceAll(/[\u0300-\u036f]/g, "")
