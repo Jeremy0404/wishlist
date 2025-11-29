@@ -33,7 +33,7 @@
             {{ t("auth.create") }}
           </Button>
           <RouterLink
-            to="/auth/login"
+            :to="loginLink"
             class="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition border border-zinc-300 bg-white hover:bg-zinc-100"
           >
             {{ t("auth.login") }}
@@ -62,6 +62,14 @@ const router = useRouter();
 const redirect = computed(() => {
   const r = route.query.redirect;
   return typeof r === "string" && r ? r : "/me";
+});
+
+const loginLink = computed(() => {
+  const r = route.query.redirect;
+  if (typeof r === "string" && r) {
+    return { path: "/auth/login", query: { redirect: r } };
+  }
+  return { path: "/auth/login" };
 });
 
 const name = ref("");

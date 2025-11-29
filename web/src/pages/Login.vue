@@ -26,7 +26,7 @@
             {{ t("auth.login") }}
           </Button>
           <RouterLink
-            to="/auth/register"
+            :to="registerLink"
             class="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition border border-zinc-300 bg-white hover:bg-zinc-100"
           >
             {{ t("auth.register") }}
@@ -55,6 +55,14 @@ const router = useRouter();
 const redirect = computed(() => {
   const r = route.query.redirect;
   return typeof r === "string" && r ? r : "/me";
+});
+
+const registerLink = computed(() => {
+  const r = route.query.redirect;
+  if (typeof r === "string" && r) {
+    return { path: "/auth/register", query: { redirect: r } };
+  }
+  return { path: "/auth/register" };
 });
 
 const email = ref("");
