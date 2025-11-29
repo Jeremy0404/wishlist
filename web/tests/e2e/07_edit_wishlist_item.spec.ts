@@ -7,7 +7,7 @@ test("edit an existing wishlist item", async ({ page }) => {
   await registerUser(page);
   await createFamily(page, "Inline Edit Family");
 
-  await addWishlistItem(page, {
+  const created = await addWishlistItem(page, {
     title: "Retro Camera",
     url: "https://example.com/camera",
     price: 150,
@@ -15,9 +15,11 @@ test("edit an existing wishlist item", async ({ page }) => {
     notes: "Film preferred",
   });
 
-  const item = page.locator(
-    '[data-test="wishlist-item"][data-title="Retro Camera"]',
-  );
+  const item = created?.id
+    ? page.locator(`[data-test="wishlist-item"][data-id="${created.id}"]`)
+    : page.locator('[data-test="wishlist-item"]').filter({
+        hasText: "Retro Camera",
+      });
   await expect(item).toBeVisible();
 
   await item.locator('[data-test="wishlist-edit"]').click();

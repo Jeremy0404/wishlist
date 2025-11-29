@@ -72,6 +72,7 @@
       :key="it.id"
       data-test="wishlist-item"
       :data-title="it.title"
+      :data-id="it.id"
     >
       <Card>
         <div v-if="editingId === it.id" class="grid gap-3 sm:grid-cols-2">
