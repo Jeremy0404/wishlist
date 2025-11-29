@@ -18,7 +18,7 @@ test("edit an existing wishlist item", async ({ page }) => {
   const item = page.locator("li", { hasText: "Retro Camera" });
   await expect(item).toBeVisible();
 
-  await item.locator('button:has-text("Modifier")').click();
+  await item.locator('[data-test="wishlist-edit"]').click();
 
   await item.locator('input[name="title"]').fill("Retro Camera Pro");
   await item
@@ -35,7 +35,7 @@ test("edit an existing wishlist item", async ({ page }) => {
       res.request().method() === "PATCH" &&
       res.status() === 200,
   );
-  await item.locator('button:has-text("Enregistrer")').click();
+  await item.locator('[data-test="wishlist-edit-save"]').click();
   await saveResponse;
 
   await expect(item.locator("text=Retro Camera Pro")).toBeVisible({ timeout: 10000 });

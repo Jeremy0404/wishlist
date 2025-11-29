@@ -113,13 +113,18 @@
             <Button
               variant="primary"
               type="button"
+              data-test="wishlist-edit-save"
               :loading="editSubmitting"
               @click="saveEdit"
               >{{ t("my.save") }}</Button
             >
-            <Button variant="ghost" type="button" @click="cancelEdit">{{
-              t("my.cancel")
-            }}</Button>
+            <Button
+              variant="ghost"
+              type="button"
+              data-test="wishlist-edit-cancel"
+              @click="cancelEdit"
+              >{{ t("my.cancel") }}</Button
+            >
           </div>
         </div>
         <div v-else class="flex items-start justify-between gap-3">
@@ -144,12 +149,18 @@
             </div>
           </div>
           <div class="flex flex-col gap-2">
-            <Button variant="ghost" @click="beginEdit(it)">{{
-              t("my.edit")
-            }}</Button>
-            <Button variant="ghost" @click="removeItem(it.id)">{{
-              t("my.delete")
-            }}</Button>
+            <Button
+              variant="ghost"
+              data-test="wishlist-edit"
+              @click="beginEdit(it)"
+              >{{ t("my.edit") }}</Button
+            >
+            <Button
+              variant="ghost"
+              data-test="wishlist-delete"
+              @click="removeItem(it.id)"
+              >{{ t("my.delete") }}</Button
+            >
           </div>
         </div>
       </Card>
