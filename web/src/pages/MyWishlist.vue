@@ -67,7 +67,12 @@
   </div>
 
   <ul class="grid gap-3">
-    <li v-for="it in items" :key="it.id">
+    <li
+      v-for="it in items"
+      :key="it.id"
+      data-test="wishlist-item"
+      :data-title="it.title"
+    >
       <Card>
         <div v-if="editingId === it.id" class="grid gap-3 sm:grid-cols-2">
           <Input

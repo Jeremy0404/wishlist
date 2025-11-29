@@ -15,7 +15,9 @@ test("edit an existing wishlist item", async ({ page }) => {
     notes: "Film preferred",
   });
 
-  const item = page.locator("li", { hasText: "Retro Camera" });
+  const item = page.locator(
+    '[data-test="wishlist-item"][data-title="Retro Camera"]',
+  );
   await expect(item).toBeVisible();
 
   await item.locator('[data-test="wishlist-edit"]').click();
