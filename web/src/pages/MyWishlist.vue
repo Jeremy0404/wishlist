@@ -71,7 +71,7 @@
       v-for="it in items"
       :key="it.id"
       data-test="wishlist-item"
-      :data-title="it.title"
+      :data-title="it.original_title || it.title"
       :data-id="it.id"
     >
       <Card>
@@ -206,9 +206,13 @@ const editForm = reactive({
   priority: undefined as number | undefined,
 });
 
+function normalizeItem(item: any) {
+  return { ...item, original_title: item.original_title ?? item.title };
+}
+
 async function load() {
   const data = await api.getMyWishlist();
-  items.value = data.items ?? [];
+  items.value = (data.items ?? []).map(normalizeItem);
 }
 
 async function add() {
@@ -222,7 +226,7 @@ async function add() {
       priority: form.priority,
     });
 
-    items.value.unshift(created);
+    items.value.unshift(normalizeItem(created));
     form.title = "";
     form.url = "";
     form.price_eur = undefined;
@@ -272,7 +276,9 @@ async function saveEdit() {
       priority: editForm.priority,
     });
     items.value = items.value.map((it) =>
-      it.id === editingId.value ? { ...it, ...updated } : it,
+      it.id === editingId.value
+        ? normalizeItem({ ...it, ...updated, original_title: it.original_title })
+        : it,
     );
     push(t("toast.updated"), "success");
     cancelEdit();
