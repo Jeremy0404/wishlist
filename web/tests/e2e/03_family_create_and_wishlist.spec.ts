@@ -22,7 +22,7 @@ test('complete family creation and wishlist management flow', async ({ page }) =
   await addWishlistItemViaForm(page, {
     title: originalTitle,
     url: "https://example.com/switch",
-    price: 299.99,
+    price: 300,
     priority: 1,
     notes: "Prefer OLED model in red",
   });
