@@ -45,21 +45,36 @@ interface PdfLine {
 }
 
 function toPdfHex(text: string) {
-  const codeUnits: number[] = [0xfeff]; // UTF-16BE BOM
+  const winAnsiExtras: Record<number, number> = {
+    0x20ac: 0x80, // Euro
+    0x201a: 0x82,
+    0x2030: 0x89,
+    0x2018: 0x91,
+    0x2019: 0x92,
+    0x201c: 0x93,
+    0x201d: 0x94,
+    0x2022: 0x95,
+    0x2013: 0x96,
+    0x2014: 0x97,
+    0x2122: 0x99,
+  };
+
+  // Encode as WinAnsi (single-byte) to work with built-in Helvetica while keeping accented chars.
+  const bytes: number[] = [];
   for (const char of text) {
     const codePoint = char.codePointAt(0) ?? 0;
-    if (codePoint > 0xffff) {
-      const cp = codePoint - 0x10000;
-      codeUnits.push(((cp >> 10) & 0x3ff) + 0xd800); // high surrogate
-      codeUnits.push((cp & 0x3ff) + 0xdc00); // low surrogate
+    const mapped = winAnsiExtras[codePoint];
+    if (mapped != null) {
+      bytes.push(mapped);
+    } else if (codePoint <= 0xff) {
+      bytes.push(codePoint);
     } else {
-      codeUnits.push(codePoint);
+      // Replace unsupported characters (e.g., emojis) with a friendly fallback.
+      bytes.push(0x2a); // '*'
     }
   }
 
-  return `<${codeUnits
-    .map((unit) => unit.toString(16).padStart(4, "0"))
-    .join("")}>`;
+  return `<${bytes.map((unit) => unit.toString(16).padStart(2, "0")).join("")}>`;
 }
 
 function wrapLines(text: string, maxChars: number): string[] {
@@ -183,42 +198,44 @@ async function exportPdf() {
     const now = new Date();
     const noValue = t("my.export.none");
 
-    lines.push({
-      text: `${t("my.title")} – ${familyLabel.value}`,
-      size: 16,
-      lineHeight: 22,
-    });
-    lines.push({ text: t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }), size: 12 });
-    lines.push({ text: t("my.export.subtitle"), size: 12 });
+    const header = `${t("my.title")} – ${familyLabel.value}`;
+    lines.push({ text: header.toUpperCase(), size: 17, lineHeight: 24 });
+    lines.push({ text: t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }), size: 11 });
+    lines.push({ text: t("my.export.subtitle"), size: 11 });
+    lines.push({ text: `Articles : ${safeItems.value.length}`, size: 12, lineHeight: 18 });
+    lines.push({ text: "".padEnd(74, "-"), size: 9, lineHeight: 12 });
     lines.push({ text: "", size: 8, lineHeight: 12 });
 
-    const maxChars = 72;
+    const maxChars = 70;
     const addWrapped = (label: string, value: string, size = 12) => {
-      wrapLines(`${label}: ${value}`, maxChars).forEach((text) =>
+      wrapLines(`${label} : ${value}`, maxChars).forEach((text) =>
         lines.push({ text, size, lineHeight: size + 4 }),
       );
     };
 
     safeItems.value.forEach((item: WishlistItem, index: number) => {
       const itemTitle = item.original_title || item.title;
-      lines.push({ text: `${index + 1}. 🎁 ${itemTitle}`, size: 14, lineHeight: 20 });
+      lines.push({ text: `#${index + 1} ${itemTitle}`, size: 14, lineHeight: 20 });
+      lines.push({ text: "".padEnd(46, "="), size: 9, lineHeight: 12 });
 
-      addWrapped(t("my.export.linkLabel"), item.url || noValue);
+      addWrapped(`- ${t("my.export.linkLabel")}`, item.url || noValue, 11);
       addWrapped(
-        t("my.export.priceLabel"),
+        `- ${t("my.export.priceLabel")}`,
         item.price_eur != null ? fmtEUR.format(item.price_eur) : noValue,
+        11,
       );
-      addWrapped(t("my.export.priorityLabel"), `${item.priority ?? noValue}`);
-      addWrapped(t("my.export.notesLabel"), item.notes || noValue);
+      addWrapped(`- ${t("my.export.priorityLabel")}`, `${item.priority ?? noValue}`, 11);
+      addWrapped(`- ${t("my.export.notesLabel")}`, item.notes || noValue, 11);
       if (item.created_at) {
         addWrapped(
-          t("my.export.createdLabel"),
+          `- ${t("my.export.createdLabel")}`,
           new Date(item.created_at).toLocaleDateString("fr-FR"),
+          11,
         );
       }
 
-      lines.push({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 10, lineHeight: 16 });
-      lines.push({ text: "", size: 8, lineHeight: 12 });
+      lines.push({ text: "".padEnd(46, "-"), size: 9, lineHeight: 12 });
+      lines.push({ text: "", size: 8, lineHeight: 14 });
     });
 
     const pdfBytes = buildPdf(lines);
