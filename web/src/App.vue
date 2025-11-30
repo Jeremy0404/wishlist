@@ -1,10 +1,14 @@
 <template>
-  <div class="min-h-screen bg-white text-zinc-900">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900">
     <NavBar />
 
-    <main class="max-w-5xl mx-auto px-4 py-6">
-      <ToastContainer />
-      <router-view />
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+      <div
+        class="bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl shadow-slate-900/10 rounded-3xl p-6 sm:p-8 lg:p-10 space-y-6"
+      >
+        <ToastContainer />
+        <router-view />
+      </div>
     </main>
   </div>
 </template>
@@ -22,14 +26,6 @@ onMounted(() => {
 </script>
 
 <style>
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
-}
 a {
   text-decoration: none;
   color: inherit;
