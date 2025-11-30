@@ -220,7 +220,7 @@ function renderItemCard(
 
   // Details
   const priceValue =
-    item.price_eur === null ? ctx.noValue : fmtEUR.format(item.price_eur);
+    item.price_eur == null ? ctx.noValue : fmtEUR.format(item.price_eur);
   renderDetail(doc, ctx, t("my.export.priceLabel"), priceValue, {
     color: palette.accent,
     labelColor: palette.text,

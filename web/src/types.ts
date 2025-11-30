@@ -15,13 +15,17 @@ export type ReservationStatus = "reserved" | "purchased";
 
 export interface WishlistItemForm {
   title: string;
+  url?: string;
+  price_eur?: number;
+  notes?: string;
+  priority?: number;
+}
+
+export interface WishlistItem extends WishlistItemForm {
   url?: string | null;
   price_eur?: number | null;
   notes?: string | null;
   priority?: number | null;
-}
-
-export interface WishlistItem extends WishlistItemForm {
   id: string;
   original_title?: string | null;
   reserved?: boolean;

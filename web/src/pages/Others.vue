@@ -4,7 +4,12 @@
 
   <ul v-if="rows.length" class="grid gap-3">
     <li v-for="r in rows" :key="r.user_id">
-      <WishlistItemCard :item="{ title: r.name }">
+      <WishlistItemCard
+        :item="{
+          id: r.user_id,
+          title: r.name,
+        }"
+      >
         <template #actions>
           <RouterLink
             class="px-3 py-1.5 rounded hover:bg-zinc-100"

@@ -103,7 +103,7 @@ async function purchase(id: string) {
   push(t("toast.purchased"), "success");
   await load();
 }
-function statusLabel(s: string) {
+function statusLabel(s?: string | null) {
   const key = `status.${s}`;
   return te(key) ? t(key) : s;
 }
