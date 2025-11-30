@@ -207,6 +207,15 @@ async function exportPdf() {
     lines.push({ text: "", size: 8, lineHeight: 12 });
 
     const maxChars = 70;
+    const formatLink = (url: string | null | undefined) => {
+      if (!url) return noValue;
+      const trimmed = url.trim();
+      if (!trimmed) return noValue;
+      const hasProtocol = /^https?:\/\//i.test(trimmed);
+      const normalized = hasProtocol ? trimmed : `https://${trimmed}`;
+      return `<${normalized}>`;
+    };
+
     const addWrapped = (label: string, value: string, size = 12) => {
       wrapLines(`${label} : ${value}`, maxChars).forEach((text) =>
         lines.push({ text, size, lineHeight: size + 4 }),
@@ -218,7 +227,7 @@ async function exportPdf() {
       lines.push({ text: `#${index + 1} ${itemTitle}`, size: 14, lineHeight: 20 });
       lines.push({ text: "".padEnd(46, "="), size: 9, lineHeight: 12 });
 
-      addWrapped(`- ${t("my.export.linkLabel")}`, item.url || noValue, 11);
+      addWrapped(`- ${t("my.export.linkLabel")}`, formatLink(item.url), 11);
       addWrapped(
         `- ${t("my.export.priceLabel")}`,
         item.price_eur != null ? fmtEUR.format(item.price_eur) : noValue,
