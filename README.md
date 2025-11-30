@@ -31,7 +31,16 @@ npm run dev          # starts the API (http://localhost:3000)
 ```
 The API reads its configuration from `api/.env` and connects to the Docker‑hosted Postgres instance.
 
-### 4. Run the frontend dev server
+### 4. Load sample data
+The seed wipes existing rows and inserts demo accounts and wish lists that cover the full flow (multiple families, reservations, and purchased items). From the `api/` directory run:
+```bash
+npm run migrate:latest   # apply database schema
+npm run seed:run         # reset and populate demo data
+```
+Both commands expect to be run from `api/` so Knex can read `knexfile.cjs`; running elsewhere will produce a "No configuration file found" error.
+Log in with `alice@example.com`, `bob@example.com`, or `charlie@example.com` using password `dev` to explore shared families, wish lists, and reservations without manual setup.
+
+### 5. Run the frontend dev server
 ```bash
 cd web
 npm ci               # install dependencies
@@ -39,7 +48,7 @@ npm run dev          # Vite dev server on http://localhost:5173
 ```
 The frontend reads `VITE_API_URL` from `web/.env.development`.
 
-### 5. Verify the app
+### 6. Verify the app
 Open your browser at **http://localhost:5173**. You should see the landing page, be able to register a new user, log in, and navigate the wish‑list features.
 
 ## Tests
