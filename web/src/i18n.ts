@@ -6,6 +6,7 @@ const fr = {
     share: "Partager…",
     copy: "Copier",
     loading: "Chargement…",
+    createdAt: "Créé le",
   },
   nav: {
     wishlist: "Wishlist",
@@ -109,6 +110,12 @@ const fr = {
   my: {
     title: "Ma wishlist",
     addTitle: "Ajouter un article",
+    export: {
+      pdf: "Exporter en PDF",
+      generatedAt: "Généré le {date}",
+      success: "PDF téléchargé",
+      error: "Impossible de générer le PDF",
+    },
     form: {
       title: "Titre",
       url: "Lien (optionnel)",

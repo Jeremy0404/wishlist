@@ -1,5 +1,7 @@
 export function buildJoinUrl(code: string, baseHref?: string): string {
-  const href = baseHref ?? globalThis.location?.href ?? "https://example.com/";
+  const href =
+    baseHref ??
+    (typeof location !== "undefined" ? location.href : "https://example.com/");
   const url = new URL(href);
   url.pathname = "/family/join";
   url.searchParams.delete("code");
