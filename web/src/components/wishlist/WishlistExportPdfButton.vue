@@ -164,7 +164,7 @@ function buildPdf(lines: PdfLine[]) {
     addObject(pageId, pageBody);
   });
 
-  addObject(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  addObject(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   const pagesKids = pageIds.map((id) => `${id} 0 R`).join(" ");
   addObject(2, `<< /Type /Pages /Kids [${pagesKids}] /Count ${pageIds.length} >>`);
   addObject(1, "<< /Type /Catalog /Pages 2 0 R >>");
@@ -198,7 +198,7 @@ async function exportPdf() {
     const now = new Date();
     const noValue = t("my.export.none");
 
-    const header = `${t("my.title")} – ${familyLabel.value}`;
+    const header = `${t("my.title")} - ${familyLabel.value}`;
     lines.push({ text: header.toUpperCase(), size: 17, lineHeight: 24 });
     lines.push({ text: t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }), size: 11 });
     lines.push({ text: t("my.export.subtitle"), size: 11 });
