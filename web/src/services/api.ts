@@ -1,5 +1,10 @@
 // web/src/services/api.ts
-import type { Family, FamilyMember } from "../types.ts";
+import type {
+  Family,
+  FamilyMember,
+  WishlistItem,
+  WishlistItemForm,
+} from "../types.ts";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -90,30 +95,23 @@ export const api = {
     request<Family>("/families/join", { method: "POST", body: { code } }),
 
   // --- Wishlist (mine) ---
-  getMyWishlist: () => request<any>("/wishlists/me"),
-  addMyItem: (body: {
-    title: string;
-    url?: string;
-    price_eur?: number;
-    notes?: string;
-    priority?: number;
-  }) => request<any>("/wishlists/me/items", { method: "POST", body }),
-  updateMyItem: (
-    id: string,
-    body: {
-      title: string;
-      url?: string;
-      price_eur?: number;
-      notes?: string;
-      priority?: number;
-    },
-  ) => request<any>(`/wishlists/me/items/${id}`, { method: "PATCH", body }),
+  getMyWishlist: () => request<{ items: WishlistItem[] }>("/wishlists/me"),
+  addMyItem: (body: WishlistItemForm) =>
+    request<WishlistItem>("/wishlists/me/items", { method: "POST", body }),
+  updateMyItem: (id: string, body: WishlistItemForm) =>
+    request<WishlistItem>(`/wishlists/me/items/${id}`, {
+      method: "PATCH",
+      body,
+    }),
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
   // --- Others / viewing ---
-  others: () => request<any[]>("/wishlists"),
-  viewWishlist: (userId: string) => request<any>(`/wishlists/${userId}`),
+  others: () => request<Array<{ user_id: string; name: string }>>("/wishlists"),
+  viewWishlist: (userId: string) =>
+    request<{ owner?: { name?: string }; items: WishlistItem[] }>(
+      `/wishlists/${userId}`,
+    ),
   reserve: (itemId: string) =>
     request(`/wishlists/items/${itemId}/reserve`, { method: "POST" }),
   unreserve: (itemId: string) =>

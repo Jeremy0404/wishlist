@@ -1,5 +1,8 @@
 <template>
-  <h1 class="text-xl font-semibold mb-4">{{ t("my.title") }}</h1>
+  <div class="flex items-center justify-between gap-3 mb-4">
+    <h1 class="text-xl font-semibold">{{ t("my.title") }}</h1>
+    <WishlistExportPdfButton :items="items" />
+  </div>
 
   <Card class="mb-4">
     <template #header
@@ -101,22 +104,16 @@ import { useToasts } from "../components/ui/useToasts";
 import { useI18n } from "vue-i18n";
 import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
+import WishlistExportPdfButton from "../components/wishlist/WishlistExportPdfButton.vue";
+import type { WishlistItem, WishlistItemForm } from "../types.ts";
 
 const { push } = useToasts();
 const { t } = useI18n();
 
-interface WishlistItemForm {
-  title: string;
-  url?: string;
-  price_eur?: number;
-  notes?: string;
-  priority?: number;
-}
-
-const items = ref<any[]>([]);
+const items = ref<WishlistItem[]>([]);
 const submitting = ref(false);
 const editSubmitting = ref(false);
-const form = reactive({
+const form = reactive<WishlistItemForm>({
   title: "",
   url: "",
   price_eur: undefined as number | undefined,
@@ -125,7 +122,7 @@ const form = reactive({
 });
 const editingId = ref<string | null>(null);
 
-function normalizeItem(item: any) {
+function normalizeItem(item: WishlistItem): WishlistItem {
   return { ...item, original_title: item.original_title ?? item.title };
 }
 
@@ -165,7 +162,7 @@ async function removeItem(id: string) {
   push(t("toast.removed"), "info");
 }
 
-function beginEdit(item: any) {
+function beginEdit(item: WishlistItem) {
   editingId.value = item.id;
 }
 

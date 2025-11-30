@@ -6,6 +6,7 @@ const fr = {
     share: "Partager…",
     copy: "Copier",
     loading: "Chargement…",
+    createdAt: "Créé le",
   },
   nav: {
     wishlist: "Wishlist",
@@ -109,6 +110,20 @@ const fr = {
   my: {
     title: "Ma wishlist",
     addTitle: "Ajouter un article",
+    export: {
+      pdf: "Exporter en PDF",
+      generatedAt: "Généré le {date}",
+      subtitle: "Ma liste de cadeaux ✨",
+      success: "PDF téléchargé",
+      error: "Impossible de générer le PDF",
+      noFamily: "Famille mystérieuse",
+      linkLabel: "Lien",
+      priceLabel: "Prix",
+      priorityLabel: "Priorité",
+      notesLabel: "Notes",
+      createdLabel: "Ajouté le",
+      none: "Non renseigné",
+    },
     form: {
       title: "Titre",
       url: "Lien (optionnel)",

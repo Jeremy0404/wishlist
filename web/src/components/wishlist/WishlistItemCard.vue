@@ -36,14 +36,7 @@ import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import { fmtEUR } from "../../utils/money";
-
-interface WishlistItem {
-  title: string;
-  url?: string | null;
-  price_eur?: number | null;
-  notes?: string | null;
-  priority?: number | null;
-}
+import type { WishlistItem } from "../../types.ts";
 
 const props = withDefaults(
   defineProps<{

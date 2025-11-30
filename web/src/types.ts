@@ -11,16 +11,26 @@ export interface FamilyMember {
   joined_at: string;
 }
 
-export interface Item {
-  id: string;
+export type ReservationStatus = "reserved" | "purchased";
+
+export interface WishlistItemForm {
   title: string;
-  priority: number;
-  url: string;
-  price_eur: number;
-  notes: string;
-  reserved: boolean;
-  reserver_name: string;
-  reservation_status: ReservationStatus;
+  url?: string;
+  price_eur?: number;
+  notes?: string;
+  priority?: number;
 }
 
-type ReservationStatus = "reserved" | "purchased";
+export interface WishlistItem {
+  id: string;
+  title: string;
+  url?: string | null;
+  price_eur?: number | null;
+  notes?: string | null;
+  priority?: number | null;
+  original_title?: string | null;
+  reserved?: boolean;
+  reserver_name?: string | null;
+  reservation_status?: ReservationStatus | null;
+  created_at?: string | null;
+}
