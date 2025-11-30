@@ -19,54 +19,14 @@ import { useToasts } from "../ui/useToasts";
 import { fmtEUR } from "../../utils/money";
 import { useAuth } from "../../stores/auth";
 import type { WishlistItem } from "../../types.ts";
-
-type Color = [number, number, number];
-
-type Palette = {
-  heroBg: Color;
-  heroTitle: Color;
-  heroMeta: Color;
-  heroAccent: Color;
-  cardA: Color;
-  cardB: Color;
-  link: Color;
-  notes: Color;
-  muted: Color;
-  accent: Color;
-  text: Color;
-};
-
-const palette: Palette = {
-  heroBg: [240, 245, 255],
-  heroTitle: [31, 41, 55],
-  heroMeta: [99, 115, 129],
-  heroAccent: [18, 116, 152],
-  cardA: [255, 255, 255],
-  cardB: [245, 248, 252],
-  link: [23, 105, 170],
-  notes: [71, 85, 99],
-  muted: [120, 130, 140],
-  accent: [24, 144, 180],
-  text: [45, 55, 72],
-};
-
-const pdfConfig = {
-  margin: 36,
-  heroHeight: 92,
-  heroSpacing: 18,
-  cardSpacing: 6,
-  cardTitleHeight: 26,
-};
-
-type RenderContext = {
-  margin: number;
-  contentWidth: number;
-  pageHeight: number;
-  cursorY: number;
-  noValue: string;
-  now: Date;
-  familyLabel: string;
-};
+import {
+  createRenderContext,
+  ensureSpace,
+  formatLink,
+  palette,
+  pdfConfig,
+} from "./pdfUtils";
+import type { Color, RenderContext } from "./pdfUtils";
 
 const props = defineProps<{ items: WishlistItem[] }>();
 const exporting = ref(false);
@@ -78,38 +38,7 @@ const safeItems = computed(() => props.items ?? []);
 const familyLabel = computed(
   () => auth.myFamily?.name || t("my.export.noFamily"),
 );
-
-function createRenderContext(doc: jsPDF, family: string): RenderContext {
-  const margin = pdfConfig.margin;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const contentWidth = pageWidth - margin * 2;
-
-  return {
-    margin,
-    contentWidth,
-    pageHeight,
-    cursorY: margin,
-    noValue: t("my.export.none"),
-    now: new Date(),
-    familyLabel: family,
-  };
-}
-
-function ensureSpace(doc: jsPDF, ctx: RenderContext, needed: number) {
-  if (ctx.cursorY + needed > ctx.pageHeight - ctx.margin) {
-    doc.addPage();
-    ctx.cursorY = ctx.margin;
-  }
-}
-
-function formatLink(url: string | null | undefined, noValue: string) {
-  if (!url) return noValue;
-  const trimmed = url.trim();
-  if (!trimmed) return noValue;
-  const hasProtocol = /^https?:\/\//i.test(trimmed);
-  return hasProtocol ? trimmed : `https://${trimmed}`;
-}
+const noValue = computed(() => t("my.export.none"));
 
 function renderHero(doc: jsPDF, ctx: RenderContext) {
   const { margin, contentWidth, noValue, now } = ctx;
@@ -272,7 +201,7 @@ async function exportPdf() {
   exporting.value = true;
   try {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const ctx = createRenderContext(doc, familyLabel.value);
+    const ctx = createRenderContext(doc, familyLabel.value, noValue.value);
 
     renderHero(doc, ctx);
     safeItems.value.forEach((item, index) =>
