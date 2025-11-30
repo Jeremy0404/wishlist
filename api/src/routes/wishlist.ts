@@ -45,7 +45,6 @@ const Item = z.object({
   title: z.string().min(1),
   url: z.string().url().optional().or(z.literal("")),
   price_eur: z.coerce.number().min(0).max(99_999_999.99).optional(),
-  currency: z.string().length(3).optional(),
   notes: z.string().max(1000).optional(),
   priority: z.number().int().min(1).max(5).optional(),
 });

@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Wishlist" type="CompoundRunConfigurationType">
+    <toRun name="Wishlist DB" type="docker-deploy" />
+    <toRun name="Wishlist api" type="js.build_tools.npm" />
+    <toRun name="Wishlist web" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>
