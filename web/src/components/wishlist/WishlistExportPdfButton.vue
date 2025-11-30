@@ -16,6 +16,7 @@ import Button from "../ui/Button.vue";
 import { useI18n } from "vue-i18n";
 import { useToasts } from "../ui/useToasts";
 import { fmtEUR } from "../../utils/money";
+import { useAuth } from "../../stores/auth";
 
 interface WishlistItem {
   id: string;
@@ -32,14 +33,36 @@ const props = defineProps<{ items: WishlistItem[] }>();
 const exporting = ref(false);
 const { push } = useToasts();
 const { t } = useI18n();
+const auth = useAuth();
 
 const safeItems = computed(() => props.items ?? []);
+const familyLabel = computed(() => auth.myFamily?.name || t("my.export.noFamily"));
 
-function escapePdf(text: string) {
-  return text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+interface PdfLine {
+  text: string;
+  size: number;
+  lineHeight?: number;
 }
 
-function wrapLines(text: string, maxChars: number) {
+function toPdfHex(text: string) {
+  const codeUnits: number[] = [0xfeff]; // UTF-16BE BOM
+  for (const char of text) {
+    const codePoint = char.codePointAt(0) ?? 0;
+    if (codePoint > 0xffff) {
+      const cp = codePoint - 0x10000;
+      codeUnits.push(((cp >> 10) & 0x3ff) + 0xd800); // high surrogate
+      codeUnits.push((cp & 0x3ff) + 0xdc00); // low surrogate
+    } else {
+      codeUnits.push(codePoint);
+    }
+  }
+
+  return `<${codeUnits
+    .map((unit) => unit.toString(16).padStart(4, "0"))
+    .join("")}>`;
+}
+
+function wrapLines(text: string, maxChars: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length === 0) return [""];
   const lines: string[] = [];
@@ -57,21 +80,27 @@ function wrapLines(text: string, maxChars: number) {
   return lines;
 }
 
-function buildPdf(lines: string[]) {
+function buildPdf(lines: PdfLine[]) {
   const pageWidth = 595.28; // A4 in points
   const pageHeight = 841.89;
   const margin = 40;
-  const lineHeight = 16;
-  const maxLinesPerPage = Math.floor((pageHeight - margin * 2) / lineHeight);
 
-  const paginated: string[][] = [[]];
-  let current: string[] = paginated[0]!;
+  const paginated: PdfLine[][] = [[]];
+  let current: PdfLine[] = paginated[0]!;
+  let currentHeight = 0;
+  const maxHeight = pageHeight - margin * 2;
+
+  const getLineHeight = (line: PdfLine) => line.lineHeight ?? Math.max(line.size + 2, 16);
+
   for (const line of lines) {
-    if (current.length >= maxLinesPerPage) {
+    const h = getLineHeight(line);
+    if (currentHeight + h > maxHeight) {
       current = [];
       paginated.push(current);
+      currentHeight = 0;
     }
     current.push(line);
+    currentHeight += h;
   }
 
   const encoder = new TextEncoder();
@@ -97,13 +126,13 @@ function buildPdf(lines: string[]) {
 
   const contentsStartId = 4;
   paginated.forEach((pageLines, pageIndex) => {
-    const yStart = pageHeight - margin;
+    let currentY = pageHeight - margin;
     const contentLines = pageLines
-      .map((text, lineIndex) => {
-        const y = yStart - lineIndex * lineHeight;
-        return `BT /F1 12 Tf 1 0 0 1 ${margin} ${y.toFixed(2)} Tm (${escapePdf(
-          text,
-        )}) Tj ET`;
+      .map((line, lineIndex) => {
+        const y = lineIndex === 0 ? currentY : (currentY -= getLineHeight(pageLines[lineIndex - 1]!));
+        return `BT /F1 ${line.size} Tf 1 0 0 1 ${margin} ${y.toFixed(2)} Tm ${toPdfHex(
+          line.text,
+        )} Tj ET`;
       })
       .join("\n");
     const contentString = `${contentLines}\n`;
@@ -150,32 +179,46 @@ async function exportPdf() {
   if (!safeItems.value.length) return;
   exporting.value = true;
   try {
-    const lines: string[] = [];
+    const lines: PdfLine[] = [];
     const now = new Date();
-    lines.push(t("my.title"));
-    lines.push(t("my.export.generatedAt", { date: now.toLocaleString() }));
-    lines.push("");
+    const noValue = t("my.export.none");
 
-    const maxChars = 90;
+    lines.push({
+      text: `${t("my.title")} – ${familyLabel.value}`,
+      size: 16,
+      lineHeight: 22,
+    });
+    lines.push({ text: t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }), size: 12 });
+    lines.push({ text: t("my.export.subtitle"), size: 12 });
+    lines.push({ text: "", size: 8, lineHeight: 12 });
+
+    const maxChars = 72;
+    const addWrapped = (label: string, value: string, size = 12) => {
+      wrapLines(`${label}: ${value}`, maxChars).forEach((text) =>
+        lines.push({ text, size, lineHeight: size + 4 }),
+      );
+    };
+
     safeItems.value.forEach((item: WishlistItem, index: number) => {
-      lines.push(`#${index + 1} ${item.original_title || item.title}`);
-      wrapLines(`${t("my.form.url")}: ${item.url || "—"}`, maxChars).forEach((l) =>
-        lines.push(l),
+      const itemTitle = item.original_title || item.title;
+      lines.push({ text: `${index + 1}. 🎁 ${itemTitle}`, size: 14, lineHeight: 20 });
+
+      addWrapped(t("my.export.linkLabel"), item.url || noValue);
+      addWrapped(
+        t("my.export.priceLabel"),
+        item.price_eur != null ? fmtEUR.format(item.price_eur) : noValue,
       );
-      wrapLines(
-        `${t("my.form.price")}: ${item.price_eur != null ? fmtEUR.format(item.price_eur) : "—"}`,
-        maxChars,
-      ).forEach((l) => lines.push(l));
-      lines.push(`${t("my.form.priority")}: ${item.priority ?? "—"}`);
-      wrapLines(`${t("my.form.notes")}: ${item.notes ? item.notes : "—"}`, maxChars).forEach((l) =>
-        lines.push(l),
-      );
+      addWrapped(t("my.export.priorityLabel"), `${item.priority ?? noValue}`);
+      addWrapped(t("my.export.notesLabel"), item.notes || noValue);
       if (item.created_at) {
-        lines.push(
-          `${t("common.createdAt", "Créé le")}: ${new Date(item.created_at).toLocaleDateString()}`,
+        addWrapped(
+          t("my.export.createdLabel"),
+          new Date(item.created_at).toLocaleDateString("fr-FR"),
         );
       }
-      lines.push("");
+
+      lines.push({ text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 10, lineHeight: 16 });
+      lines.push({ text: "", size: 8, lineHeight: 12 });
     });
 
     const pdfBytes = buildPdf(lines);

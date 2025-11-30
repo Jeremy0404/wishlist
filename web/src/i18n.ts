@@ -113,8 +113,16 @@ const fr = {
     export: {
       pdf: "Exporter en PDF",
       generatedAt: "Généré le {date}",
+      subtitle: "Des cadeaux qui claquent, avec une pointe de magie ✨",
       success: "PDF téléchargé",
       error: "Impossible de générer le PDF",
+      noFamily: "Famille mystérieuse",
+      linkLabel: "Lien",
+      priceLabel: "Prix",
+      priorityLabel: "Priorité",
+      notesLabel: "Notes",
+      createdLabel: "Ajouté le",
+      none: "Non renseigné",
     },
     form: {
       title: "Titre",
