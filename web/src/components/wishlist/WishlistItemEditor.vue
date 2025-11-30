@@ -63,26 +63,11 @@ import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Input from "../ui/Input.vue";
-
-interface WishlistItemForm {
-  title: string;
-  url?: string;
-  price_eur?: number;
-  notes?: string;
-  priority?: number;
-}
-
-interface WishlistItemInitial {
-  title: string;
-  url?: string | null;
-  price_eur?: number | null;
-  notes?: string | null;
-  priority?: number | null;
-}
+import type { WishlistItem, WishlistItemForm } from "../../types.ts";
 
 const props = withDefaults(
   defineProps<{
-    initialItem: WishlistItemInitial;
+    initialItem: WishlistItem;
     loading?: boolean;
   }>(),
   {

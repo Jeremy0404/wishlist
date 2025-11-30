@@ -67,13 +67,13 @@ import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { fmtEUR } from "../utils/money.ts";
-import type { Item } from "../types.ts";
+import type { WishlistItem } from "../types.ts";
 
 const { t, te } = useI18n();
 const { push } = useToasts();
 
 const ownerName = ref("");
-const items = ref<Item[]>([]);
+const items = ref<WishlistItem[]>([]);
 const error = ref("");
 
 const props = defineProps<{ userId: string }>();

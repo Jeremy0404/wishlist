@@ -3,6 +3,12 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
+    "baseUrl": "./",
+    "paths": {
+      "jspdf": ["./src/vendor/jspdf"],
+      "jspdf/*": ["./src/vendor/jspdf"],
+      "~/*": ["./src/*"]
+    },
 
     /* Linting */
     "strict": true,
