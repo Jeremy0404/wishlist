@@ -37,7 +37,6 @@ The seed wipes existing rows and inserts demo accounts and wish lists that cover
 npm run migrate:latest   # apply database schema
 npm run seed:run         # reset and populate demo data
 ```
-Both commands expect to be run from `api/` so Knex can read `knexfile.cjs`; running elsewhere will produce a "No configuration file found" error.
 Log in with `alice@example.com`, `bob@example.com`, or `charlie@example.com` using password `dev` to explore shared families, wish lists, and reservations without manual setup.
 
 ### 5. Run the frontend dev server
