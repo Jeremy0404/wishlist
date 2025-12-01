@@ -15,7 +15,11 @@ import PublicWishlist from "./pages/PublicWishlist.vue";
 
 const routes = [
   { path: "/", component: Landing, meta: { public: true } },
-  { path: "/share/:slug", component: PublicWishlist, meta: { public: true } },
+  {
+    path: "/share/:slug",
+    component: PublicWishlist,
+    meta: { public: true, minimal: true },
+  },
 
   // Auth
   {
