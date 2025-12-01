@@ -1,11 +1,17 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900">
+  <div
+    :class="[
+      'min-h-screen text-slate-900',
+      isMinimalLayout ? 'bg-white' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100',
+    ]"
+  >
     <NavBar v-if="!isMinimalLayout" />
 
     <main
       :class="[
-        'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8',
-        isMinimalLayout ? 'py-6 sm:py-10' : 'py-10 lg:py-14',
+        isMinimalLayout
+          ? 'min-h-screen'
+          : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14',
       ]"
     >
       <div v-if="isMinimalLayout" class="space-y-6">
