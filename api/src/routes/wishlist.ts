@@ -23,7 +23,10 @@ router.get(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "get-own" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "get-own",
+    });
     const wl = await db("wishlists")
       .where({ user_id: req.user!.id, family_id: req.familyId! })
       .first();
@@ -37,7 +40,10 @@ router.get(
       .where({ wishlist_id: wl.id })
       .orderBy("created_at", "desc");
 
-    log.info({ wishlistId: wl.id, itemCount: items.length }, "Fetched wishlist");
+    log.info(
+      { wishlistId: wl.id, itemCount: items.length },
+      "Fetched wishlist",
+    );
     res.json({ wishlist: wl, items });
   }),
 );
@@ -68,7 +74,10 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "add-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "add-item",
+    });
     const { id: user_id } = req.user!;
     const family_id = req.familyId!;
 
@@ -94,7 +103,10 @@ router.post(
         .insert({ wishlist_id: wishlist.id, ...parse.data })
         .returning("*");
 
-      log.info({ wishlistId: wishlist.id, itemId: item.id }, "Added wishlist item");
+      log.info(
+        { wishlistId: wishlist.id, itemId: item.id },
+        "Added wishlist item",
+      );
       await trx.commit();
       return res.status(201).json(item);
     } catch (e) {
@@ -109,7 +121,10 @@ router.patch(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "update-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "update-item",
+    });
     const { id } = req.params;
     const row = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
@@ -138,7 +153,10 @@ router.delete(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "delete-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "delete-item",
+    });
     const { id } = req.params;
     const owned = await db("wishlist_items as i")
       .join("wishlists as w", "w.id", "i.wishlist_id")
@@ -161,7 +179,10 @@ router.get(
   familyContext,
   mustHaveWishlistWithItem,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "list-family" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "list-family",
+    });
     const rows = await db("wishlists as w")
       .join("users as u", "u.id", "w.user_id")
       .where("w.family_id", req.familyId!)
@@ -173,7 +194,10 @@ router.get(
         "w.created_at",
       )
       .orderBy("u.name", "asc");
-    log.info({ familyId: req.familyId, count: rows.length }, "Listed family wishlists");
+    log.info(
+      { familyId: req.familyId, count: rows.length },
+      "Listed family wishlists",
+    );
     res.json(rows);
   }),
 );
@@ -277,7 +301,10 @@ router.get(
   familyContext,
   mustHaveWishlistWithItem,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "view-other" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "view-other",
+    });
     const { userId } = req.params;
 
     const wl = await db("wishlists")
@@ -301,9 +328,12 @@ router.get(
         "ur.name as reserver_name",
       )
       .where("i.wishlist_id", wl.id)
-      .orderBy("i.created_at", "desc");
+      .orderBy("i.priority", "asc");
 
-    log.info({ wishlistId: wl.id, ownerId: owner?.id }, "Fetched wishlist for member");
+    log.info(
+      { wishlistId: wl.id, ownerId: owner?.id },
+      "Fetched wishlist for member",
+    );
     res.json({
       wishlist: wl,
       owner: owner ? { id: owner.id, name: owner.name } : null,
@@ -317,7 +347,10 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "reserve-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "reserve-item",
+    });
     const { id } = req.params;
 
     const row = await db("wishlist_items as i")
@@ -353,7 +386,10 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "unreserve-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "unreserve-item",
+    });
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
@@ -370,7 +406,10 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "purchase-item" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "purchase-item",
+    });
     const { id } = req.params;
     const r = await db("reservations")
       .where({ item_id: id, reserver_user_id: req.user!.id })
@@ -380,7 +419,10 @@ router.post(
       .where({ id: r.id })
       .update({ status: "purchased" })
       .returning("*");
-    log.info({ itemId: id, reservationId: u.id }, "Marked wishlist item as purchased");
+    log.info(
+      { itemId: id, reservationId: u.id },
+      "Marked wishlist item as purchased",
+    );
     res.json(u);
   }),
 );
