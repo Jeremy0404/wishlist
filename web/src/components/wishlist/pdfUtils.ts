@@ -7,8 +7,12 @@ export type Palette = {
   heroTitle: Color;
   heroMeta: Color;
   heroAccent: Color;
+  heroBadge: Color;
   cardA: Color;
   cardB: Color;
+  cardShadow: Color;
+  priority: Color;
+  priorityText: Color;
   link: Color;
   notes: Color;
   muted: Color;
@@ -21,8 +25,12 @@ export const palette: Palette = {
   heroTitle: [31, 41, 55],
   heroMeta: [99, 115, 129],
   heroAccent: [18, 116, 152],
+  heroBadge: [255, 255, 255],
   cardA: [255, 255, 255],
   cardB: [245, 248, 252],
+  cardShadow: [227, 232, 240],
+  priority: [255, 240, 223],
+  priorityText: [160, 92, 26],
   link: [23, 105, 170],
   notes: [71, 85, 99],
   muted: [120, 130, 140],
@@ -34,7 +42,8 @@ export const pdfConfig = {
   margin: 36,
   heroHeight: 92,
   heroSpacing: 18,
-  cardSpacing: 6,
+  sectionSpacing: 12,
+  cardSpacing: 10,
   cardTitleHeight: 26,
 };
 
