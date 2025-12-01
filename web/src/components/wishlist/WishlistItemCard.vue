@@ -6,8 +6,8 @@
           {{ item.title }}
           <span v-if="item.priority" class="text-xs text-zinc-500">P{{ item.priority }}</span>
         </div>
-        <div v-if="item.url" class="text-sm text-brand-700">
-          <a :href="item.url" target="_blank">{{ item.url }}</a>
+        <div v-if="item.url" class="text-sm text-brand-700 break-words">
+          <a :href="item.url" target="_blank" class="inline-block max-w-full break-all">{{ item.url }}</a>
         </div>
         <div v-if="item.price_eur != null" class="text-sm text-zinc-600">
           {{ fmtEUR.format(item.price_eur) }}
