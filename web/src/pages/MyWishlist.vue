@@ -4,65 +4,6 @@
     <WishlistExportButton :items="items" />
   </div>
 
-  <Card class="mb-4 overflow-hidden bg-gradient-to-br from-amber-50/80 to-white">
-    <template #header>
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs uppercase tracking-[0.2em] text-amber-700 font-semibold mb-1">
-            {{ t("my.publish.badge") }}
-          </p>
-          <h2 class="font-semibold">{{ t("my.publish.title") }}</h2>
-        </div>
-        <span
-          v-if="isPublished"
-          class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800"
-        >
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          {{ t("my.publish.online") }}
-        </span>
-      </div>
-    </template>
-    <div class="grid gap-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
-      <div class="space-y-2 text-sm text-zinc-600">
-        <p>{{ t("my.publish.description") }}</p>
-        <p class="text-amber-700" v-if="!hasItems">{{ t("my.publish.empty") }}</p>
-        <p class="text-xs text-zinc-500">
-          {{ t("my.publish.hint") }}
-        </p>
-      </div>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <Input
-          class="sm:w-64"
-          :model-value="publishLink"
-          :placeholder="t('my.publish.placeholder')"
-          readonly
-        />
-        <div class="flex flex-wrap gap-2 justify-end">
-          <Button
-            v-if="!isPublished"
-            variant="primary"
-            :disabled="!hasItems"
-            :loading="publishSubmitting"
-            @click="publish"
-          >
-            🎁 {{ t("my.publish.action") }}
-          </Button>
-          <template v-else>
-            <Button variant="ghost" @click="copyLink">{{ t("my.publish.copy") }}</Button>
-            <Button variant="secondary" @click="openPreview">{{ t("my.publish.preview") }}</Button>
-            <Button
-              variant="danger"
-              :loading="unpublishSubmitting"
-              @click="unpublish"
-            >
-              {{ t("my.publish.unpublish") }}
-            </Button>
-          </template>
-        </div>
-      </div>
-    </div>
-  </Card>
-
   <Card class="mb-4">
     <template #header
       ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
@@ -151,6 +92,65 @@
       />
     </li>
   </ul>
+
+  <Card class="mt-6 overflow-hidden bg-gradient-to-br from-amber-50/80 to-white">
+    <template #header>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-amber-700 font-semibold mb-1">
+            {{ t("my.publish.badge") }}
+          </p>
+          <h2 class="font-semibold">{{ t("my.publish.title") }}</h2>
+        </div>
+        <span
+          v-if="isPublished"
+          class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800"
+        >
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          {{ t("my.publish.online") }}
+        </span>
+      </div>
+    </template>
+    <div class="grid gap-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
+      <div class="space-y-2 text-sm text-zinc-600">
+        <p>{{ t("my.publish.description") }}</p>
+        <p class="text-amber-700" v-if="!hasItems">{{ t("my.publish.empty") }}</p>
+        <p class="text-xs text-zinc-500">
+          {{ t("my.publish.hint") }}
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <Input
+          class="sm:w-64"
+          :model-value="publishLink"
+          :placeholder="t('my.publish.placeholder')"
+          readonly
+        />
+        <div class="flex flex-wrap gap-2 justify-end">
+          <Button
+            v-if="!isPublished"
+            variant="primary"
+            :disabled="!hasItems"
+            :loading="publishSubmitting"
+            @click="publish"
+          >
+            🎁 {{ t("my.publish.action") }}
+          </Button>
+          <template v-else>
+            <Button variant="ghost" @click="copyLink">{{ t("my.publish.copy") }}</Button>
+            <Button variant="secondary" @click="openPreview">{{ t("my.publish.preview") }}</Button>
+            <Button
+              variant="danger"
+              :loading="unpublishSubmitting"
+              @click="unpublish"
+            >
+              {{ t("my.publish.unpublish") }}
+            </Button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </Card>
 </template>
 
 <script setup lang="ts">
