@@ -35,6 +35,13 @@ const { t } = useI18n();
 const auth = useAuth();
 
 const safeItems = computed(() => props.items ?? []);
+const sortedItems = computed(() =>
+  [...safeItems.value].sort((a, b) => {
+    const priorityA = a.priority ?? 6;
+    const priorityB = b.priority ?? 6;
+    return priorityA - priorityB;
+  }),
+);
 const familyLabel = computed(
   () => auth.myFamily?.name || t("my.export.noFamily"),
 );
@@ -204,7 +211,7 @@ async function exportPdf() {
     const ctx = createRenderContext(doc, familyLabel.value, noValue.value);
 
     renderHero(doc, ctx);
-    safeItems.value.forEach((item, index) =>
+    sortedItems.value.forEach((item, index) =>
       renderItemCard(doc, ctx, item, index),
     );
     downloadDoc(doc);
