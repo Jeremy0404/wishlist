@@ -111,11 +111,15 @@ const fr = {
     title: "Ma wishlist",
     addTitle: "Ajouter un article",
     export: {
+      action: "Exporter",
       pdf: "Exporter en PDF",
+      markdown: "Exporter en Markdown",
       generatedAt: "Généré le {date}",
       subtitle: "Ma liste de cadeaux ✨",
       success: "PDF téléchargé",
       error: "Impossible de générer le PDF",
+      markdownSuccess: "Markdown téléchargé",
+      markdownError: "Impossible de générer le Markdown",
       noFamily: "Famille mystérieuse",
       linkLabel: "Lien",
       priceLabel: "Prix",
@@ -123,6 +127,7 @@ const fr = {
       notesLabel: "Notes",
       createdLabel: "Ajouté le",
       none: "Non renseigné",
+      itemsCount: "Articles : {count}",
     },
     form: {
       title: "Titre",
