@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center justify-between gap-3 mb-4">
     <h1 class="text-xl font-semibold">{{ t("my.title") }}</h1>
-    <WishlistExportPdfButton :items="items" />
+    <WishlistExportButton :items="items" />
   </div>
 
   <Card class="mb-4">
@@ -104,7 +104,7 @@ import { useToasts } from "../components/ui/useToasts";
 import { useI18n } from "vue-i18n";
 import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
-import WishlistExportPdfButton from "../components/wishlist/WishlistExportPdfButton.vue";
+import WishlistExportButton from "../components/wishlist/WishlistExportButton.vue";
 import type { WishlistItem, WishlistItemForm } from "../types.ts";
 
 const { push } = useToasts();
