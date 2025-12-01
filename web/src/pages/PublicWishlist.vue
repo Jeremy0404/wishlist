@@ -2,14 +2,23 @@
   <div class="relative">
     <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-rose-50 via-white to-amber-50"></div>
     <div class="relative max-w-4xl mx-auto">
-      <div class="text-center mb-8 space-y-2">
-        <p class="text-xs uppercase tracking-[0.25em] text-rose-700 font-semibold">{{
-          t("public.eyebrow")
-        }}</p>
-        <h1 class="text-3xl sm:text-4xl font-serif text-rose-900">
-          {{ t("public.title", { name: ownerDisplay }) }}
-        </h1>
-        <p class="text-sm text-rose-700">{{ t("public.subtitle") }}</p>
+      <div class="flex flex-wrap items-start justify-between gap-4 mb-6 sm:mb-8">
+        <div class="flex-1 min-w-[240px] space-y-2 text-center w-full">
+          <p class="text-xs uppercase tracking-[0.25em] text-rose-700 font-semibold">{{
+            t("public.eyebrow")
+          }}</p>
+          <h1 class="text-3xl sm:text-4xl font-serif text-rose-900">
+            {{ t("public.title", { name: ownerDisplay }) }}
+          </h1>
+          <p v-if="subtitle" class="text-sm text-rose-700">{{ subtitle }}</p>
+        </div>
+        <RouterLink
+          class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/70 px-4 py-2 text-sm font-medium text-rose-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          to="/"
+        >
+          {{ t("public.back") }}
+          <span aria-hidden="true">↗</span>
+        </RouterLink>
       </div>
 
       <div
@@ -109,6 +118,7 @@ const publishedAt = ref<string | null>(null);
 
 const slug = computed(() => route.params.slug as string);
 const ownerDisplay = computed(() => ownerName.value || t("public.someone"));
+const subtitle = computed(() => t("public.subtitle"));
 
 function formatDate(value: string) {
   const d = new Date(value);
