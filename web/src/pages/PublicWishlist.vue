@@ -53,7 +53,7 @@
                       <p class="text-sm text-amber-800" v-if="item.notes">{{ item.notes }}</p>
                     </div>
                     <div class="text-right text-sm font-semibold text-emerald-700" v-if="item.price_eur">
-                      {{ fmtEUR(item.price_eur) }}
+                      {{ fmtEUR.format(item.price_eur) }}
                     </div>
                   </div>
                   <div class="mt-2 flex items-center justify-between text-xs text-zinc-500">
