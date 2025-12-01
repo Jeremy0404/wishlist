@@ -2,6 +2,7 @@
 import type {
   Family,
   FamilyMember,
+  Wishlist,
   WishlistItem,
   WishlistItemForm,
 } from "../types.ts";
@@ -95,7 +96,8 @@ export const api = {
     request<Family>("/families/join", { method: "POST", body: { code } }),
 
   // --- Wishlist (mine) ---
-  getMyWishlist: () => request<{ items: WishlistItem[] }>("/wishlists/me"),
+  getMyWishlist: () =>
+    request<{ wishlist: Wishlist | null; items: WishlistItem[] }>("/wishlists/me"),
   addMyItem: (body: WishlistItemForm) =>
     request<WishlistItem>("/wishlists/me/items", { method: "POST", body }),
   updateMyItem: (id: string, body: WishlistItemForm) =>
@@ -105,6 +107,15 @@ export const api = {
     }),
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
+
+  publishMyWishlist: () =>
+    request<{ wishlist: Wishlist }>("/wishlists/me/publish", { method: "POST" }),
+  unpublishMyWishlist: () =>
+    request<{ wishlist: Wishlist }>("/wishlists/me/publish", { method: "DELETE" }),
+  viewPublicWishlist: (slug: string) =>
+    request<{ owner?: { name?: string }; wishlist?: Wishlist; items: WishlistItem[] }>(
+      `/wishlists/public/${slug}`,
+    ),
 
   // --- Others / viewing ---
   others: () => request<Array<{ user_id: string; name: string }>>("/wishlists"),

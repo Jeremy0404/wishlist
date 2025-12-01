@@ -11,9 +11,11 @@ import Others from "./pages/Others.vue";
 import WishlistView from "./pages/WishlistView.vue";
 import FamilyInvite from "./pages/FamilyInvite.vue";
 import Landing from "./pages/Landing.vue";
+import PublicWishlist from "./pages/PublicWishlist.vue";
 
 const routes = [
   { path: "/", component: Landing, meta: { public: true } },
+  { path: "/share/:slug", component: PublicWishlist, meta: { public: true } },
 
   // Auth
   {

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/knex.js";
@@ -48,6 +49,19 @@ const Item = z.object({
   notes: z.string().max(1000).optional(),
   priority: z.number().int().min(1).max(5).optional(),
 });
+
+function generateSlug() {
+  return `santa-${crypto.randomBytes(6).toString("hex")}`;
+}
+
+async function ensureUniqueSlug(trx = db) {
+  for (let i = 0; i < 5; i += 1) {
+    const slug = generateSlug();
+    const existing = await trx("wishlists").where({ public_slug: slug }).first();
+    if (!existing) return slug;
+  }
+  throw new Error("unable to generate share link");
+}
 
 router.post(
   "/me/items",
@@ -161,6 +175,99 @@ router.get(
       .orderBy("u.name", "asc");
     log.info({ familyId: req.familyId, count: rows.length }, "Listed family wishlists");
     res.json(rows);
+  }),
+);
+
+router.post(
+  "/me/publish",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "publish" });
+    const { id: user_id } = req.user!;
+    const family_id = req.familyId!;
+
+    const trx = await db.transaction();
+    try {
+      await trx("wishlists")
+        .insert({ user_id, family_id })
+        .onConflict(["user_id", "family_id"])
+        .ignore();
+
+      const wishlist = await trx("wishlists")
+        .where({ user_id, family_id })
+        .first();
+
+      if (!wishlist) throw new BadRequestError("missing wishlist");
+
+      const public_slug = wishlist.public_slug ?? (await ensureUniqueSlug(trx));
+
+      const [updated] = await trx("wishlists")
+        .where({ id: wishlist.id })
+        .update({
+          public_slug,
+          published_at: trx.fn.now(),
+        })
+        .returning("*");
+
+      await trx.commit();
+      log.info({ wishlistId: wishlist.id, slug: public_slug }, "Published wishlist");
+      res.json({ wishlist: updated });
+    } catch (e) {
+      await trx.rollback();
+      throw e;
+    }
+  }),
+);
+
+router.delete(
+  "/me/publish",
+  authRequired,
+  familyContext,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "unpublish" });
+    const { id: user_id } = req.user!;
+    const family_id = req.familyId!;
+
+    const wishlist = await db("wishlists").where({ user_id, family_id }).first();
+    if (!wishlist) throw new NotFoundError("wishlist not found");
+
+    const [updated] = await db("wishlists")
+      .where({ id: wishlist.id })
+      .update({ public_slug: null, published_at: null })
+      .returning("*");
+
+    log.info({ wishlistId: wishlist.id }, "Unpublished wishlist");
+    res.json({ wishlist: updated });
+  }),
+);
+
+router.get(
+  "/public/:slug",
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "wishlist", action: "public-view" });
+    const { slug } = req.params;
+
+    const wl = await db("wishlists as w")
+      .leftJoin("users as u", "u.id", "w.user_id")
+      .select("w.*", "u.name as owner_name")
+      .where({ "w.public_slug": slug })
+      .andWhereNotNull("w.published_at")
+      .first();
+
+    if (!wl) throw new NotFoundError("wishlist not published");
+
+    const items = await db("wishlist_items")
+      .where({ wishlist_id: wl.id })
+      .orderBy("priority", "asc")
+      .orderBy("created_at", "desc");
+
+    log.info({ wishlistId: wl.id, slug }, "Fetched public wishlist");
+    res.json({
+      owner: wl.owner_name ? { name: wl.owner_name } : undefined,
+      wishlist: { id: wl.id, published_at: wl.published_at, created_at: wl.created_at },
+      items,
+    });
   }),
 );
 
