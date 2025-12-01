@@ -2,7 +2,9 @@
   <div
     :class="[
       'min-h-screen text-slate-900',
-      isMinimalLayout ? 'bg-white' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100',
+      isMinimalLayout
+        ? 'bg-gradient-to-b from-rose-50 via-white to-amber-50'
+        : 'bg-gradient-to-br from-slate-50 via-white to-slate-100',
     ]"
   >
     <NavBar v-if="!isMinimalLayout" />
