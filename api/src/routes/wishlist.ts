@@ -252,7 +252,7 @@ router.get(
       .leftJoin("users as u", "u.id", "w.user_id")
       .select("w.*", "u.name as owner_name")
       .where({ "w.public_slug": slug })
-      .andWhereNotNull("w.published_at")
+      .whereNotNull("w.published_at")
       .first();
 
     if (!wl) throw new NotFoundError("wishlist not published");
