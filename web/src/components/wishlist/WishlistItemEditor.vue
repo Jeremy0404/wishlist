@@ -25,13 +25,15 @@
         :label="t('my.form.priority')"
       />
       <div class="sm:col-span-2">
-        <label class="block text-sm mb-1" for="notes">{{ t("my.form.notes") }}</label>
+        <label class="block text-sm mb-1" for="notes">{{
+          t("my.form.notes")
+        }}</label>
         <textarea
           v-model="form.notes"
           name="notes"
           rows="3"
           class="w-full rounded-lg border-neutral-400 bg-surface text-sm focus:ring-accent-500 focus:border-accent-500"
-          placeholder="Notes"
+          :placeholder="t('my.form.notes')"
         ></textarea>
       </div>
       <div class="sm:col-span-2 flex gap-2">
