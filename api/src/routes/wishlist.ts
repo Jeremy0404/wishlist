@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { Router } from "express";
 import type { Knex } from "knex";
 import { z } from "zod";
@@ -16,6 +15,7 @@ import {
   ValidationError,
 } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
+import { buildShareSlug } from "../share-slug.js";
 
 const router = Router();
 
@@ -48,12 +48,29 @@ function findOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
   return scopeToOwner(trx("wishlists"), userId, familyId).first();
 }
 
+const SLUG_ATTEMPTS = 5;
+
+async function mintShareSlug(userId: string, trx = db) {
+  const owner = await trx("users").select("name").where({ id: userId }).first();
+
+  for (let i = 0; i < SLUG_ATTEMPTS; i += 1) {
+    const slug = buildShareSlug(owner?.name ?? "");
+    const taken = await trx("wishlists").where({ public_slug: slug }).first();
+    if (!taken) return slug;
+  }
+  throw new Error("unable to generate share link");
+}
+
 async function ensureOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
   const existing = await findOwnWishlist(userId, familyId, trx);
   if (existing) return existing;
 
   const [created] = await trx("wishlists")
-    .insert({ user_id: userId, family_id: familyId ?? null })
+    .insert({
+      user_id: userId,
+      family_id: familyId ?? null,
+      public_slug: await mintShareSlug(userId, trx),
+    })
     .returning("*");
   return created;
 }
@@ -113,19 +130,6 @@ const Item = z.object({
   notes: z.string().max(1000).optional(),
   priority: z.number().int().min(1).max(5).optional(),
 });
-
-function generateSlug() {
-  return `santa-${crypto.randomBytes(6).toString("hex")}`;
-}
-
-async function ensureUniqueSlug(trx = db) {
-  for (let i = 0; i < 5; i += 1) {
-    const slug = generateSlug();
-    const existing = await trx("wishlists").where({ public_slug: slug }).first();
-    if (!existing) return slug;
-  }
-  throw new Error("unable to generate share link");
-}
 
 router.post(
   "/me/items",
@@ -248,7 +252,7 @@ router.post(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "publish" });
+    const log = getRequestLogger(req, { module: "wishlist", action: "share" });
     const { id: user_id } = req.user!;
     const family_id = req.familyId;
 
@@ -258,18 +262,16 @@ router.post(
 
       if (!wishlist) throw new BadRequestError("missing wishlist");
 
-      const public_slug = wishlist.public_slug ?? (await ensureUniqueSlug(trx));
-
       const [updated] = await trx("wishlists")
         .where({ id: wishlist.id })
-        .update({
-          public_slug,
-          published_at: trx.fn.now(),
-        })
+        .update({ published_at: trx.fn.now() })
         .returning("*");
 
       await trx.commit();
-      log.info({ wishlistId: wishlist.id, slug: public_slug }, "Published wishlist");
+      log.info(
+        { wishlistId: wishlist.id, slug: updated.public_slug },
+        "Shared wishlist",
+      );
       res.json({ wishlist: updated });
     } catch (e) {
       await trx.rollback();
@@ -283,16 +285,16 @@ router.delete(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "unpublish" });
+    const log = getRequestLogger(req, { module: "wishlist", action: "unshare" });
     const wishlist = await findOwnWishlist(req.user!.id, req.familyId);
     if (!wishlist) throw new NotFoundError("wishlist not found");
 
     const [updated] = await db("wishlists")
       .where({ id: wishlist.id })
-      .update({ public_slug: null, published_at: null })
+      .update({ published_at: null })
       .returning("*");
 
-    log.info({ wishlistId: wishlist.id }, "Unpublished wishlist");
+    log.info({ wishlistId: wishlist.id }, "Stopped sharing wishlist");
     res.json({ wishlist: updated });
   }),
 );
