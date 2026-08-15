@@ -5,6 +5,11 @@ Thumbs.db
 .vscode/
 *.code-workspace
 
+# Local-only agent tooling (not shared)
+.claude/
+CLAUDE.md
+graphify-out/
+
 # Logs & diagnostics
 logs/
 *.log

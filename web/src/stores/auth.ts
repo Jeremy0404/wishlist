@@ -67,7 +67,9 @@ export const useAuth = defineStore("auth", {
     async logout() {
       try {
         await api.logout();
-      } catch {}
+      } catch {
+        // the local session is cleared below whether or not the server answered
+      }
       this.user = null;
       this.myFamily = null;
       this.hydrated = true;
