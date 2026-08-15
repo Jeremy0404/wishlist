@@ -50,7 +50,7 @@ export async function seed(knex: Knex): Promise<void> {
         ])
         .returning('*');
 
-    const [legoSet, cleanArchitecture] = await knex('wishlist_items')
+    const [legoSet, _cleanArchitecture] = await knex('wishlist_items')
         .insert([
             {
                 wishlist_id: aliceNoelList.id,

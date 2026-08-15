@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p .",
+    "lint": "eslint .",
+    "typecheck": "tsc -p . --noEmit",
     "start": "node dist/server.js",
     "start:prod": "npm run migrate:latest && node dist/src/server.js",
     "migrate:make": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.cjs migrate:make",
@@ -26,18 +28,22 @@
     "pino": "^10.0.0",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.1",
-    "prettier": "^3.6.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.23",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
     "@types/pg": "^8.15.5",
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0"
   }
 }

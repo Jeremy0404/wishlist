@@ -30,7 +30,7 @@ export async function registerUser(
 /** Sign out via the navbar control */
 export async function logout(page: Page): Promise<void> {
   await page.click('button[data-test="logout"]');
-  await expect(page).toHaveURL(/^https?:\/\/[^\/]+\/$/);
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
 }
 
 /** Add a wishlist item through the UI form */

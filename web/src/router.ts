@@ -62,7 +62,10 @@ router.beforeEach(async (to) => {
   if (needsFreshSession) {
     try {
       await auth.hydrate();
-    } catch {}
+    } catch {
+      // an expired or missing session is not an error here: the guards below
+      // treat the user as logged out
+    }
   }
 
   const isPublic = Boolean(to.meta?.public);
