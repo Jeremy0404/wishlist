@@ -121,6 +121,7 @@ function requestOnce(
         lookup,
         headers: {
           accept: "text/html,application/xhtml+xml",
+          "accept-encoding": "identity",
           "user-agent": USER_AGENT,
         },
       },
