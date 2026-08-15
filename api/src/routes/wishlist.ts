@@ -16,6 +16,7 @@ import {
 } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
 import { buildShareSlug } from "../share-slug.js";
+import { fetchLinkPreview } from "../link-preview.js";
 
 const router = Router();
 
@@ -130,6 +131,29 @@ const Item = z.object({
   notes: z.string().max(1000).optional(),
   priority: z.number().int().min(1).max(5).optional(),
 });
+
+const PreviewRequest = z.object({
+  url: z.string().url(),
+});
+
+router.post(
+  "/me/items/preview",
+  authRequired,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "preview-item",
+    });
+
+    const parse = PreviewRequest.safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+    const preview = await fetchLinkPreview(parse.data.url);
+
+    log.info({ resolved: preview.title !== null }, "Resolved link preview");
+    res.json(preview);
+  }),
+);
 
 router.post(
   "/me/items",
@@ -285,7 +309,10 @@ router.delete(
   authRequired,
   familyContext,
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "unshare" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "unshare",
+    });
     const wishlist = await findOwnWishlist(req.user!.id, req.familyId);
     if (!wishlist) throw new NotFoundError("wishlist not found");
 
@@ -302,7 +329,10 @@ router.delete(
 router.get(
   "/public/:slug",
   asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "public-view" });
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "public-view",
+    });
     const { slug } = req.params;
 
     const wl = await db("wishlists as w")
@@ -322,7 +352,11 @@ router.get(
     log.info({ wishlistId: wl.id, slug }, "Fetched public wishlist");
     res.json({
       owner: wl.owner_name ? { name: wl.owner_name } : undefined,
-      wishlist: { id: wl.id, published_at: wl.published_at, created_at: wl.created_at },
+      wishlist: {
+        id: wl.id,
+        published_at: wl.published_at,
+        created_at: wl.created_at,
+      },
       items,
     });
   }),
