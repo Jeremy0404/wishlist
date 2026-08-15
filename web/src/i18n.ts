@@ -1,7 +1,7 @@
 import { createI18n } from "vue-i18n";
 
 const fr = {
-  app: { title: "🎄 Liste de Noël" },
+  app: { title: "Wishlist" },
   common: {
     share: "Partager…",
     copy: "Copier",
@@ -13,7 +13,7 @@ const fr = {
     wishlist: "Wishlist",
     home: "Accueil",
     myList: "Ma liste",
-    others: "Les listes de ma famille",
+    others: "Parcourir",
     invite: "Inviter",
     joinFamily: "Rejoindre une famille",
     login: "Se connecter",
@@ -25,7 +25,7 @@ const fr = {
     helloAnon: "Bienvenue !",
     helloUser: "Salut {name} 👋",
     subAnon: "Une petite app pour préparer les cadeaux sans se spoiler.",
-    subUser: "Ravi de te revoir. On s’organise pour Noël ?",
+    subUser: "Content de te revoir. On jette un œil à ta liste ?",
 
     // états
     youAreIn: "Tu es dans la famille {fam}.",
@@ -220,19 +220,19 @@ const fr = {
     empty: "Aucun article ici pour le moment.",
   },
   public: {
-    eyebrow: "Lettre au Père Noël",
+    eyebrow: "Liste partagée",
     title: "La liste de {name}",
     subtitle: "",
-    stamp: "Cachet officiel du Pôle Nord",
-    online: "Lettre publiée",
+    stamp: "Wishlist",
+    online: "En ligne",
     back: "Découvrir l’application",
     priority: "Priorité : {value}/5",
     link: "Voir le cadeau",
     empty: "La liste est encore vide pour le moment.",
-    signature: "Bisous, {name}",
-    footer: "Joyeuses fêtes ✨",
+    signature: "— {name}",
+    footer: "Fait avec Wishlist",
     someone: "un·e proche",
-    missing: "Cette lettre n'est pas disponible ou a été retirée.",
+    missing: "Cette liste n’est pas disponible ou a été retirée.",
   },
   toast: {
     added: "Article ajouté",

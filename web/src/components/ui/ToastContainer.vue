@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { type Toast, useToasts } from "./useToasts";
 import Icon from "./Icon.vue";
 
+const { t } = useI18n();
 const { items, clear } = useToasts();
 
 // Filter in script so there's no v-if on the v-for node (avoids the union-type bug)
@@ -15,27 +17,31 @@ const visible = computed<Toast[]>(() =>
   <div class="fixed bottom-4 right-4 z-50 space-y-2">
     <TransitionGroup name="toast-fade" tag="div">
       <div
-        v-for="t in visible"
-        :key="t.id"
+        v-for="toast in visible"
+        :key="toast.id"
         class="flex min-w-56 max-w-sm items-start gap-3 rounded-pill px-4 py-2 text-control shadow-md"
         :class="{
-          'bg-accent-2-700 text-bg': t.kind === 'success',
-          'bg-accent-700 text-bg': t.kind === 'error',
-          'bg-neutral-800 text-bg': !t.kind || t.kind === 'info',
+          'bg-accent-2-700 text-bg': toast.kind === 'success',
+          'bg-accent-700 text-bg': toast.kind === 'error',
+          'bg-neutral-800 text-bg': !toast.kind || toast.kind === 'info',
         }"
       >
         <Icon
           :name="
-            t.kind === 'success' ? 'checkCircle' : t.kind === 'error' ? 'alert' : 'bell'
+            toast.kind === 'success'
+              ? 'checkCircle'
+              : toast.kind === 'error'
+                ? 'alert'
+                : 'bell'
           "
         />
         <div class="flex-1 break-words">
-          {{ t.text }}
+          {{ toast.text }}
         </div>
         <button
           class="opacity-70 transition-opacity hover:opacity-100"
-          title="Dismiss"
-          @click="clear(t.id)"
+          :title="t('common.close')"
+          @click="clear(toast.id)"
         >
           <Icon name="close" :size="14" />
         </button>
