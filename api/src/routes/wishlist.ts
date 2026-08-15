@@ -6,7 +6,7 @@ import { db } from "../db/knex.js";
 import {
   authRequired,
   familyContext,
-  mustHaveWishlistWithItem,
+  familyRequired,
 } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import {
@@ -29,6 +29,34 @@ const RESERVED_BY_ME_COUNT = `(
   join reservations r on r.item_id = i.id
   where i.wishlist_id = w.id and r.reserver_user_id = ?
 )::int as reserved_by_me_count`;
+
+type FamilyId = string | null | undefined;
+
+function scopeToOwner<T extends Knex.QueryBuilder>(
+  query: T,
+  userId: string,
+  familyId: FamilyId,
+  prefix = "",
+): T {
+  query.where(`${prefix}user_id`, userId);
+  return familyId
+    ? (query.where(`${prefix}family_id`, familyId) as T)
+    : (query.whereNull(`${prefix}family_id`) as T);
+}
+
+function findOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
+  return scopeToOwner(trx("wishlists"), userId, familyId).first();
+}
+
+async function ensureOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
+  const existing = await findOwnWishlist(userId, familyId, trx);
+  if (existing) return existing;
+
+  const [created] = await trx("wishlists")
+    .insert({ user_id: userId, family_id: familyId ?? null })
+    .returning("*");
+  return created;
+}
 
 export async function listFamilyWishlists(
   dbConn: Knex,
@@ -59,9 +87,7 @@ router.get(
       module: "wishlist",
       action: "get-own",
     });
-    const wl = await db("wishlists")
-      .where({ user_id: req.user!.id, family_id: req.familyId! })
-      .first();
+    const wl = await findOwnWishlist(req.user!.id, req.familyId);
 
     if (!wl) {
       log.info("No wishlist yet for user");
@@ -111,21 +137,14 @@ router.post(
       action: "add-item",
     });
     const { id: user_id } = req.user!;
-    const family_id = req.familyId!;
+    const family_id = req.familyId;
 
     const parse = Item.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
 
     const trx = await db.transaction();
     try {
-      await trx("wishlists")
-        .insert({ user_id, family_id })
-        .onConflict(["user_id", "family_id"])
-        .ignore();
-
-      const wishlist = await trx("wishlists")
-        .where({ user_id, family_id })
-        .first();
+      const wishlist = await ensureOwnWishlist(user_id, family_id, trx);
 
       if (!wishlist) {
         throw new BadRequestError("Unable to ensure wishlist");
@@ -158,14 +177,14 @@ router.patch(
       action: "update-item",
     });
     const { id } = req.params;
-    const row = await db("wishlist_items as i")
-      .join("wishlists as w", "w.id", "i.wishlist_id")
-      .where({
-        "i.id": id,
-        "w.user_id": req.user!.id,
-        "w.family_id": req.familyId!,
-      })
-      .first();
+    const row = await scopeToOwner(
+      db("wishlist_items as i")
+        .join("wishlists as w", "w.id", "i.wishlist_id")
+        .where("i.id", id),
+      req.user!.id,
+      req.familyId,
+      "w.",
+    ).first();
     if (!row) throw new NotFoundError("item not found");
 
     const parse = Item.partial().safeParse(req.body);
@@ -190,14 +209,14 @@ router.delete(
       action: "delete-item",
     });
     const { id } = req.params;
-    const owned = await db("wishlist_items as i")
-      .join("wishlists as w", "w.id", "i.wishlist_id")
-      .where({
-        "i.id": id,
-        "w.user_id": req.user!.id,
-        "w.family_id": req.familyId!,
-      })
-      .first();
+    const owned = await scopeToOwner(
+      db("wishlist_items as i")
+        .join("wishlists as w", "w.id", "i.wishlist_id")
+        .where("i.id", id),
+      req.user!.id,
+      req.familyId,
+      "w.",
+    ).first();
     if (!owned) throw new NotFoundError("item not found");
     await db("wishlist_items").where({ id }).del();
     log.info({ itemId: id }, "Deleted wishlist item");
@@ -209,7 +228,7 @@ router.get(
   "/",
   authRequired,
   familyContext,
-  mustHaveWishlistWithItem,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -231,18 +250,11 @@ router.post(
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "wishlist", action: "publish" });
     const { id: user_id } = req.user!;
-    const family_id = req.familyId!;
+    const family_id = req.familyId;
 
     const trx = await db.transaction();
     try {
-      await trx("wishlists")
-        .insert({ user_id, family_id })
-        .onConflict(["user_id", "family_id"])
-        .ignore();
-
-      const wishlist = await trx("wishlists")
-        .where({ user_id, family_id })
-        .first();
+      const wishlist = await ensureOwnWishlist(user_id, family_id, trx);
 
       if (!wishlist) throw new BadRequestError("missing wishlist");
 
@@ -272,10 +284,7 @@ router.delete(
   familyContext,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "wishlist", action: "unpublish" });
-    const { id: user_id } = req.user!;
-    const family_id = req.familyId!;
-
-    const wishlist = await db("wishlists").where({ user_id, family_id }).first();
+    const wishlist = await findOwnWishlist(req.user!.id, req.familyId);
     if (!wishlist) throw new NotFoundError("wishlist not found");
 
     const [updated] = await db("wishlists")
@@ -321,7 +330,7 @@ router.get(
   "/:userId",
   authRequired,
   familyContext,
-  mustHaveWishlistWithItem,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -368,6 +377,7 @@ router.post(
   "/items/:id/reserve",
   authRequired,
   familyContext,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -407,6 +417,7 @@ router.post(
   "/items/:id/unreserve",
   authRequired,
   familyContext,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -427,6 +438,7 @@ router.post(
   "/items/:id/purchase",
   authRequired,
   familyContext,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",

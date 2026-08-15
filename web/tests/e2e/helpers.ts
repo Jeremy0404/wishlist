@@ -22,8 +22,8 @@ export async function registerUser(
   await page.fill('input[name="new-password"]', password);
   await page.click('button[type="submit"]');
 
-  // Wait for navigation to either /me or /family/create (if new user needs to create family)
-  await expect(page).toHaveURL(/\/me|\/family\/create/);
+  // A new user lands straight on their own list: family membership is optional
+  await expect(page).toHaveURL(/\/me/);
 
   return { email, password };
 }

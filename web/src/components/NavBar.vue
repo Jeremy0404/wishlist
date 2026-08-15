@@ -70,6 +70,9 @@ onMounted(() => {
           <RouterLink v-if="auth.inFamily" class="nav-link" to="/family/invite">
             {{ t("nav.invite") }}
           </RouterLink>
+          <RouterLink v-else class="nav-link" to="/family/join">
+            {{ t("nav.joinFamily") }}
+          </RouterLink>
         </template>
       </div>
     </div>

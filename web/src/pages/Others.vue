@@ -27,6 +27,7 @@
     </Card>
 
     <div
+      v-if="auth.inFamily"
       class="flex flex-col items-center justify-center gap-2 rounded-card border-[1.5px] border-dashed border-divider p-4 text-center"
     >
       <Icon name="users" :size="20" class="text-accent" />
@@ -43,7 +44,9 @@
     </div>
   </div>
 
-  <p v-if="!rows.length && !error" class="mt-4 text-muted">{{ t("browse.empty") }}</p>
+  <p v-if="!rows.length && !error" class="mt-4 text-muted">
+    {{ auth.inFamily ? t("browse.empty") : t("browse.noFamily") }}
+  </p>
 
   <InviteDialog :open="inviteOpen" @close="inviteOpen = false" />
 </template>
@@ -57,9 +60,11 @@ import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
 import Icon from "../components/ui/Icon.vue";
 import InviteDialog from "../components/InviteDialog.vue";
+import { useAuth } from "../stores/auth.ts";
 import type { FamilyWishlist } from "../types.ts";
 
 const { t } = useI18n();
+const auth = useAuth();
 const rows = ref<FamilyWishlist[]>([]);
 const error = ref("");
 const inviteOpen = ref(false);
@@ -73,6 +78,7 @@ function summary(row: FamilyWishlist) {
 }
 
 onMounted(async () => {
+  if (!auth.inFamily) return;
   try {
     rows.value = await api.others();
   } catch (e: any) {

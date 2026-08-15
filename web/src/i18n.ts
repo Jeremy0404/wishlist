@@ -15,6 +15,7 @@ const fr = {
     myList: "Ma liste",
     others: "Les listes de ma famille",
     invite: "Inviter",
+    joinFamily: "Rejoindre une famille",
     login: "Se connecter",
     register: "Créer un compte",
     logout: "Déconnexion",
@@ -176,6 +177,8 @@ const fr = {
     reservedNone: "rien de réservé",
     hint: "Tu peux voir les autres quand ta liste contient au moins un article.",
     empty: "Aucune autre liste pour l’instant.",
+    noFamily:
+      "Rejoins une famille — ou crées-en une — pour voir les listes des autres et réserver.",
     inviteCard: {
       title: "Inviter quelqu’un",
       body: "Fais venir d’autres personnes — quand tu veux, sans pression.",
