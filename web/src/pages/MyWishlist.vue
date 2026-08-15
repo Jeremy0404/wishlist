@@ -4,6 +4,10 @@
     <WishlistExportButton :items="items" />
   </div>
 
+  <ShareCard :wishlist="wishlist" @change="(updated) => (wishlist = updated)" />
+
+  <InviteNudge />
+
   <Card class="mb-4">
     <template #header
       ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
@@ -92,69 +96,10 @@
       />
     </li>
   </ul>
-
-  <Card class="mt-6 overflow-hidden bg-gradient-to-br from-accent-100 to-bg">
-    <template #header>
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs uppercase tracking-[0.2em] text-accent-700 font-semibold mb-1">
-            {{ t("my.publish.badge") }}
-          </p>
-          <h2 class="font-semibold">{{ t("my.publish.title") }}</h2>
-        </div>
-        <span
-          v-if="isPublished"
-          class="inline-flex items-center gap-2 rounded-full bg-accent-2-100 px-3 py-1 text-xs font-medium text-accent-2-800"
-        >
-          <span class="h-2 w-2 rounded-full bg-accent-2-500"></span>
-          {{ t("my.publish.online") }}
-        </span>
-      </div>
-    </template>
-    <div class="grid gap-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
-      <div class="space-y-2 text-sm text-neutral-700">
-        <p>{{ t("my.publish.description") }}</p>
-        <p class="text-accent-700" v-if="!hasItems">{{ t("my.publish.empty") }}</p>
-        <p class="text-xs text-neutral-600">
-          {{ t("my.publish.hint") }}
-        </p>
-      </div>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <Input
-          class="sm:w-64"
-          :model-value="publishLink"
-          :placeholder="t('my.publish.placeholder')"
-          readonly
-        />
-        <div class="flex flex-wrap gap-2 justify-end">
-          <Button
-            v-if="!isPublished"
-            variant="primary"
-            :disabled="!hasItems"
-            :loading="publishSubmitting"
-            @click="publish"
-          >
-            🎁 {{ t("my.publish.action") }}
-          </Button>
-          <template v-else>
-            <Button variant="ghost" @click="copyLink">{{ t("my.publish.copy") }}</Button>
-            <Button variant="secondary" @click="openPreview">{{ t("my.publish.preview") }}</Button>
-            <Button
-              variant="danger"
-              :loading="unpublishSubmitting"
-              @click="unpublish"
-            >
-              {{ t("my.publish.unpublish") }}
-            </Button>
-          </template>
-        </div>
-      </div>
-    </div>
-  </Card>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { api } from "../services/api";
 import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
@@ -164,6 +109,8 @@ import { useI18n } from "vue-i18n";
 import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
 import WishlistExportButton from "../components/wishlist/WishlistExportButton.vue";
+import ShareCard from "../components/wishlist/ShareCard.vue";
+import InviteNudge from "../components/InviteNudge.vue";
 import type { Wishlist, WishlistItem, WishlistItemForm } from "../types.ts";
 
 const { push } = useToasts();
@@ -173,8 +120,6 @@ const items = ref<WishlistItem[]>([]);
 const wishlist = ref<Wishlist | null>(null);
 const submitting = ref(false);
 const editSubmitting = ref(false);
-const publishSubmitting = ref(false);
-const unpublishSubmitting = ref(false);
 const form = reactive<WishlistItemForm>({
   title: "",
   url: "",
@@ -183,13 +128,6 @@ const form = reactive<WishlistItemForm>({
   priority: 3,
 });
 const editingId = ref<string | null>(null);
-const hasItems = computed(() => items.value.length > 0);
-const isPublished = computed(
-  () => Boolean(wishlist.value?.public_slug && wishlist.value?.published_at),
-);
-const publishLink = computed(() =>
-  wishlist.value?.public_slug ? `${window.location.origin}/share/${wishlist.value.public_slug}` : "",
-);
 
 function normalizeItem(item: WishlistItem): WishlistItem {
   return { ...item, original_title: item.original_title ?? item.title };
@@ -213,6 +151,7 @@ async function add() {
     });
 
     items.value.unshift(normalizeItem(created));
+    if (!wishlist.value) wishlist.value = (await api.getMyWishlist()).wishlist;
     form.title = "";
     form.url = "";
     form.price_eur = undefined;
@@ -224,54 +163,6 @@ async function add() {
   } finally {
     submitting.value = false;
   }
-}
-
-async function publish() {
-  if (!hasItems.value) {
-    push(t("my.publish.empty"), "error");
-    return;
-  }
-
-  publishSubmitting.value = true;
-  try {
-    const { wishlist: updated } = await api.publishMyWishlist();
-    wishlist.value = updated;
-    push(t("my.publish.published"), "success");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
-  } finally {
-    publishSubmitting.value = false;
-  }
-}
-
-async function unpublish() {
-  if (!isPublished.value) return;
-  if (!window.confirm(t("my.publish.unpublishConfirm"))) return;
-
-  unpublishSubmitting.value = true;
-  try {
-    const { wishlist: updated } = await api.unpublishMyWishlist();
-    wishlist.value = updated;
-    push(t("my.publish.unpublished"), "info");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
-  } finally {
-    unpublishSubmitting.value = false;
-  }
-}
-
-async function copyLink() {
-  if (!publishLink.value) return;
-  try {
-    await navigator.clipboard.writeText(publishLink.value);
-    push(t("my.publish.copied"), "success");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
-  }
-}
-
-function openPreview() {
-  if (publishLink.value) window.open(publishLink.value, "_blank");
 }
 
 async function removeItem(id: string) {
