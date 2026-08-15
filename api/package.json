@@ -7,7 +7,7 @@
     "build": "tsc -p .",
     "lint": "eslint .",
     "typecheck": "tsc -p . --noEmit",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "start:prod": "npm run migrate:latest && node dist/src/server.js",
     "migrate:make": "node -r ts-node/register ./node_modules/knex/bin/cli.js --knexfile knexfile.cjs migrate:make",
     "migrate:latest": "knex --knexfile knexfile.cjs migrate:latest",
