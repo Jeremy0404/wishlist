@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { Router } from "express";
+import type { Knex } from "knex";
 import { z } from "zod";
 import { db } from "../db/knex.js";
 import {
@@ -17,6 +18,37 @@ import {
 import { getRequestLogger } from "../logging/logger.js";
 
 const router = Router();
+
+const ITEM_COUNT = `(
+  select count(*) from wishlist_items i where i.wishlist_id = w.id
+)::int as item_count`;
+
+const RESERVED_BY_ME_COUNT = `(
+  select count(*)
+  from wishlist_items i
+  join reservations r on r.item_id = i.id
+  where i.wishlist_id = w.id and r.reserver_user_id = ?
+)::int as reserved_by_me_count`;
+
+export async function listFamilyWishlists(
+  dbConn: Knex,
+  familyId: string,
+  userId: string,
+) {
+  return dbConn("wishlists as w")
+    .join("users as u", "u.id", "w.user_id")
+    .where("w.family_id", familyId)
+    .andWhereNot("w.user_id", userId)
+    .select(
+      "w.id as wishlist_id",
+      "u.id as user_id",
+      "u.name",
+      "w.created_at",
+      dbConn.raw(ITEM_COUNT),
+      dbConn.raw(RESERVED_BY_ME_COUNT, [userId]),
+    )
+    .orderBy("u.name", "asc");
+}
 
 router.get(
   "/me",
@@ -183,17 +215,7 @@ router.get(
       module: "wishlist",
       action: "list-family",
     });
-    const rows = await db("wishlists as w")
-      .join("users as u", "u.id", "w.user_id")
-      .where("w.family_id", req.familyId!)
-      .andWhereNot("w.user_id", req.user!.id)
-      .select(
-        "w.id as wishlist_id",
-        "u.id as user_id",
-        "u.name",
-        "w.created_at",
-      )
-      .orderBy("u.name", "asc");
+    const rows = await listFamilyWishlists(db, req.familyId!, req.user!.id);
     log.info(
       { familyId: req.familyId, count: rows.length },
       "Listed family wishlists",
