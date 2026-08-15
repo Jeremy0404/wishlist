@@ -173,15 +173,16 @@ const fr = {
   },
   view: {
     title: "Liste de {name}",
-    by: "par {name}",
-    unreserve: "Annuler",
-    purchase: "Marquer acheté",
+    back: "Retour aux listes",
+    counter: "{remaining} sur {total} encore à prendre",
     reserve: "Réserver",
+    purchase: "Marquer acheté",
+    unreserve: "Annuler",
+    reservedByYou: "Réservé par toi",
+    purchasedByYou: "Acheté — bien joué",
+    reservedByOther: "Réservé par {name}",
+    link: "Voir le cadeau",
     empty: "Aucun article ici pour le moment.",
-  },
-  status: {
-    reserved: "Réservé",
-    purchased: "Acheté",
   },
   public: {
     eyebrow: "Lettre au Père Noël",
