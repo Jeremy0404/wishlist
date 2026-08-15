@@ -20,6 +20,15 @@ export interface Wishlist {
   created_at?: string | null;
 }
 
+export interface FamilyWishlist {
+  wishlist_id: string;
+  user_id: string;
+  name: string;
+  created_at?: string | null;
+  item_count: number;
+  reserved_by_me_count: number;
+}
+
 export interface WishlistItemForm {
   title: string;
   url?: string;
