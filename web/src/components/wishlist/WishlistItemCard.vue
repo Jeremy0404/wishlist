@@ -1,52 +1,15 @@
-<template>
-  <Card>
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <div class="font-medium">
-          {{ item.title }}
-          <span v-if="item.priority" class="text-xs text-neutral-600">P{{ item.priority }}</span>
-        </div>
-        <div v-if="item.url" class="text-sm text-accent-700 break-words">
-          <a :href="item.url" target="_blank" class="inline-block max-w-full break-all">{{ item.url }}</a>
-        </div>
-        <div v-if="item.price_eur != null" class="text-sm text-neutral-700">
-          {{ fmtEUR.format(item.price_eur) }}
-        </div>
-        <div v-if="item.notes" class="text-sm text-neutral-700 whitespace-pre-wrap mt-1">
-          {{ item.notes }}
-        </div>
-      </div>
-      <div v-if="showActionsComputed" class="flex flex-col gap-2">
-        <slot name="actions" :on-edit="emitEdit" :on-delete="emitDelete">
-          <Button variant="ghost" data-test="wishlist-edit" @click="emitEdit">
-            {{ t("my.edit") }}
-          </Button>
-          <Button variant="ghost" data-test="wishlist-delete" @click="emitDelete">
-            {{ t("my.delete") }}
-          </Button>
-        </slot>
-      </div>
-    </div>
-  </Card>
-</template>
-
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
+import Icon from "../ui/Icon.vue";
+import Tag from "../ui/Tag.vue";
 import { fmtEUR } from "../../utils/money";
+import { isHighPriority } from "../../utils/priority";
 import type { WishlistItem } from "../../types.ts";
 
-const props = withDefaults(
-  defineProps<{
-    item: WishlistItem;
-    showActions?: boolean;
-  }>(),
-  {
-    showActions: true,
-  },
-);
+const props = defineProps<{ item: WishlistItem }>();
 
 const emit = defineEmits<{
   edit: [];
@@ -55,8 +18,64 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const showActionsComputed = computed(() => props.showActions);
-
-const emitEdit = () => emit("edit");
-const emitDelete = () => emit("delete");
+const high = computed(() => isHighPriority(props.item.priority));
 </script>
+
+<template>
+  <Card>
+    <div class="flex items-start gap-3">
+      <div class="min-w-[200px] flex-1">
+        <a
+          v-if="item.url"
+          :href="item.url"
+          target="_blank"
+          rel="noreferrer"
+          class="font-semibold text-accent"
+        >
+          {{ item.title }}
+        </a>
+        <span v-else class="font-semibold">{{ item.title }}</span>
+
+        <div class="mt-1 flex flex-wrap items-center gap-2">
+          <span v-if="item.price_eur != null" class="text-caption text-muted">
+            {{ fmtEUR.format(item.price_eur) }}
+          </span>
+          <Tag
+            v-if="item.priority != null"
+            :variant="high ? 'accent' : 'neutral'"
+            data-test="wishlist-priority"
+          >
+            {{ high ? t("my.priority.high") : t("my.priority.nice") }}
+          </Tag>
+        </div>
+
+        <p v-if="item.notes" class="mb-0 mt-1 text-caption opacity-80">
+          {{ item.notes }}
+        </p>
+      </div>
+
+      <div class="flex flex-none gap-1">
+        <Button
+          variant="ghost"
+          icon
+          data-test="wishlist-edit"
+          :aria-label="t('my.edit')"
+          :title="t('my.edit')"
+          @click="emit('edit')"
+        >
+          <Icon name="pencil" :size="16" />
+        </Button>
+        <Button
+          variant="ghost"
+          icon
+          data-test="wishlist-delete"
+          :aria-label="t('my.delete')"
+          :title="t('my.delete')"
+          @click="emit('delete')"
+        >
+          <Icon name="trash" :size="16" />
+        </Button>
+      </div>
+    </div>
+  </Card>
+</template>

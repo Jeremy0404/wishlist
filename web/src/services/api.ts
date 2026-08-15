@@ -3,6 +3,7 @@ import type {
   Family,
   FamilyMember,
   FamilyWishlist,
+  LinkPreview,
   Wishlist,
   WishlistItem,
   WishlistItemForm,
@@ -98,7 +99,14 @@ export const api = {
 
   // --- Wishlist (mine) ---
   getMyWishlist: () =>
-    request<{ wishlist: Wishlist | null; items: WishlistItem[] }>("/wishlists/me"),
+    request<{ wishlist: Wishlist | null; items: WishlistItem[] }>(
+      "/wishlists/me",
+    ),
+  previewItemUrl: (url: string) =>
+    request<LinkPreview>("/wishlists/me/items/preview", {
+      method: "POST",
+      body: { url },
+    }),
   addMyItem: (body: WishlistItemForm) =>
     request<WishlistItem>("/wishlists/me/items", { method: "POST", body }),
   updateMyItem: (id: string, body: WishlistItemForm) =>
@@ -110,13 +118,19 @@ export const api = {
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
   publishMyWishlist: () =>
-    request<{ wishlist: Wishlist }>("/wishlists/me/publish", { method: "POST" }),
+    request<{ wishlist: Wishlist }>("/wishlists/me/publish", {
+      method: "POST",
+    }),
   unpublishMyWishlist: () =>
-    request<{ wishlist: Wishlist }>("/wishlists/me/publish", { method: "DELETE" }),
+    request<{ wishlist: Wishlist }>("/wishlists/me/publish", {
+      method: "DELETE",
+    }),
   viewPublicWishlist: (slug: string) =>
-    request<{ owner?: { name?: string }; wishlist?: Wishlist; items: WishlistItem[] }>(
-      `/wishlists/public/${slug}`,
-    ),
+    request<{
+      owner?: { name?: string };
+      wishlist?: Wishlist;
+      items: WishlistItem[];
+    }>(`/wishlists/public/${slug}`),
 
   // --- Others / viewing ---
   others: () => request<FamilyWishlist[]>("/wishlists"),
