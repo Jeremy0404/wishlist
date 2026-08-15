@@ -37,6 +37,7 @@ export interface WishlistItem {
   priority?: number | null;
   original_title?: string | null;
   reserved?: boolean;
+  reserver_user_id?: string | null;
   reserver_name?: string | null;
   reservation_status?: ReservationStatus | null;
   created_at?: string | null;
