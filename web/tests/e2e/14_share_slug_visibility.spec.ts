@@ -1,12 +1,21 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { addWishlistItem, registerUser } from "./helpers";
 
 const SLUG = /^elodie-martin-[a-z2-9]{4}$/;
 
-async function readOwnWishlist(page: import("@playwright/test").Page) {
+async function readOwnWishlist(page: Page) {
   const res = await page.request.get("/api/wishlists/me");
   expect(res.status()).toBe(200);
   return (await res.json()).wishlist;
+}
+
+async function setVisibility(page: Page, value: "shared" | "private") {
+  const response = page.waitForResponse(
+    (res) => res.url().includes("/api/wishlists/me/publish") && res.ok(),
+  );
+  await page.click(`[data-test="share-visibility-${value}"]`);
+  await response;
 }
 
 test.describe("Share slug and visibility", () => {
@@ -20,16 +29,24 @@ test.describe("Share slug and visibility", () => {
     expect(created.public_slug).toMatch(SLUG);
     expect(created.published_at).toBeNull();
 
+    // Private: the link is shown, greyed and inert, with a line saying so
+    await expect(page.locator('[data-test="share-link"]')).toHaveValue(
+      new RegExp(`/share/${created.public_slug}$`),
+    );
+    await expect(page.locator('[data-test="share-private-hint"]')).toBeVisible();
+    await expect(page.locator('[data-test="share-copy"]')).toBeDisabled();
+
     const beforeSharing = await page.request.get(
       `/api/wishlists/public/${created.public_slug}`,
     );
     expect(beforeSharing.status()).toBe(404);
 
-    const shared = await page.request.post("/api/wishlists/me/publish");
-    expect(shared.status()).toBe(200);
-    expect((await shared.json()).wishlist.public_slug).toBe(
-      created.public_slug,
-    );
+    // Turning sharing on asks nothing: an unhandled confirm would be dismissed
+    await setVisibility(page, "shared");
+    await expect(
+      page.locator('[data-test="share-private-hint"]'),
+    ).toHaveCount(0);
+    expect((await readOwnWishlist(page)).public_slug).toBe(created.public_slug);
 
     const publicView = await page.request.get(
       `/api/wishlists/public/${created.public_slug}`,
@@ -42,22 +59,43 @@ test.describe("Share slug and visibility", () => {
     ]);
     expect(Object.keys(body.items[0])).not.toContain("reserved");
 
-    const unshared = await page.request.delete("/api/wishlists/me/publish");
-    expect(unshared.status()).toBe(200);
-    const afterUnsharing = await unshared.json();
-    expect(afterUnsharing.wishlist.public_slug).toBe(created.public_slug);
-    expect(afterUnsharing.wishlist.published_at).toBeNull();
+    // Copy gives visible feedback on the button itself. The clipboard API needs
+    // a secure context, which the plain-http test stack is not, so it is stubbed.
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: async () => {} },
+      });
+    });
+    await page.click('[data-test="share-copy"]');
+    await expect(page.locator('[data-test="share-copy"]')).toHaveText("Copié !");
+
+    // Turning it off asks for confirmation, and declining changes nothing
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.click('[data-test="share-visibility-private"]');
+    await expect(
+      page.locator('[data-test="share-private-hint"]'),
+    ).toHaveCount(0);
+    expect(
+      (await page.request.get(`/api/wishlists/public/${created.public_slug}`))
+        .status(),
+    ).toBe(200);
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await setVisibility(page, "private");
+    await expect(page.locator('[data-test="share-private-hint"]')).toBeVisible();
+
+    const unshared = await readOwnWishlist(page);
+    expect(unshared.public_slug).toBe(created.public_slug);
+    expect(unshared.published_at).toBeNull();
 
     const goneAgain = await page.request.get(
       `/api/wishlists/public/${created.public_slug}`,
     );
     expect(goneAgain.status()).toBe(404);
 
-    const reshared = await page.request.post("/api/wishlists/me/publish");
-    expect(reshared.status()).toBe(200);
-    expect((await reshared.json()).wishlist.public_slug).toBe(
-      created.public_slug,
-    );
+    await setVisibility(page, "shared");
+    expect((await readOwnWishlist(page)).public_slug).toBe(created.public_slug);
     const resolvesAgain = await page.request.get(
       `/api/wishlists/public/${created.public_slug}`,
     );
