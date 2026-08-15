@@ -29,3 +29,6 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - name: Unit tests
+        if: matrix.package == 'api'
+        run: npm test
