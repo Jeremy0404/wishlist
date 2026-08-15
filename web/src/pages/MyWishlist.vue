@@ -49,7 +49,7 @@
           name="notes"
           data-test="item-notes"
           rows="3"
-          class="w-full rounded-lg border-zinc-300 bg-white text-sm focus:ring-brand-500 focus:border-brand-500"
+          class="w-full rounded-lg border-neutral-400 bg-surface text-sm focus:ring-accent-500 focus:border-accent-500"
           placeholder="Notes"
         ></textarea>
       </div>
@@ -65,7 +65,7 @@
     </form>
   </Card>
 
-  <div v-if="items.length === 0" class="text-zinc-600">
+  <div v-if="items.length === 0" class="text-neutral-700">
     {{ t("my.empty") }}
   </div>
 
@@ -93,29 +93,29 @@
     </li>
   </ul>
 
-  <Card class="mt-6 overflow-hidden bg-gradient-to-br from-amber-50/80 to-white">
+  <Card class="mt-6 overflow-hidden bg-gradient-to-br from-accent-100 to-bg">
     <template #header>
       <div class="flex items-center justify-between gap-3">
         <div>
-          <p class="text-xs uppercase tracking-[0.2em] text-amber-700 font-semibold mb-1">
+          <p class="text-xs uppercase tracking-[0.2em] text-accent-700 font-semibold mb-1">
             {{ t("my.publish.badge") }}
           </p>
           <h2 class="font-semibold">{{ t("my.publish.title") }}</h2>
         </div>
         <span
           v-if="isPublished"
-          class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800"
+          class="inline-flex items-center gap-2 rounded-full bg-accent-2-100 px-3 py-1 text-xs font-medium text-accent-2-800"
         >
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span class="h-2 w-2 rounded-full bg-accent-2-500"></span>
           {{ t("my.publish.online") }}
         </span>
       </div>
     </template>
     <div class="grid gap-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
-      <div class="space-y-2 text-sm text-zinc-600">
+      <div class="space-y-2 text-sm text-neutral-700">
         <p>{{ t("my.publish.description") }}</p>
-        <p class="text-amber-700" v-if="!hasItems">{{ t("my.publish.empty") }}</p>
-        <p class="text-xs text-zinc-500">
+        <p class="text-accent-700" v-if="!hasItems">{{ t("my.publish.empty") }}</p>
+        <p class="text-xs text-neutral-600">
           {{ t("my.publish.hint") }}
         </p>
       </div>

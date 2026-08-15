@@ -1,11 +1,11 @@
 <template>
   <div v-if="auth.inFamily" class="flex items-center gap-2 text-sm">
-    <span class="px-2 py-1 rounded bg-zinc-100">
+    <span class="px-2 py-1 rounded bg-neutral-200">
       👨‍👩‍👧 {{ auth.myFamily?.name }}
     </span>
-    <span class="hidden sm:inline text-zinc-600">
+    <span class="hidden sm:inline text-neutral-700">
       {{ t("family.code") }} :
-      <code class="bg-zinc-100 px-1 rounded">{{ auth.inviteCode }}</code>
+      <code class="bg-neutral-200 px-1 rounded">{{ auth.inviteCode }}</code>
     </span>
     <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
   </div>

@@ -17,7 +17,7 @@
     </p>
     <p class="mb-2">
       {{ t("familyCreate.inviteCode") }} :
-      <code class="bg-zinc-100 px-2 py-0.5 rounded">{{
+      <code class="bg-neutral-200 px-2 py-0.5 rounded">{{
         family.invite_code
       }}</code>
     </p>
@@ -29,7 +29,7 @@
         :code="family.invite_code"
       />
       <RouterLink
-        class="px-3 py-2 rounded bg-zinc-100 hover:bg-zinc-200"
+        class="px-3 py-2 rounded bg-neutral-200 hover:bg-neutral-300"
         to="/me"
         >{{ t("familyCreate.goMyList") }}</RouterLink
       >

@@ -192,7 +192,9 @@ export async function joinFamily(
   await page.click('[data-test="family-join-submit"]');
 
   // Wait for success message
-  await page.waitForSelector(".text-green-700", { timeout: 5000 });
+  await page.waitForSelector('[data-test="family-join-success"]', {
+    timeout: 5000,
+  });
 
   // Wait for auth refresh to complete (the component calls auth.refreshFamilies())
   await page.waitForLoadState("networkidle");

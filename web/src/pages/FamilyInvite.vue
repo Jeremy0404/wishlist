@@ -9,7 +9,7 @@
       </p>
       <p class="mb-2">
         <strong>{{ t("familyInvite.codeLabel") }} :</strong>
-        <code class="bg-zinc-100 px-2 py-0.5 rounded">{{
+        <code class="bg-neutral-200 px-2 py-0.5 rounded">{{
           auth.inviteCode
         }}</code>
       </p>
@@ -24,7 +24,7 @@
           {{ rotating ? t("common.loading") : t("familyInvite.rotate") }}
         </Button>
       </div>
-      <p v-if="copied" class="text-green-700 text-sm mt-2">
+      <p v-if="copied" class="text-accent-2-700 text-sm mt-2">
         {{ t("familyInvite.copied") }}
       </p>
     </Card>
@@ -38,7 +38,7 @@
           {{ loadingMembers ? t("common.loading") : t("familyInvite.refresh") }}
         </Button>
       </div>
-      <p v-if="loadingMembers" class="text-zinc-600 text-sm">
+      <p v-if="loadingMembers" class="text-neutral-700 text-sm">
         {{ t("familyInvite.loadingMembers") }}
       </p>
       <ul v-else class="space-y-2">
@@ -49,22 +49,22 @@
         >
           <div>
             <p class="font-medium">{{ member.name }}</p>
-            <p class="text-sm text-zinc-600">
+            <p class="text-sm text-neutral-700">
               {{ t("familyInvite.roleLabel", { role: member.role }) }}
             </p>
           </div>
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-neutral-700">
             {{ t("familyInvite.joinedAt", { date: formatDate(member.joined_at) }) }}
           </p>
         </li>
       </ul>
-      <p v-if="!loadingMembers && members.length === 0" class="text-zinc-600 text-sm">
+      <p v-if="!loadingMembers && members.length === 0" class="text-neutral-700 text-sm">
         {{ t("familyInvite.noMembers") }}
       </p>
     </Card>
   </div>
 
-  <p v-else class="text-zinc-600">{{ t("familyInvite.noFamily") }}</p>
+  <p v-else class="text-neutral-700">{{ t("familyInvite.noFamily") }}</p>
 </template>
 
 <script setup lang="ts">

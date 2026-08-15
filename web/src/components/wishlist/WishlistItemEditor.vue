@@ -30,7 +30,7 @@
           v-model="form.notes"
           name="notes"
           rows="3"
-          class="w-full rounded-lg border-zinc-300 bg-white text-sm focus:ring-brand-500 focus:border-brand-500"
+          class="w-full rounded-lg border-neutral-400 bg-surface text-sm focus:ring-accent-500 focus:border-accent-500"
           placeholder="Notes"
         ></textarea>
       </div>
