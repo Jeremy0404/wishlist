@@ -36,17 +36,17 @@ export async function seed(knex: Knex): Promise<void> {
     ]);
 
     const [aliceNoelList] = await knex('wishlists')
-        .insert({ user_id: alice.id, family_id: noelFamily.id })
+        .insert({ user_id: alice.id, family_id: noelFamily.id, public_slug: 'alice-a4k2' })
         .returning('*');
 
     const [bobNoelList] = await knex('wishlists')
-        .insert({ user_id: bob.id, family_id: noelFamily.id })
+        .insert({ user_id: bob.id, family_id: noelFamily.id, public_slug: 'bob-b7m3' })
         .returning('*');
 
     const [charlieSummerList, dianaSummerList] = await knex('wishlists')
         .insert([
-            { user_id: charlie.id, family_id: summerFamily.id },
-            { user_id: diana.id, family_id: summerFamily.id }
+            { user_id: charlie.id, family_id: summerFamily.id, public_slug: 'charlie-c2n8' },
+            { user_id: diana.id, family_id: summerFamily.id, public_slug: 'diana-d9p5' }
         ])
         .returning('*');
 
