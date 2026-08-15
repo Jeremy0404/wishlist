@@ -11,6 +11,8 @@ export function authRequired(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+/** Resolves the caller's family when they have one. Having none is not an error:
+ *  a family-less user still owns a private wishlist. */
 export async function familyContext(
   req: Request,
   _res: Response,
@@ -23,37 +25,21 @@ export async function familyContext(
       .where({ user_id: req.user.id })
       .first();
 
-    if (!memb) return next(new ForbiddenError("not in a family"));
-    req.familyId = memb.family_id;
+    req.familyId = memb?.family_id ?? null;
     next();
   } catch (err) {
     next(err);
   }
 }
 
-/** Gate: you must have a wishlist with ≥1 item to browse others */
-export async function mustHaveWishlistWithItem(
+/** Gate for the endpoints that only mean something inside a family:
+ *  browsing other lists, and reserving. */
+export function familyRequired(
   req: Request,
   _res: Response,
   next: NextFunction,
 ) {
-  if (!req.user || !req.familyId)
-    return next(new UnauthorizedError("unauthorized"));
-  try {
-    const row = await db("wishlists as w")
-      .leftJoin("wishlist_items as i", "i.wishlist_id", "w.id")
-      .count<{ count: string }>("i.id as count")
-      .where({ "w.user_id": req.user.id, "w.family_id": req.familyId })
-      .first();
-    const count = Number(row?.count ?? 0);
-    if (count < 3)
-      return next(
-        new ForbiddenError(
-          "Vous devez ajouter au moins 3 éléments à votre wishlist pour accéder à celles de votre famille !",
-        ),
-      );
-    next();
-  } catch (err) {
-    next(err);
-  }
+  if (!req.user) return next(new UnauthorizedError("unauthorized"));
+  if (!req.familyId) return next(new ForbiddenError("not in a family"));
+  next();
 }

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerUser, createFamily } from './helpers';
+import { addWishlistItemViaForm, registerUser, createFamily } from './helpers';
 
 test.describe('Route Guards', () => {
     test('guest visiting protected route redirects to login', async ({ page }) => {
@@ -35,16 +35,15 @@ test.describe('Route Guards', () => {
         await expect(page).toHaveURL(/\/me/);
     });
 
-    test('user without family visiting /me redirects to /family/create', async ({ page }) => {
+    test('user without family owns a list and is never sent to a family screen', async ({ page }) => {
         // Register but don't create family
         await registerUser(page);
 
-        // Try to visit /me without having a family
+        // /me is theirs straight away, and usable
         await page.goto('/me');
+        await expect(page).toHaveURL(/\/me/);
 
-        // Should be redirected to family create with redirect query
-        await expect(page).toHaveURL(/\/family\/create/);
-        await expect(page.url()).toContain('redirect');
+        await addWishlistItemViaForm(page, { title: 'Une chose que je veux' });
     });
 
     test('user with family visiting /family/join redirects to /me', async ({ page }) => {
@@ -59,23 +58,18 @@ test.describe('Route Guards', () => {
         await expect(page).toHaveURL(/\/me/);
     });
 
-    test('user can access /wishlists only when in a family', async ({ page }) => {
+    test('user without family reaches /wishlists and is nudged rather than blocked', async ({ page }) => {
         // Register but don't create family
         await registerUser(page);
 
-        // Try to visit /wishlists without family
+        // /wishlists no longer redirects; it explains why there is nothing there
         await page.goto('/wishlists');
-
-        // Should be redirected to family create
-        await expect(page).toHaveURL(/\/family\/create/);
-
-        // Now create a family
-        await createFamily(page);
-
-        // Try again to visit /wishlists
-        await page.goto('/wishlists');
-
-        // Should now be allowed
         await expect(page).toHaveURL(/\/wishlists/);
+        await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
+        await expect(page.getByText('Rejoins une famille')).toBeVisible();
+
+        // Joining is offered from the navigation instead of being forced
+        await page.getByRole('link', { name: 'Rejoindre une famille' }).click();
+        await expect(page).toHaveURL(/\/family\/join/);
     });
 });

@@ -35,8 +35,8 @@ test("family join flow with multi-user interactions", async ({ browser }) => {
   // User B: Register new account
   await registerUser(pageB);
 
-  // User B: Should be redirected to /family/create
-  await expect(pageB).toHaveURL(/\/family\/create/);
+  // User B: lands on their own list — joining a family is a choice, not a gate
+  await expect(pageB).toHaveURL(/\/me/);
 
   // User B: Join the family using invite code
   await joinFamily(pageB, inviteCode);

@@ -3,5 +3,5 @@ import { registerUser } from './helpers';
 
 test('should register a new user', async ({ page }) => {
     await registerUser(page);
-    await expect(page.locator('h1')).toContainText('Créer une famille');
+    await expect(page.locator('h1')).toContainText('Ma wishlist');
 });

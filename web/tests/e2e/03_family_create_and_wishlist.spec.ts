@@ -12,7 +12,7 @@ import {
 test('complete family creation and wishlist management flow', async ({ page }) => {
   const { email, password } = await registerUser(page);
 
-  await expect(page).toHaveURL(/\/family\/create/);
+  await expect(page).toHaveURL(/\/me/);
 
   const familyData = await createFamily(page, "Test Family");
   expect(familyData.inviteCode).toBeTruthy();

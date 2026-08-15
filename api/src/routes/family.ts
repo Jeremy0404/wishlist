@@ -2,7 +2,11 @@ import { Router } from "express";
 import type { Knex } from "knex";
 import { z } from "zod";
 import { db } from "../db/knex.js";
-import { authRequired, familyContext } from "../middleware/auth.js";
+import {
+  authRequired,
+  familyContext,
+  familyRequired,
+} from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { NotFoundError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
@@ -57,6 +61,24 @@ export function generateInviteCode(name: string) {
   return `${prefix}-${suffix}`;
 }
 
+/** A user who filled their list before joining keeps it: the family-less wishlist
+ *  becomes the family one, unless they already have a list in that family. */
+export async function adoptFamilylessWishlist(
+  dbConn: Knex,
+  userId: string,
+  familyId: string,
+) {
+  const existing = await dbConn("wishlists")
+    .where({ user_id: userId, family_id: familyId })
+    .first();
+  if (existing) return;
+
+  await dbConn("wishlists")
+    .where({ user_id: userId })
+    .whereNull("family_id")
+    .update({ family_id: familyId });
+}
+
 router.post(
   "/",
   authRequired,
@@ -76,6 +98,8 @@ router.post(
       .insert({ user_id: req.user!.id, family_id: fam.id })
       .onConflict(["user_id"])
       .merge({ family_id: fam.id });
+
+    await adoptFamilylessWishlist(db, req.user!.id, fam.id);
 
     log.info({ familyId: fam.id }, "Created family and added creator");
     res.status(201).json(fam);
@@ -104,6 +128,8 @@ router.post(
       .onConflict(["user_id"])
       .merge({ family_id: family.id });
 
+    await adoptFamilylessWishlist(db, req.user!.id, family.id);
+
     log.info({ familyId: family.id }, "User joined family");
     return res.status(200).json(family);
   }),
@@ -113,6 +139,7 @@ router.get(
   "/members",
   authRequired,
   familyContext,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "family", action: "list-members" });
 
@@ -130,6 +157,7 @@ router.post(
   "/rotate-invite",
   authRequired,
   familyContext,
+  familyRequired,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "family", action: "rotate-invite" });
 
