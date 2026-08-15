@@ -11,7 +11,8 @@
 
     <p
       v-if="msg"
-      :class="['mt-3 text-sm', ok ? 'text-green-700' : 'text-red-700']"
+      :data-test="ok ? 'family-join-success' : 'family-join-error'"
+      :class="['mt-3 text-sm', ok ? 'text-accent-2-700' : 'text-accent-700']"
     >
       {{ msg }}
     </p>

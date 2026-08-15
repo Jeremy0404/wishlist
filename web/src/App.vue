@@ -1,10 +1,10 @@
 <template>
   <div
     :class="[
-      'min-h-screen text-slate-900',
+      'min-h-screen text-neutral-900',
       isMinimalLayout
-        ? 'bg-gradient-to-b from-rose-50 via-white to-amber-50'
-        : 'bg-gradient-to-br from-slate-50 via-white to-slate-100',
+        ? 'bg-gradient-to-b from-accent-100 via-bg to-accent-100'
+        : 'bg-gradient-to-br from-neutral-100 via-bg to-neutral-200',
     ]"
   >
     <NavBar v-if="!isMinimalLayout" />
@@ -22,7 +22,7 @@
       </div>
       <div
         v-else
-        class="bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl shadow-slate-900/10 rounded-3xl p-6 sm:p-8 lg:p-10 space-y-6"
+        class="bg-surface/80 backdrop-blur-xl border border-divider shadow-lg rounded-card p-6 sm:p-8 lg:p-10 space-y-6"
       >
         <ToastContainer />
         <router-view />

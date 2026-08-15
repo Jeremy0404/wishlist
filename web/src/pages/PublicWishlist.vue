@@ -3,12 +3,12 @@
     class="relative min-h-screen overflow-hidden px-4 sm:px-6 lg:px-8 py-10 sm:py-14"
   >
     <div
-      class="pointer-events-none absolute inset-0 bg-gradient-to-b from-rose-50 via-white to-amber-50"
+      class="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent-100 via-bg to-accent-100"
     ></div>
     <div class="relative max-w-4xl mx-auto">
       <div class="relative mb-6 sm:mb-8 text-center">
         <RouterLink
-          class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/70 px-4 py-2 text-sm font-medium text-rose-800 shadow-sm transition hover:-translate-y-0.1 hover:shadow-md"
+          class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-full border border-accent-200 bg-surface/70 px-4 py-2 text-sm font-medium text-accent-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           to="/"
           target="_blank"
         >
@@ -17,49 +17,49 @@
         </RouterLink>
         <div class="space-y-2">
           <p
-            class="text-xs uppercase tracking-[0.25em] text-rose-700 font-semibold"
+            class="text-xs uppercase tracking-[0.25em] text-accent-700 font-semibold"
           >
             {{ t("public.eyebrow") }}
           </p>
-          <h1 class="text-3xl sm:text-4xl font-serif text-rose-900">
+          <h1 class="text-3xl sm:text-4xl font-serif text-accent-900">
             {{ t("public.title", { name: ownerDisplay }) }}
           </h1>
-          <p v-if="subtitle" class="text-sm text-rose-700">{{ subtitle }}</p>
+          <p v-if="subtitle" class="text-sm text-accent-700">{{ subtitle }}</p>
         </div>
       </div>
 
       <div
-        class="relative overflow-hidden rounded-[32px] border border-rose-100 bg-white/90 shadow-xl shadow-rose-100/70"
+        class="relative overflow-hidden rounded-card border border-accent-200 bg-surface/90 shadow-lg"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-br from-amber-50/80 via-white to-rose-50/70"
+          class="absolute inset-0 bg-gradient-to-br from-accent-100 via-bg to-accent-100"
         ></div>
         <div class="relative p-6 sm:p-10 space-y-6">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p
-                class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700"
+                class="text-xs font-semibold uppercase tracking-[0.2em] text-accent-700"
               >
                 {{ t("public.stamp") }}
               </p>
-              <p class="text-sm text-zinc-500" v-if="publishedAt">
+              <p class="text-sm text-neutral-600" v-if="publishedAt">
                 {{ t("common.createdAt") }} : {{ formatDate(publishedAt) }}
               </p>
             </div>
             <div
-              class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800"
+              class="inline-flex items-center gap-2 rounded-full bg-accent-2-100 px-3 py-1 text-xs font-medium text-accent-2-800"
             >
-              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span class="h-2 w-2 rounded-full bg-accent-2-500"></span>
               {{ t("public.online") }}
             </div>
           </div>
 
-          <div v-if="loading" class="text-center text-zinc-500 py-12">
+          <div v-if="loading" class="text-center text-neutral-600 py-12">
             {{ t("common.loading") }}
           </div>
           <div
             v-else-if="error"
-            class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-rose-700"
+            class="rounded-2xl border border-accent-200 bg-accent-100 px-4 py-3 text-center text-accent-700"
           >
             {{ error }}
           </div>
@@ -67,26 +67,26 @@
             <ul v-if="items.length" class="space-y-3">
               <li v-for="item in items" :key="item.id">
                 <div
-                  class="group rounded-2xl border border-amber-100 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                  class="group rounded-2xl border border-accent-200 bg-surface/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="space-y-1">
-                      <p class="text-lg font-semibold text-rose-900">
+                      <p class="text-lg font-semibold text-accent-900">
                         {{ item.title }}
                       </p>
-                      <p class="text-sm text-amber-800" v-if="item.notes">
+                      <p class="text-sm text-accent-800" v-if="item.notes">
                         {{ item.notes }}
                       </p>
                     </div>
                     <div
-                      class="text-right text-sm font-semibold text-emerald-700"
+                      class="text-right text-sm font-semibold text-accent-2-700"
                       v-if="item.price_eur"
                     >
                       {{ fmtEUR.format(item.price_eur) }}
                     </div>
                   </div>
                   <div
-                    class="mt-2 flex items-center justify-between text-xs text-zinc-500"
+                    class="mt-2 flex items-center justify-between text-xs text-neutral-600"
                   >
                     <span>{{
                       t("public.priority", { value: item.priority ?? 3 })
@@ -96,7 +96,7 @@
                       :href="item.url ?? undefined"
                       target="_blank"
                       rel="noreferrer"
-                      class="inline-flex items-center gap-1 text-amber-700 hover:text-amber-800"
+                      class="inline-flex items-center gap-1 text-accent-700 hover:text-accent-800"
                     >
                       {{ t("public.link") }}
                       <span aria-hidden="true">↗</span>
@@ -107,16 +107,16 @@
             </ul>
             <div
               v-else
-              class="rounded-2xl border border-dashed border-rose-200 bg-white/90 px-4 py-8 text-center text-rose-700"
+              class="rounded-2xl border border-dashed border-accent-200 bg-surface/90 px-4 py-8 text-center text-accent-700"
             >
               {{ t("public.empty") }}
             </div>
 
-            <div class="pt-6 text-right font-serif text-rose-900">
+            <div class="pt-6 text-right font-serif text-accent-900">
               <p class="text-lg">
                 {{ t("public.signature", { name: ownerDisplay }) }}
               </p>
-              <p class="text-sm text-rose-700">{{ t("public.footer") }}</p>
+              <p class="text-sm text-accent-700">{{ t("public.footer") }}</p>
             </div>
           </div>
         </div>

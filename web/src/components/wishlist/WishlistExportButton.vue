@@ -10,7 +10,7 @@
       <span class="inline-flex items-center gap-1">
         {{ t("my.export.action") }}
         <svg
-          class="h-4 w-4 text-zinc-500"
+          class="h-4 w-4 text-neutral-600"
           viewBox="0 0 20 20"
           fill="currentColor"
           aria-hidden="true"
@@ -26,10 +26,10 @@
 
     <div
       v-if="dropdownOpen"
-      class="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg"
+      class="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-300 bg-surface shadow-lg"
     >
       <button
-        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100"
+        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-200"
         data-test="wishlist-export-pdf"
         :disabled="exporting"
         @click="exportPdf"
@@ -37,7 +37,7 @@
         📄 {{ t("my.export.pdf") }}
       </button>
       <button
-        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100"
+        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-200"
         data-test="wishlist-export-markdown"
         :disabled="exporting"
         @click="exportMarkdown"

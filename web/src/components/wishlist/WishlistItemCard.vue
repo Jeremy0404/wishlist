@@ -4,15 +4,15 @@
       <div>
         <div class="font-medium">
           {{ item.title }}
-          <span v-if="item.priority" class="text-xs text-zinc-500">P{{ item.priority }}</span>
+          <span v-if="item.priority" class="text-xs text-neutral-600">P{{ item.priority }}</span>
         </div>
-        <div v-if="item.url" class="text-sm text-brand-700 break-words">
+        <div v-if="item.url" class="text-sm text-accent-700 break-words">
           <a :href="item.url" target="_blank" class="inline-block max-w-full break-all">{{ item.url }}</a>
         </div>
-        <div v-if="item.price_eur != null" class="text-sm text-zinc-600">
+        <div v-if="item.price_eur != null" class="text-sm text-neutral-700">
           {{ fmtEUR.format(item.price_eur) }}
         </div>
-        <div v-if="item.notes" class="text-sm text-zinc-700 whitespace-pre-wrap mt-1">
+        <div v-if="item.notes" class="text-sm text-neutral-700 whitespace-pre-wrap mt-1">
           {{ item.notes }}
         </div>
       </div>

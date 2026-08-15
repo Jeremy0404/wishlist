@@ -27,7 +27,7 @@
           </Button>
           <RouterLink
             :to="registerLink"
-            class="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition border border-zinc-300 bg-white hover:bg-zinc-100"
+            class="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition border border-neutral-400 bg-surface hover:bg-neutral-200"
           >
             {{ t("auth.register") }}
           </RouterLink>

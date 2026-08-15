@@ -1,8 +1,9 @@
 <template>
-  <h1 class="text-xl font-semibold mb-4">
-    {{ ownerName ? t("view.title", { name: ownerName }) : "Wishlist" }}
-  </h1>
-  <p v-if="error" class="text-red-600">{{ error }}</p>
+  <div class="mb-4 flex items-center gap-3">
+    <Avatar v-if="ownerName" :name="ownerName" size="lg" />
+    <h1>{{ ownerName ? t("view.title", { name: ownerName }) : "Wishlist" }}</h1>
+  </div>
+  <p v-if="error" class="text-accent-600">{{ error }}</p>
 
   <ul v-if="items.length" class="grid gap-3">
     <li v-for="it in items" :key="it.id">
@@ -11,19 +12,19 @@
           <div>
             <div class="font-medium">
               {{ it.title }}
-              <span v-if="it.priority" class="text-xs text-zinc-500"
+              <span v-if="it.priority" class="text-xs text-neutral-600"
                 >• P{{ it.priority }}</span
               >
             </div>
-            <div v-if="it.url" class="text-sm text-brand-700">
+            <div v-if="it.url" class="text-sm text-accent-700">
               <a :href="it.url" target="_blank">{{ it.url }}</a>
             </div>
-            <div v-if="it.price_eur != null" class="text-sm text-zinc-600">
+            <div v-if="it.price_eur != null" class="text-sm text-neutral-700">
               {{ fmtEUR.format(it.price_eur) }}
             </div>
             <div
               v-if="it.notes"
-              class="text-sm text-zinc-700 whitespace-pre-wrap mt-1"
+              class="text-sm text-neutral-700 whitespace-pre-wrap mt-1"
             >
               {{ it.notes }}
             </div>
@@ -31,10 +32,10 @@
 
           <div class="flex gap-2 items-center">
             <template v-if="it.reserved">
-              <span class="text-sm text-zinc-600">
+              <Tag variant="accent-2">
                 {{ statusLabel(it.reservation_status) }}
                 {{ t("view.by", { name: it.reserver_name }) }}
-              </span>
+              </Tag>
               <Button variant="ghost" @click="unreserve(it.id)">{{
                 t("view.unreserve")
               }}</Button>
@@ -56,7 +57,7 @@
     </li>
   </ul>
 
-  <div v-else class="text-zinc-600">{{ t("view.empty") }}</div>
+  <div v-else class="text-neutral-700">{{ t("view.empty") }}</div>
 </template>
 
 <script setup lang="ts">
@@ -65,6 +66,8 @@ import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import Card from "../components/ui/Card.vue";
 import Button from "../components/ui/Button.vue";
+import Tag from "../components/ui/Tag.vue";
+import Avatar from "../components/ui/Avatar.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { fmtEUR } from "../utils/money.ts";
 import type { WishlistItem } from "../types.ts";

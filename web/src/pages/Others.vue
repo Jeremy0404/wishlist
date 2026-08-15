@@ -1,6 +1,6 @@
 <template>
   <h1 class="text-xl font-semibold mb-2">{{ t("others.title") }}</h1>
-  <p class="text-zinc-600 mb-3">{{ t("others.hint") }}</p>
+  <p class="text-neutral-700 mb-3">{{ t("others.hint") }}</p>
 
   <ul v-if="rows.length" class="grid gap-3">
     <li v-for="r in rows" :key="r.user_id">
@@ -12,7 +12,7 @@
       >
         <template #actions>
           <RouterLink
-            class="px-3 py-1.5 rounded hover:bg-zinc-100"
+            class="px-3 py-1.5 rounded hover:bg-neutral-200"
             :to="`/wishlists/${r.user_id}`"
             >{{ t("others.open") }}</RouterLink
           >
@@ -20,9 +20,9 @@
       </WishlistItemCard>
     </li>
   </ul>
-  <div v-else-if="!error" class="text-zinc-600">{{ t("others.empty") }}</div>
+  <div v-else-if="!error" class="text-neutral-700">{{ t("others.empty") }}</div>
 
-  <p v-if="error" class="text-red-600 mt-3">{{ error }}</p>
+  <p v-if="error" class="text-accent-600 mt-3">{{ error }}</p>
 </template>
 
 <script setup lang="ts">
