@@ -91,10 +91,12 @@ jobs:
           name: deploy-tag
           path: tag.txt
 
+  # Deployment is manual on purpose: it SSHes into a production host described only by the
+  # VPS_* secrets. Run this workflow from the Actions tab once the target host is confirmed.
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/download-artifact@v4
         with:
