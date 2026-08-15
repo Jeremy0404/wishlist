@@ -12,11 +12,12 @@ export function uniqueEmail(): string {
 /** Register a new user and return its credentials */
 export async function registerUser(
   page: Page,
+  name = "Test User",
 ): Promise<{ email: string; password: string }> {
   const email = uniqueEmail();
   const password = "password123";
   await page.goto("/auth/register");
-  await page.fill('input[name="name"]', "Test User");
+  await page.fill('input[name="name"]', name);
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="new-password"]', password);
   await page.click('button[type="submit"]');

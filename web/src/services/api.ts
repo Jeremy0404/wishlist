@@ -2,6 +2,7 @@
 import type {
   Family,
   FamilyMember,
+  FamilyWishlist,
   Wishlist,
   WishlistItem,
   WishlistItemForm,
@@ -118,7 +119,7 @@ export const api = {
     ),
 
   // --- Others / viewing ---
-  others: () => request<Array<{ user_id: string; name: string }>>("/wishlists"),
+  others: () => request<FamilyWishlist[]>("/wishlists"),
   viewWishlist: (userId: string) =>
     request<{ owner?: { name?: string }; items: WishlistItem[] }>(
       `/wishlists/${userId}`,

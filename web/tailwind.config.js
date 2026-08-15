@@ -71,6 +71,7 @@ export default {
                 body: ['15px', { lineHeight: '1.55' }],
                 'card-title': ['17px', { lineHeight: '1.2' }],
                 control: ['14px', { lineHeight: '1.2' }],
+                'dialog-body': ['14px', { lineHeight: '1.55' }],
                 caption: ['13px', { lineHeight: '1.4' }],
                 label: ['12px', { lineHeight: '1.4' }],
                 meta: ['11px', { lineHeight: '1.4' }],

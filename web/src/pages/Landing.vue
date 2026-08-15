@@ -138,7 +138,7 @@
           class="rounded-xl border border-neutral-300 p-4 bg-surface shadow-sm"
         >
           <p class="text-neutral-700">
-            {{ t("others.hint") }}
+            {{ t("browse.hint") }}
           </p>
           <div class="mt-3 flex flex-wrap gap-3">
             <RouterLink

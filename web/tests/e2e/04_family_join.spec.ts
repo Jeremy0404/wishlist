@@ -58,7 +58,7 @@ test("family join flow with multi-user interactions", async ({ browser }) => {
   }, { timeout: 20000 }).toBeGreaterThan(0);
 
   await pageB.waitForLoadState("networkidle");
-  const othersLinks = pageB.locator('a:has-text("Ouvrir")');
+  const othersLinks = pageB.locator('[data-test="wishlist-open"]');
   await expect(othersLinks.first()).toBeVisible({ timeout: 20000 });
 
   // User B: Click to view User A's wishlist

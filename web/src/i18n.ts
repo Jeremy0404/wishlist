@@ -5,6 +5,7 @@ const fr = {
   common: {
     share: "Partager…",
     copy: "Copier",
+    close: "Fermer",
     loading: "Chargement…",
     createdAt: "Créé le",
   },
@@ -165,11 +166,29 @@ const fr = {
       "Aucun article — ajoute ton premier pour débloquer les listes des autres.",
     delete: "Supprimer",
   },
-  others: {
-    title: "Listes de la famille",
+  browse: {
+    title: "Parcourir et réserver",
+    subtitle:
+      "Vois ce qui fait envie autour de toi — réserve un cadeau pour éviter les doublons.",
+    open: "Ouvrir la liste",
+    itemCount: "{count} article | {count} articles",
+    reservedCount: "{count} réservé par toi | {count} réservés par toi",
+    reservedNone: "rien de réservé",
     hint: "Tu peux voir les autres quand ta liste contient au moins un article.",
-    open: "Ouvrir",
     empty: "Aucune autre liste pour l’instant.",
+    inviteCard: {
+      title: "Inviter quelqu’un",
+      body: "Fais venir d’autres personnes — quand tu veux, sans pression.",
+      action: "Inviter",
+    },
+    invite: {
+      title: "Inviter dans ta famille",
+      description:
+        "Partage ce code : la personne le saisira à l’inscription pour rejoindre ta famille.",
+      codeLabel: "Code d’invitation",
+      copied: "Code copié",
+      noFamily: "Crée ou rejoins d’abord une famille.",
+    },
   },
   view: {
     title: "Liste de {name}",
@@ -216,4 +235,7 @@ export const i18n = createI18n({
   locale: "fr",
   fallbackLocale: "fr",
   messages: { fr },
+  pluralRules: {
+    fr: (choice: number) => (choice > 1 ? 1 : 0),
+  },
 });
