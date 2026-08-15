@@ -48,13 +48,25 @@ export async function addWishlistItemViaForm(
   await page.goto("/me");
   await expect(page.locator('[data-test="wishlist-add-submit"]')).toBeVisible();
 
-  await page.fill('[data-test="item-title"]', item.title);
-  if (item.url) await page.fill('[data-test="item-url"]', item.url);
-  if (item.price !== undefined)
-    await page.fill('[data-test="item-price"]', String(item.price));
-  if (item.priority !== undefined)
-    await page.fill('[data-test="item-priority"]', String(item.priority));
-  if (item.notes) await page.fill('[data-test="item-notes"]', item.notes);
+  await page.fill('[data-test="quick-add-entry"]', item.title);
+
+  const hasDetails =
+    item.url !== undefined ||
+    item.price !== undefined ||
+    item.priority !== undefined ||
+    item.notes !== undefined;
+
+  if (hasDetails) {
+    await page.click('[data-test="quick-add-toggle"]');
+    await expect(page.locator('[data-test="quick-add-details"]')).toBeVisible();
+
+    if (item.url) await page.fill('[data-test="item-url"]', item.url);
+    if (item.price !== undefined)
+      await page.fill('[data-test="item-price"]', String(item.price));
+    if (item.priority !== undefined)
+      await page.fill('[data-test="item-priority"]', String(item.priority));
+    if (item.notes) await page.fill('[data-test="item-notes"]', item.notes);
+  }
 
   const createResponse = page.waitForResponse(
     (res) =>
@@ -99,9 +111,7 @@ export async function editWishlistItem(
   if (updates.url !== undefined)
     await target.locator('input[name="url"]').fill(updates.url);
   if (updates.price !== undefined)
-    await target
-      .locator('input[name="price_eur"]')
-      .fill(String(updates.price));
+    await target.locator('input[name="price_eur"]').fill(String(updates.price));
   if (updates.priority !== undefined)
     await target
       .locator('input[name="priority"]')

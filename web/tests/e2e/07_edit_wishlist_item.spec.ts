@@ -28,8 +28,7 @@ test("edit an existing wishlist item", async ({ page }) => {
   await item
     .locator('input[name="url"]')
     .fill("https://example.com/camera-pro");
-  await item.locator('input[name="price_eur"]')
-    .fill("249");
+  await item.locator('input[name="price_eur"]').fill("249");
   await item.locator('input[name="priority"]').fill("2");
   await item.locator('textarea[name="notes"]').fill("Now with better lens");
 
@@ -42,11 +41,15 @@ test("edit an existing wishlist item", async ({ page }) => {
   await item.locator('[data-test="wishlist-edit-save"]').click();
   await saveResponse;
 
-  await expect(item.locator("text=Retro Camera Pro")).toBeVisible({ timeout: 10000 });
+  await expect(item.locator("text=Retro Camera Pro")).toBeVisible({
+    timeout: 10000,
+  });
   await expect(
     item.locator('a[href="https://example.com/camera-pro"]'),
   ).toBeVisible();
   await expect(item.locator("text=249")).toBeVisible();
-  await expect(item.locator("text=P2")).toBeVisible();
+  await expect(item.locator('[data-test="wishlist-priority"]')).toHaveText(
+    "Priorité haute",
+  );
   await expect(item.locator("text=Now with better lens")).toBeVisible();
 });

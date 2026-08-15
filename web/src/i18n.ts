@@ -111,7 +111,6 @@ const fr = {
   },
   my: {
     title: "Ma wishlist",
-    addTitle: "Ajouter un article",
     export: {
       action: "Exporter",
       pdf: "Exporter en PDF",
@@ -138,7 +137,8 @@ const fr = {
       private: "Privée",
       privateHint:
         "Ta liste est privée : personne ne peut ouvrir ce lien pour l’instant.",
-      privateConfirm: "Rendre ta liste privée ? Le lien cessera de fonctionner.",
+      privateConfirm:
+        "Rendre ta liste privée ? Le lien cessera de fonctionner.",
       nowShared: "Ta liste est partagée.",
       nowPrivate: "Ta liste est redevenue privée.",
       copy: "Copier",
@@ -150,6 +150,17 @@ const fr = {
       reassurance: "— ça prend dix secondes, et c’est facultatif.",
       action: "Inviter des proches",
       dismiss: "Masquer",
+    },
+    quick: {
+      label: "Colle un lien ou décris ce que tu veux",
+      placeholder: "un lien produit, ou « plaid tout doux »",
+      showDetails: "Ajouter un prix, des notes ou une priorité",
+      hideDetails: "Masquer les détails",
+      resolving: "On regarde ce que dit la page…",
+    },
+    priority: {
+      high: "Priorité haute",
+      nice: "Ça me ferait plaisir",
     },
     form: {
       title: "Titre",

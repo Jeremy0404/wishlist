@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between gap-3 mb-4">
+  <div class="mb-4 flex items-center justify-between gap-3">
     <h1 class="text-xl font-semibold">{{ t("my.title") }}</h1>
     <WishlistExportButton :items="items" />
   </div>
@@ -8,66 +8,7 @@
 
   <InviteNudge />
 
-  <Card class="mb-4">
-    <template #header
-      ><h2 class="font-semibold">{{ t("my.addTitle") }}</h2></template
-    >
-    <form @submit.prevent="add" class="grid gap-3 sm:grid-cols-2">
-      <Input
-        v-model="form.title"
-        name="title"
-        data-test="item-title"
-        :label="t('my.form.title')"
-        required
-      />
-      <Input
-        v-model="form.url"
-        name="url"
-        data-test="item-url"
-        :label="t('my.form.url')"
-      />
-      <Input
-        v-model.number="form.price_eur"
-        name="price_eur"
-        data-test="item-price"
-        type="number"
-        step="5"
-        min="0"
-        :max="1000000"
-        :label="t('my.form.price')"
-      />
-
-      <Input
-        v-model.number="form.priority"
-        name="priority"
-        data-test="item-priority"
-        type="number"
-        :label="t('my.form.priority')"
-      />
-      <div class="sm:col-span-2">
-        <label class="block text-sm mb-1" for="notes">{{
-          t("my.form.notes")
-        }}</label>
-        <textarea
-          v-model="form.notes"
-          name="notes"
-          data-test="item-notes"
-          rows="3"
-          class="w-full rounded-lg border-neutral-400 bg-surface text-sm focus:ring-accent-500 focus:border-accent-500"
-          placeholder="Notes"
-        ></textarea>
-      </div>
-      <div class="sm:col-span-2">
-        <Button
-          variant="primary"
-          type="submit"
-          data-test="wishlist-add-submit"
-          :loading="submitting"
-          >{{ t("my.addBtn") }}</Button
-        >
-      </div>
-    </form>
-  </Card>
+  <QuickAdd @added="onAdded" />
 
   <div v-if="items.length === 0" class="text-neutral-700">
     {{ t("my.empty") }}
@@ -99,13 +40,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { api } from "../services/api";
-import Card from "../components/ui/Card.vue";
-import Button from "../components/ui/Button.vue";
-import Input from "../components/ui/Input.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useI18n } from "vue-i18n";
+import QuickAdd from "../components/wishlist/QuickAdd.vue";
 import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
 import WishlistExportButton from "../components/wishlist/WishlistExportButton.vue";
@@ -118,15 +57,7 @@ const { t } = useI18n();
 
 const items = ref<WishlistItem[]>([]);
 const wishlist = ref<Wishlist | null>(null);
-const submitting = ref(false);
 const editSubmitting = ref(false);
-const form = reactive<WishlistItemForm>({
-  title: "",
-  url: "",
-  price_eur: undefined as number | undefined,
-  notes: "",
-  priority: 3,
-});
 const editingId = ref<string | null>(null);
 
 function normalizeItem(item: WishlistItem): WishlistItem {
@@ -139,30 +70,9 @@ async function load() {
   wishlist.value = data.wishlist ?? null;
 }
 
-async function add() {
-  submitting.value = true;
-  try {
-    const created = await api.addMyItem({
-      title: form.title || "",
-      url: form.url || undefined,
-      price_eur: form.price_eur,
-      notes: form.notes || undefined,
-      priority: form.priority,
-    });
-
-    items.value.unshift(normalizeItem(created));
-    if (!wishlist.value) wishlist.value = (await api.getMyWishlist()).wishlist;
-    form.title = "";
-    form.url = "";
-    form.price_eur = undefined;
-    form.notes = "";
-    form.priority = 3;
-    push(t("toast.added"), "success");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
-  } finally {
-    submitting.value = false;
-  }
+async function onAdded(created: WishlistItem) {
+  items.value.unshift(normalizeItem(created));
+  if (!wishlist.value) wishlist.value = (await api.getMyWishlist()).wishlist;
 }
 
 async function removeItem(id: string) {
@@ -198,7 +108,11 @@ async function saveEdit(id: string, form: WishlistItemForm) {
     });
     items.value = items.value.map((it) =>
       it.id === id
-        ? normalizeItem({ ...it, ...updated, original_title: it.original_title })
+        ? normalizeItem({
+            ...it,
+            ...updated,
+            original_title: it.original_title,
+          })
         : it,
     );
     push(t("toast.updated"), "success");

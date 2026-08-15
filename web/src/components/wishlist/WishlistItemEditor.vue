@@ -12,7 +12,7 @@
         v-model.number="form.price_eur"
         name="price_eur"
         type="number"
-        step="5"
+        step="0.01"
         min="0"
         :max="1000000"
         :label="t('my.form.price')"

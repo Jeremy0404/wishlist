@@ -51,3 +51,9 @@ export interface WishlistItem {
   reservation_status?: ReservationStatus | null;
   created_at?: string | null;
 }
+
+export interface LinkPreview {
+  title: string | null;
+  price_eur: number | null;
+  image_url: string | null;
+}
