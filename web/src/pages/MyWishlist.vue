@@ -78,7 +78,7 @@ async function onAdded(created: WishlistItem) {
 async function removeItem(id: string) {
   await api.deleteMyItem(id);
   items.value = items.value.filter((i) => i.id !== id);
-  push(t("toast.removed"), "info");
+  push(t("toast.removed"), "success");
 }
 
 function beginEdit(item: WishlistItem) {
