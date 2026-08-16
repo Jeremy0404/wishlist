@@ -12,6 +12,6 @@ app.use(pinia);
 app.use(router);
 app.use(i18n);
 
-useAuth().installApiGuards();
+useAuth().installApiGuards(router);
 
 app.mount("#app");

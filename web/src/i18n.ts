@@ -259,6 +259,16 @@ const fr = {
     someone: "un·e proche",
     missing: "Cette liste n’est pas disponible ou a été retirée.",
   },
+  notFound: {
+    title: "Cette page n’existe pas",
+    body: "Le lien est peut-être ancien, ou mal recopié.",
+    action: "Retour à ma liste",
+  },
+  sessionExpired: {
+    title: "Quelque chose s’est mal passé",
+    body: "Ta session a peut-être expiré. Reconnecte-toi pour continuer.",
+    action: "Se reconnecter",
+  },
   toast: {
     added: "Article ajouté",
     removed: "Article supprimé",

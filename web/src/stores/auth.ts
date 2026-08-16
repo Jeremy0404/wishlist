@@ -1,9 +1,7 @@
 import { defineStore } from "pinia";
+import type { Router } from "vue-router";
 import api, { onUnauthorized, type User } from "../services/api.ts";
 import type { Family } from "../types.ts";
-import { useToasts } from "../components/ui/useToasts.ts";
-
-const { push } = useToasts();
 
 export const useAuth = defineStore("auth", {
   state: () => ({
@@ -75,14 +73,16 @@ export const useAuth = defineStore("auth", {
       return this.user;
     },
     async logout() {
-      try {
-        await api.logout();
-      } catch {
-        // the local session is cleared below whether or not the server answered
-      }
+      // Cleared first: signing out is deliberate, so a 401 on the way out is
+      // not a session that expired under the user.
       this.user = null;
       this.myFamily = null;
       this.hydrated = true;
+      try {
+        await api.logout();
+      } catch {
+        // the local session is gone whether or not the server answered
+      }
     },
     async register(name: string, email: string, password: string) {
       const res = await api.register(name, email, password);
@@ -100,14 +100,16 @@ export const useAuth = defineStore("auth", {
       this.myFamily = fam;
       return fam;
     },
-    installApiGuards() {
+    /** A 401 is the ordinary answer for a guest, so only a session that was
+     *  signed in a moment ago counts as one that expired. */
+    installApiGuards(router: Router) {
       onUnauthorized(() => {
+        const wasSignedIn = this.isLogged;
         this.user = null;
         this.myFamily = null;
         this.hydrated = true;
 
-        // @todo translate
-        push("Votre sessison a expirée. Veuillez vous reconnecter.", "error");
+        if (wasSignedIn) void router.push("/oops");
       });
     },
   },
