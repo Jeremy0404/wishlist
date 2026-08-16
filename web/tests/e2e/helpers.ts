@@ -64,7 +64,10 @@ export async function addWishlistItemViaForm(
     if (item.price !== undefined)
       await page.fill('[data-test="item-price"]', String(item.price));
     if (item.priority !== undefined)
-      await page.fill('[data-test="item-priority"]', String(item.priority));
+      await page.selectOption(
+        '[data-test="item-priority"]',
+        String(item.priority),
+      );
     if (item.notes) await page.fill('[data-test="item-notes"]', item.notes);
   }
 
@@ -114,8 +117,8 @@ export async function editWishlistItem(
     await target.locator('input[name="price_eur"]').fill(String(updates.price));
   if (updates.priority !== undefined)
     await target
-      .locator('input[name="priority"]')
-      .fill(String(updates.priority));
+      .locator('select[name="priority"]')
+      .selectOption(String(updates.priority));
   if (updates.notes !== undefined)
     await target.locator('textarea[name="notes"]').fill(updates.notes);
 
