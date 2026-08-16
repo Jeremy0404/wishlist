@@ -6,6 +6,7 @@ import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
 import InlineConfirm from "../ui/InlineConfirm.vue";
 import Tag from "../ui/Tag.vue";
+import ItemThumbnail from "./ItemThumbnail.vue";
 import { fmtEUR } from "../../utils/money";
 import { PRIORITY_TAG_VARIANTS, priorityLevel } from "../../utils/priority";
 import type { WishlistItem } from "../../types.ts";
@@ -31,6 +32,7 @@ function confirmDelete() {
 <template>
   <Card>
     <div class="flex items-start gap-3">
+      <ItemThumbnail :image-url="item.image_url" :size="52" />
       <div class="min-w-[200px] flex-1">
         <a
           v-if="item.url"

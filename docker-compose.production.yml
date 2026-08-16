@@ -13,6 +13,10 @@ services:
       - db
     env_file:
       - api/.env.production
+    environment:
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
     restart: unless-stopped
 
   db:
@@ -33,3 +37,6 @@ services:
 
 volumes:
   db_data:
+  # User content: back this up alongside db_data — a restore without it brings
+  # the app back with every item image broken.
+  uploads:

@@ -1,6 +1,7 @@
 <template>
   <Card data-test="wishlist-item" :data-id="item.id">
     <div class="flex flex-wrap items-start gap-3">
+      <ItemThumbnail :image-url="item.image_url" :size="56" />
       <div class="min-w-[200px] flex-1">
         <div class="flex items-center gap-2 font-semibold">
           {{ item.title }}
@@ -73,6 +74,7 @@ import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
 import Tag from "../ui/Tag.vue";
+import ItemThumbnail from "./ItemThumbnail.vue";
 import { fmtEUR } from "../../utils/money";
 import type { WishlistItem } from "../../types.ts";
 

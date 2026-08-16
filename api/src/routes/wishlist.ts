@@ -17,6 +17,13 @@ import {
 import { getRequestLogger } from "../logging/logger.js";
 import { buildShareSlug } from "../share-slug.js";
 import { fetchLinkPreview } from "../link-preview.js";
+import { IMAGE_UNSUPPORTED, imageUpload } from "../middleware/image-upload.js";
+import {
+  isLinkedImage,
+  isStoredImage,
+  removeImage,
+  storeImage,
+} from "../uploads.js";
 
 const router = Router();
 
@@ -124,13 +131,36 @@ router.get(
   }),
 );
 
+const ItemImage = z
+  .string()
+  .max(2000)
+  .refine((v) => v === "" || isStoredImage(v) || isLinkedImage(v), {
+    message: "Lien d’image invalide",
+  });
+
 const Item = z.object({
   title: z.string().min(1),
   url: z.string().url().optional().or(z.literal("")),
   price_eur: z.coerce.number().min(0).max(99_999_999.99).optional(),
   notes: z.string().max(1000).optional(),
-  priority: z.number().int().min(1).max(5).optional(),
+  priority: z.coerce.number().int().min(1).max(5).optional(),
+  image_url: ItemImage.optional(),
 });
+
+/** An uploaded file always wins over a pasted link; an empty link clears the
+ *  image, and an absent one leaves it untouched. */
+async function resolveImage(
+  file: Express.Multer.File | undefined,
+  link: string | undefined,
+) {
+  if (file) {
+    const stored = await storeImage(file.buffer);
+    if (!stored) throw new BadRequestError(IMAGE_UNSUPPORTED);
+    return stored;
+  }
+  if (link === undefined) return undefined;
+  return link === "" ? null : link;
+}
 
 const PreviewRequest = z.object({
   url: z.string().url(),
@@ -159,6 +189,7 @@ router.post(
   "/me/items",
   authRequired,
   familyContext,
+  imageUpload,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -170,6 +201,9 @@ router.post(
     const parse = Item.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
 
+    const { image_url: link, ...fields } = parse.data;
+    const image_url = await resolveImage(req.file, link);
+
     const trx = await db.transaction();
     try {
       const wishlist = await ensureOwnWishlist(user_id, family_id, trx);
@@ -179,7 +213,7 @@ router.post(
       }
 
       const [item] = await trx("wishlist_items")
-        .insert({ wishlist_id: wishlist.id, ...parse.data })
+        .insert({ wishlist_id: wishlist.id, ...fields, image_url })
         .returning("*");
 
       log.info(
@@ -199,6 +233,7 @@ router.patch(
   "/me/items/:id",
   authRequired,
   familyContext,
+  imageUpload,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "wishlist",
@@ -212,16 +247,26 @@ router.patch(
       req.user!.id,
       req.familyId,
       "w.",
-    ).first();
+    )
+      .select("i.image_url")
+      .first();
     if (!row) throw new NotFoundError("item not found");
 
     const parse = Item.partial().safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
 
+    const { image_url: link, ...fields } = parse.data;
+    const image_url = await resolveImage(req.file, link);
+    const changes = image_url === undefined ? fields : { ...fields, image_url };
+
     const [updated] = await db("wishlist_items")
       .where({ id })
-      .update(parse.data)
+      .update(changes)
       .returning("*");
+
+    if (image_url !== undefined && image_url !== row.image_url)
+      await removeImage(row.image_url);
+
     log.info({ itemId: id }, "Updated wishlist item");
     res.json(updated);
   }),
@@ -244,9 +289,12 @@ router.delete(
       req.user!.id,
       req.familyId,
       "w.",
-    ).first();
+    )
+      .select("i.image_url")
+      .first();
     if (!owned) throw new NotFoundError("item not found");
     await db("wishlist_items").where({ id }).del();
+    await removeImage(owned.image_url);
     log.info({ itemId: id }, "Deleted wishlist item");
     res.json({ ok: true });
   }),

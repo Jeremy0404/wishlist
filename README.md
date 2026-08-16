@@ -17,6 +17,9 @@ cp web/.env.development.example web/.env.development
 ```
 Edit the files if you need custom ports or secrets. The defaults work out‑of‑the‑box.
 
+`UPLOADS_DIR` is where uploaded item images are written — `api/uploads` locally, a Docker volume
+in production. The API creates it on the first upload and serves it at `/uploads/`.
+
 ### 2. Start the database (Docker)
 ```bash
 docker compose up -d db   # brings up a PostgreSQL instance

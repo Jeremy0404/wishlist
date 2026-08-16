@@ -70,13 +70,16 @@
                   class="group rounded-2xl border border-accent-200 bg-surface/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="space-y-1">
-                      <p class="text-lg font-semibold text-accent-900">
-                        {{ item.title }}
-                      </p>
-                      <p class="text-sm text-accent-800" v-if="item.notes">
-                        {{ item.notes }}
-                      </p>
+                    <div class="flex items-start gap-3">
+                      <ItemThumbnail :image-url="item.image_url" :size="56" />
+                      <div class="space-y-1">
+                        <p class="text-lg font-semibold text-accent-900">
+                          {{ item.title }}
+                        </p>
+                        <p class="text-sm text-accent-800" v-if="item.notes">
+                          {{ item.notes }}
+                        </p>
+                      </div>
                     </div>
                     <div
                       class="text-right text-sm font-semibold text-accent-2-700"
@@ -128,6 +131,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
+import ItemThumbnail from "../components/wishlist/ItemThumbnail.vue";
 import { fmtEUR } from "../utils/money";
 import { priorityLevel } from "../utils/priority";
 import type { WishlistItem } from "../types.ts";
