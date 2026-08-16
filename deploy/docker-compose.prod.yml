@@ -1,0 +1,84 @@
+# Production stack for the "mediaserver" VPS — web + api + self-hosted PostgreSQL.
+#
+# The web service is published loopback-only (127.0.0.1:${APP_PORT}), never on
+# a public interface. The host's existing Nginx Proxy Manager (NPM)
+# reverse-proxies to it by container name over the stack's private Docker
+# network (`docker network connect wishlist_default nginx-proxy-manager`, run
+# once after the first `docker compose up -d` creates the network) — see
+# deploy/README.md.
+#
+# Unlike a single-container app, wishlist serves its SPA from nginx (web) and
+# proxies /api/ to the Node API (api). NPM therefore targets wishlist-web-1:80,
+# not the api directly.
+#
+# Usage: docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d
+
+name: wishlist
+
+services:
+  web:
+    image: ghcr.io/jeremy0404/wishlist-web:${RELEASE_VERSION}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${APP_PORT:-3005}:80'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  api:
+    image: ghcr.io/jeremy0404/wishlist-api:${RELEASE_VERSION}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      UPLOADS_DIR: /data/uploads
+      APP_URL: ${APP_URL}
+      SMTP_URL: ${SMTP_URL}
+      MAIL_FROM: ${MAIL_FROM}
+    volumes:
+      - wishlist-uploads:/data/uploads
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - wishlist-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  wishlist-pg:
+  # User content: backed up alongside wishlist-pg by deploy/backup.sh. A
+  # restore without it brings the app back with every item image broken.
+  wishlist-uploads:

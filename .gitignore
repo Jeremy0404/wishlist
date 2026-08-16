@@ -59,3 +59,6 @@ test-results-*/
 
 # Uploaded item images (dev runs the API on the host)
 api/uploads/
+
+# Server-side production secrets, filled in on mediaserver only.
+deploy/.env
