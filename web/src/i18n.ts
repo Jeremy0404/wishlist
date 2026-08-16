@@ -151,6 +151,14 @@ const fr = {
   },
   my: {
     title: "Ma wishlist",
+    name: {
+      shownAs: "Ta liste s’affiche sous le nom",
+      edit: "Changer",
+      label: "Ton nom",
+      save: "Enregistrer",
+      cancel: "Annuler",
+      saved: "Ton nom est à jour.",
+    },
     export: {
       action: "Exporter",
       pdf: "Télécharger le PDF",
@@ -274,6 +282,14 @@ const fr = {
       action: "Créer ma liste",
     },
     footer: "Propulsé par Wishlist",
+  },
+  welcome: {
+    title: "Bienvenue !",
+    body: "On t’a donné un nom à partir de ton adresse. C’est celui que ta famille verra au-dessus de ta liste — change-le si ça ne te va pas.",
+    nameLabel: "Ton nom",
+    namePlaceholder: "Marie Dupont",
+    submit: "C’est parti",
+    later: "Plus tard",
   },
   notFound: {
     title: "Cette page n’existe pas",

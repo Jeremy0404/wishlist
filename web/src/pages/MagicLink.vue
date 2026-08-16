@@ -45,9 +45,9 @@ onMounted(async () => {
   }
 
   try {
-    await auth.signInWithMagicLink(token);
+    const { created } = await auth.signInWithMagicLink(token);
     push(t("auth.loginSuccess"), "success");
-    await router.replace("/me");
+    await router.replace(created ? "/welcome" : "/me");
   } catch {
     expired.value = true;
   }

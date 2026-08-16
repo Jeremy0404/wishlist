@@ -79,6 +79,9 @@ export async function request<T>(
 
 export type User = { id: string; name: string; email: string };
 
+/** `created` tells a brand-new account from one that just signed back in. */
+export type MagicLinkSession = User & { created: boolean };
+
 export const api = {
   // --- Auth ---
   async me(): Promise<User | null> {
@@ -104,10 +107,12 @@ export const api = {
       body: { email },
     }),
   consumeMagicLink: (token: string) =>
-    request<User>("/auth/magic-link/consume", {
+    request<MagicLinkSession>("/auth/magic-link/consume", {
       method: "POST",
       body: { token },
     }),
+  updateMyName: (name: string) =>
+    request<User>("/auth/me", { method: "PATCH", body: { name } }),
 
   // --- Family ---
   getMyFamily: async () => {

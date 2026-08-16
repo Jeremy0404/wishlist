@@ -6,6 +6,7 @@ import {
   buildMagicLinkUrl,
   consumeMagicLink,
   displayNameFromEmail,
+  findOrCreateUserByEmail,
   hashToken,
   issueMagicLink,
   normalizeEmail,
@@ -159,4 +160,69 @@ test("a name is derived from the address the sign-up collected", () => {
     displayNameFromEmail("jean-pierre.dupont@example.com"),
     "Jean Pierre Dupont",
   );
+});
+
+type FakeUser = { id: string; email: string; name: string };
+
+function createUsersFakeDb(existing: FakeUser[]) {
+  const inserted: Array<Record<string, unknown>> = [];
+
+  const db = (table: string) => {
+    if (table !== "users") throw new Error(`Unexpected table ${table}`);
+
+    const query = {
+      lookup: "",
+      select() {
+        return this;
+      },
+      whereRaw(_sql: string, bindings: string[]) {
+        this.lookup = bindings[0];
+        return this;
+      },
+      async first() {
+        return existing.find((u) => u.email.toLowerCase() === this.lookup);
+      },
+      insert(values: Record<string, unknown>) {
+        inserted.push(values);
+        return this;
+      },
+      async returning(_columns: string[]) {
+        const row = inserted[inserted.length - 1];
+        return [{ id: "new-user", email: row.email, name: row.name }];
+      },
+    };
+
+    return query;
+  };
+
+  return { db: db as never, inserted };
+}
+
+test("an address with no account becomes one, flagged as created", async () => {
+  const { db, inserted } = createUsersFakeDb([]);
+
+  const { user, created } = await findOrCreateUserByEmail(
+    db,
+    "marie.dupont@example.com",
+  );
+
+  assert.equal(created, true);
+  assert.equal(user.id, "new-user");
+  assert.equal(user.name, "Marie Dupont");
+  assert.equal(inserted[0].name, "Marie Dupont");
+});
+
+test("an address that already has an account is not flagged as created", async () => {
+  const { db, inserted } = createUsersFakeDb([
+    { id: "existing-user", email: "alexa@example.com", name: "Alexa" },
+  ]);
+
+  const { user, created } = await findOrCreateUserByEmail(
+    db,
+    "alexa@example.com",
+  );
+
+  assert.equal(created, false);
+  assert.equal(user.id, "existing-user");
+  assert.deepEqual(inserted, []);
 });

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import type { Knex } from "knex";
 import bcrypt from "bcryptjs";
 import { db } from "../db/knex.js";
 import { authCookie, signUser } from "../auth/jwt.js";
@@ -52,14 +53,14 @@ router.post(
     const password_hash = await bcrypt.hash(password, 10);
     const [user] = await db("users")
       .insert({ email, password_hash, name })
-      .returning(["id", "email"]);
+      .returning(["id", "email", "name"]);
 
     log.info({ userId: user.id, email: user.email }, "User registered");
 
     const token = signUser({ id: user.id, email: user.email });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email });
+      .json({ id: user.id, email: user.email, name: user.name });
   }),
 );
 
@@ -94,7 +95,7 @@ router.post(
     const token = signUser({ id: user.id, email: user.email });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email });
+      .json({ id: user.id, email: user.email, name: user.name });
   }),
 );
 
@@ -151,7 +152,7 @@ router.post(
     const token = signUser({ id: user.id, email: user.email });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email });
+      .json({ id: user.id, email: user.email, name: user.name, created });
   }),
 );
 
@@ -175,6 +176,43 @@ router.get(
       .first();
     if (!u) throw new NotFoundError("user not found");
     res.json(u);
+  }),
+);
+
+const NAME_MAX_LENGTH = 80;
+
+const ProfileUpdate = z.object({
+  name: z.string().trim().min(1).max(NAME_MAX_LENGTH),
+});
+
+export async function updateUserName(
+  dbConn: Knex,
+  userId: string,
+  name: string,
+) {
+  const [user] = await dbConn("users")
+    .where({ id: userId })
+    .update({ name })
+    .returning(["id", "email", "name"]);
+
+  return user ?? null;
+}
+
+/** The row updated is the caller's own, taken from the session — never an id
+ *  the request gets to name. */
+router.patch(
+  "/me",
+  authRequired,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, { module: "auth", action: "rename" });
+    const parse = ProfileUpdate.safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+    const user = await updateUserName(db, req.user!.id, parse.data.name);
+    if (!user) throw new NotFoundError("user not found");
+
+    log.info({ userId: user.id }, "User changed their display name");
+    res.json(user);
   }),
 );
 

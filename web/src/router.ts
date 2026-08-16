@@ -11,6 +11,7 @@ import WishlistView from "./pages/WishlistView.vue";
 import FamilyInvite from "./pages/FamilyInvite.vue";
 import SampleList from "./pages/SampleList.vue";
 import SignIn from "./pages/SignIn.vue";
+import Welcome from "./pages/Welcome.vue";
 import PublicWishlist from "./pages/PublicWishlist.vue";
 import NotFound from "./pages/NotFound.vue";
 import SessionExpired from "./pages/SessionExpired.vue";
@@ -29,6 +30,7 @@ const routes = [
   { path: "/auth/login", redirect: keepRedirect },
   { path: "/auth/register", redirect: keepRedirect },
   { path: "/auth/magic", component: MagicLink, meta: { public: true } },
+  { path: "/welcome", component: Welcome },
 
   // Family
   { path: "/family/create", component: FamilyCreate },
