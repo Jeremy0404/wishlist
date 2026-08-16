@@ -1,93 +1,83 @@
 import { expect, test } from "@playwright/test";
 import {
+  columnLayout,
   createRenderContext,
   ensureSpace,
-  formatLink,
   pdfConfig,
 } from "../../src/components/wishlist/pdfUtils";
 
-test.describe("formatLink", () => {
-  const noValue = "(none)";
-
-  test("returns placeholder for empty values", () => {
-    expect(formatLink(undefined, noValue)).toBe(noValue);
-    expect(formatLink("   ", noValue)).toBe(noValue);
-  });
-
-  test("adds https prefix when missing", () => {
-    expect(formatLink("example.com/product", noValue)).toBe(
-      "https://example.com/product",
-    );
-  });
-
-  test("preserves existing protocol", () => {
-    expect(formatLink("http://foo.test", noValue)).toBe("http://foo.test");
-    expect(formatLink("https://bar.test", noValue)).toBe("https://bar.test");
-  });
-});
-
-test.describe("ensureSpace", () => {
-  const baseContext = {
-    margin: pdfConfig.margin,
-    contentWidth: 500,
-    pageHeight: 800,
-    cursorY: pdfConfig.margin,
-    noValue: "-",
-    now: new Date("2024-01-01T00:00:00Z"),
-    familyLabel: "Test",
+function fakeDoc(width = 595.28, height = 841.89) {
+  const calls = { addPage: 0, rect: 0 };
+  const doc = {
+    internal: { pageSize: { getWidth: () => width, getHeight: () => height } },
+    setFillColor: () => doc,
+    rect: () => {
+      calls.rect += 1;
+      return doc;
+    },
+    addPage: () => {
+      calls.addPage += 1;
+      return doc;
+    },
   };
-
-  test("does not add a page when space is sufficient", () => {
-    let addedPages = 0;
-    const ctx = { ...baseContext, cursorY: 100 };
-    const doc = {
-      addPage: () => {
-        addedPages += 1;
-      },
-    } as unknown as Parameters<typeof ensureSpace>[0];
-
-    ensureSpace(doc, ctx, 200);
-
-    expect(addedPages).toBe(0);
-    expect(ctx.cursorY).toBe(100);
-  });
-
-  test("adds a page and resets cursor when space is insufficient", () => {
-    let addedPages = 0;
-    const ctx = { ...baseContext, cursorY: 760 };
-    const doc = {
-      addPage: () => {
-        addedPages += 1;
-      },
-    } as unknown as Parameters<typeof ensureSpace>[0];
-
-    ensureSpace(doc, ctx, 50);
-
-    expect(addedPages).toBe(1);
-    expect(ctx.cursorY).toBe(pdfConfig.margin);
-  });
-});
+  return { doc: doc as unknown as Parameters<typeof ensureSpace>[0], calls };
+}
 
 test.describe("createRenderContext", () => {
-  test("derives layout dimensions from jsPDF page size", () => {
-    const doc = {
-      internal: {
-        pageSize: {
-          getWidth: () => 600,
-          getHeight: () => 900,
-        },
-      },
-    } as unknown as Parameters<typeof createRenderContext>[0];
-
-    const now = new Date("2025-02-02T12:00:00Z");
-    const ctx = createRenderContext(doc, "Family", "N/A", now);
+  test("derives layout dimensions from the page size", () => {
+    const { doc } = fakeDoc(600, 900);
+    const ctx = createRenderContext(doc);
 
     expect(ctx.margin).toBe(pdfConfig.margin);
     expect(ctx.contentWidth).toBe(600 - pdfConfig.margin * 2);
     expect(ctx.pageHeight).toBe(900);
     expect(ctx.cursorY).toBe(pdfConfig.margin);
-    expect(ctx.familyLabel).toBe("Family");
-    expect(ctx.noValue).toBe("N/A");
-    expect(ctx.now).toBe(now);
+  });
+
+  test("paints the paper colour on the first page", () => {
+    const { doc, calls } = fakeDoc();
+    createRenderContext(doc);
+
+    expect(calls.rect).toBe(1);
+  });
+});
+
+test.describe("ensureSpace", () => {
+  test("keeps the cursor when the page has room", () => {
+    const { doc, calls } = fakeDoc();
+    const ctx = createRenderContext(doc);
+    ctx.cursorY = 100;
+
+    expect(ensureSpace(doc, ctx, 200)).toBe(false);
+    expect(calls.addPage).toBe(0);
+    expect(ctx.cursorY).toBe(100);
+  });
+
+  test("adds a repainted page when it does not", () => {
+    const { doc, calls } = fakeDoc();
+    const ctx = createRenderContext(doc);
+    ctx.cursorY = ctx.pageHeight - ctx.margin - 10;
+
+    expect(ensureSpace(doc, ctx, 50)).toBe(true);
+    expect(calls.addPage).toBe(1);
+    expect(calls.rect).toBe(2);
+    expect(ctx.cursorY).toBe(pdfConfig.margin);
+  });
+});
+
+test.describe("columnLayout", () => {
+  test("lays the four columns out inside the content width", () => {
+    const { doc } = fakeDoc();
+    const ctx = createRenderContext(doc);
+    const layout = columnLayout(ctx);
+
+    expect(layout.photoX).toBe(ctx.margin);
+    expect(layout.itemX).toBe(
+      ctx.margin + pdfConfig.photoColumn + pdfConfig.columnGap,
+    );
+    expect(layout.itemWidth).toBeGreaterThan(pdfConfig.photoColumn);
+    expect(layout.priorityX + pdfConfig.priorityColumn).toBe(
+      ctx.margin + ctx.contentWidth,
+    );
   });
 });
