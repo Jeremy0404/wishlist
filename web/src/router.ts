@@ -3,6 +3,7 @@ import { useAuth } from "./stores/auth";
 
 // Pages
 import Login from "./pages/Login.vue";
+import MagicLink from "./pages/MagicLink.vue";
 import Register from "./pages/Register.vue";
 import FamilyCreate from "./pages/FamilyCreate.vue";
 import FamilyJoin from "./pages/FamilyJoin.vue";
@@ -27,6 +28,7 @@ const routes = [
     component: Login,
     meta: { public: true, onlyGuest: true },
   },
+  { path: "/auth/magic", component: MagicLink, meta: { public: true } },
   {
     path: "/auth/register",
     component: Register,

@@ -98,6 +98,16 @@ export const api = {
       body: { name, email, password },
     }),
   logout: () => request("/auth/logout", { method: "POST" }),
+  requestMagicLink: (email: string) =>
+    request<{ ok: true }>("/auth/magic-link", {
+      method: "POST",
+      body: { email },
+    }),
+  consumeMagicLink: (token: string) =>
+    request<User>("/auth/magic-link/consume", {
+      method: "POST",
+      body: { token },
+    }),
 
   // --- Family ---
   getMyFamily: async () => {

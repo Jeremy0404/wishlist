@@ -159,6 +159,12 @@ export async function deleteWishlistItem(
   await expect(item).toHaveCount(0, { timeout: 10000 });
 }
 
+/** Passwords are the fallback branch of the sign-in card: the magic-link form
+ *  is what the page opens on. */
+export async function usePasswordForm(page: Page): Promise<void> {
+  await page.click('button[data-test="use-password"]');
+}
+
 /** Log in with the supplied credentials */
 export async function loginUser(
   page: Page,
@@ -166,6 +172,7 @@ export async function loginUser(
   password: string,
 ): Promise<void> {
   await page.goto("/auth/login");
+  await usePasswordForm(page);
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');

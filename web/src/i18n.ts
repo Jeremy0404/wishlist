@@ -109,6 +109,22 @@ const fr = {
     password: "Mot de passe",
     name: "Nom",
     create: "Créer le compte",
+    magic: {
+      title: "Continuer avec l’e-mail",
+      send: "Envoyez-moi un lien",
+      fineprint:
+        "Lien à usage unique, valable 15 minutes. Aucun mot de passe à inventer ni à retenir.",
+      passwordInstead: "Utiliser un mot de passe",
+      sentTitle: "Regardez votre boîte mail",
+      sentTo: "Nous avons envoyé un lien à {email}.",
+      sentHint: "Il expire dans 15 minutes.",
+      resend: "Renvoyer le lien",
+      signingIn: "Connexion en cours…",
+      expiredTitle: "Lien expiré",
+      expiredHint:
+        "Les liens ne fonctionnent qu’une fois, et seulement pendant 15 minutes.",
+      requestNew: "En demander un nouveau",
+    },
   },
   priority: {
     none: "Sans priorité",
