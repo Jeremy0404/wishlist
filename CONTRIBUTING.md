@@ -42,7 +42,47 @@ issue carries a type label (`feature` / `chore` / `fix`) and a status label (`ne
 - `fix: keep long item URLs from overflowing the card`
 - `chore: bump vite to 7.1`
 
+### Breaking changes
+
+A change release-please should bump the **major** version for uses `!` after the type and a
+`BREAKING CHANGE:` footer describing exactly what breaks:
+
+```
+feat!: remove the legacy /api/v1/wishlists endpoint
+
+BREAKING CHANGE: /api/v1/wishlists is removed, use /api/wishlists instead.
+```
+
+Whether an issue is a breaking change is decided during triage (`breaking-change` label + a note
+on the issue describing what breaks), not invented at merge time. Since PRs are squash-merged, both
+the `!` and the footer must be set explicitly in the squash-merge commit box — GitHub doesn't carry
+them over from the PR title/description automatically.
+
+## Releases
+
+[Release Please](https://github.com/googleapis/release-please) watches Conventional Commits on
+`main` and keeps a single Release PR up to date with the next version and changelog. Merging that
+PR tags the release (`vX.Y.Z`) and publishes a GitHub Release. The tag push then triggers
+`.github/workflows/release.yml`, which builds the `api` and `web` images from their own
+Dockerfiles, pushes both to GHCR, and signs them keylessly with cosign.
+
+The version is tracked in `.release-please-manifest.json` and `CHANGELOG.md` only — `release-type`
+is `simple`, so neither `api/package.json` nor `web/package.json` is bumped. There is no root
+workspace to version.
+
 ## Deployment
 
-`deploy.yml` builds and pushes the GHCR images on every push to `main`, but the deployment job
-itself only runs on a manual `workflow_dispatch` — see the note in that workflow.
+`release.yml` publishes and signs the images; it does not deploy them yet.
+
+`deploy.yml` is the older, unsigned path: it builds and pushes GHCR images tagged by commit SHA on
+every push to `main`, while its `deploy` job is gated `if: github.event_name == 'workflow_dispatch'`
+and so never runs on a push. It is being replaced by the signed release pipeline above.
+
+## One-time setup
+
+### Release Please token
+
+`release-please.yml` needs a `RELEASE_PLEASE_TOKEN` repo secret — a fine-grained PAT scoped to
+this repo with `contents: write`, `pull-requests: write`, and `issues: write`. The default
+`GITHUB_TOKEN` can't be used: PRs it opens don't trigger other workflows (CI wouldn't run on the
+Release PR).
