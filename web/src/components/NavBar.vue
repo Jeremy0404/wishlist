@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useAuth } from "../stores/auth.ts";
 import { useToasts } from "./ui/useToasts.ts";
 import Button from "./ui/Button.vue";
-import Icon from "./ui/Icon.vue";
+import BrandLockup from "./ui/BrandLockup.vue";
 import FamilyBadge from "./FamilyBadge.vue";
 
 const { t } = useI18n();
@@ -28,12 +28,8 @@ onMounted(() => {
   <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur">
     <div class="mx-auto max-w-5xl px-4 py-3">
       <div class="flex flex-wrap items-center gap-4">
-        <RouterLink
-          to="/"
-          class="inline-flex items-center gap-2 font-heading text-h5 text-ink"
-        >
-          <Icon name="gift" :size="18" />
-          <span>{{ t("nav.wishlist") }}</span>
+        <RouterLink to="/">
+          <BrandLockup />
         </RouterLink>
 
         <FamilyBadge class="shrink-0" />
