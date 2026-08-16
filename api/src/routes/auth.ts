@@ -15,6 +15,10 @@ import { sendMail } from "../mail/mailer.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import {
+  authIpRateLimit,
+  magicLinkAddressRateLimit,
+} from "../middleware/rate-limit.js";
+import {
   ConflictError,
   NotFoundError,
   UnauthorizedError,
@@ -24,6 +28,9 @@ import { getRequestLogger } from "../logging/logger.js";
 
 const router = Router();
 
+const ipRateLimit = authIpRateLimit();
+const addressRateLimit = magicLinkAddressRateLimit();
+
 const Register = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -32,6 +39,7 @@ const Register = z.object({
 
 router.post(
   "/register",
+  ipRateLimit,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "auth", action: "register" });
     const parse = Register.safeParse(req.body);
@@ -62,6 +70,7 @@ const Login = z.object({
 
 router.post(
   "/login",
+  ipRateLimit,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, { module: "auth", action: "login" });
     const parse = Login.safeParse(req.body);
@@ -97,6 +106,8 @@ const MagicLinkRequest = z.object({
  *  and signing up are the same act, so there is nothing to enumerate. */
 router.post(
   "/magic-link",
+  ipRateLimit,
+  addressRateLimit,
   asyncHandler(async (req, res) => {
     const log = getRequestLogger(req, {
       module: "auth",
