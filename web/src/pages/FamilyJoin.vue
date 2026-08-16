@@ -1,24 +1,3 @@
-<template>
-  <h1 class="text-xl font-semibold mb-4">{{ t("familyJoin.title") }}</h1>
-
-  <Card class="max-w-xl">
-    <form @submit.prevent="submit" class="grid gap-3">
-      <Input v-model="code" name="code" data-test="family-code-input" :label="t('familyJoin.codeLabel')" required />
-      <div>
-        <Button variant="primary" type="submit" data-test="family-join-submit">{{ t("familyJoin.joinBtn") }}</Button>
-      </div>
-    </form>
-
-    <p
-      v-if="msg"
-      :data-test="ok ? 'family-join-success' : 'family-join-error'"
-      :class="['mt-3 text-sm', ok ? 'text-accent-2-700' : 'text-accent-700']"
-    >
-      {{ msg }}
-    </p>
-  </Card>
-</template>
-
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -26,16 +5,18 @@ import { useI18n } from "vue-i18n";
 import { useAuth } from "../stores/auth.ts";
 import api from "../services/api.ts";
 import Button from "../components/ui/Button.vue";
-import Input from "../components/ui/Input.vue";
 import Card from "../components/ui/Card.vue";
+import Input from "../components/ui/Input.vue";
+import FamilyOptIn from "../components/FamilyOptIn.vue";
 
 const { t } = useI18n();
 const route = useRoute();
 const auth = useAuth();
 
 const code = ref("");
-const msg = ref("");
-const ok = ref(false);
+const error = ref("");
+const joined = ref("");
+const submitting = ref(false);
 
 onMounted(() => {
   const q = route.query.code;
@@ -45,16 +26,58 @@ onMounted(() => {
 });
 
 async function submit() {
-  msg.value = "";
-  ok.value = false;
+  error.value = "";
+  joined.value = "";
+  submitting.value = true;
   try {
-    const r = await api.joinFamily(code.value);
-    ok.value = true;
-    msg.value = t("familyJoin.joined", { name: r.name ?? "" });
-
+    const family = await api.joinFamily(code.value);
+    joined.value = t("familyJoin.joined", { name: family.name ?? "" });
     await auth.refreshFamilies();
   } catch (e: any) {
-    msg.value = e?.message || t("familyJoin.error");
+    error.value = e?.message || t("familyJoin.error");
+  } finally {
+    submitting.value = false;
   }
 }
 </script>
+
+<template>
+  <FamilyOptIn
+    :title="t('familyJoin.title')"
+    :body="t('familyJoin.body')"
+    :cross-label="t('familyJoin.noCode')"
+    cross-to="/family/create"
+  >
+    <Card elevation="md" class="p-6">
+      <form class="grid gap-3" @submit.prevent="submit">
+        <Input
+          v-model="code"
+          name="code"
+          class="font-mono uppercase tracking-[0.05em]"
+          data-test="family-code-input"
+          :label="t('familyJoin.codeLabel')"
+          :placeholder="t('familyJoin.codePlaceholder')"
+          :error="error"
+          required
+        />
+        <Button
+          variant="primary"
+          block
+          type="submit"
+          :loading="submitting"
+          data-test="family-join-submit"
+        >
+          {{ t("familyJoin.joinBtn") }}
+        </Button>
+      </form>
+
+      <p
+        v-if="joined"
+        class="mb-0 text-caption text-accent-2-700"
+        data-test="family-join-success"
+      >
+        {{ joined }}
+      </p>
+    </Card>
+  </FamilyOptIn>
+</template>

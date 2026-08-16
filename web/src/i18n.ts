@@ -7,6 +7,7 @@ const fr = {
     copy: "Copier",
     close: "Fermer",
     cancel: "Annuler",
+    copied: "Copié !",
     loading: "Chargement…",
   },
   nav: {
@@ -20,6 +21,8 @@ const fr = {
   },
   family: {
     badge: "Famille",
+    optional: "Optionnel",
+    maybeLater: "Plus tard",
     code: "Code",
     copied: "Code copié",
     shareTitle: "Invitation à rejoindre {name}",
@@ -35,37 +38,51 @@ const fr = {
   // --- PAGES ---
   familyCreate: {
     title: "Créer une famille",
+    body:
+      "Une famille sert à voir les listes des autres. Tu peux continuer à utiliser " +
+      "Wishlist en solo, aussi longtemps que tu veux.",
     nameLabel: "Nom de la famille",
-    createBtn: "Créer",
-    created: "Famille créée.",
+    namePlaceholder: "Les Martin",
+    createBtn: "Créer la famille",
+    haveCode: "J’ai déjà un code",
+    error: "Impossible de créer la famille.",
+    createdTitle: "C’est fait",
+    createdBody:
+      "{name} existe. Partage ce code aux personnes que tu veux voir arriver.",
     inviteCode: "Code d’invitation",
+    goInvite: "Inviter des proches",
     goMyList: "Aller à ma liste",
   },
   familyJoin: {
     title: "Rejoindre une famille",
+    body:
+      "Entre le code qu’on t’a transmis. Ta liste te suit, et rien ne t’oblige " +
+      "à rejoindre qui que ce soit.",
     codeLabel: "Code d’invitation",
+    codePlaceholder: "MAR-7F2K9B",
     joinBtn: "Rejoindre",
+    noCode: "Je n’ai pas de code — créer la mienne",
     joined: "Tu as rejoint {name}.",
     error: "Échec de la jonction",
   },
   familyInvite: {
     title: "Inviter dans ta famille",
-    famLabel: "Famille",
+    body: "Partage le code, ou le lien — les deux mènent au même endroit.",
     codeLabel: "Code d’invitation",
-    copied: "Code copié",
-    rotate: "Régénérer le code",
+    linkLabel: "Lien d’invitation",
+    rotate: "Générer un nouveau code",
     rotateConfirm:
-      "Le code d’invitation actuel ne sera plus valide. Continuer ?",
+      "L’ancien code sera retiré — les personnes qui ne s’en sont pas encore " +
+      "servies auront besoin du nouveau.",
+    rotateConfirmBtn: "Générer",
     codeRotated: "Nouveau code d’invitation généré.",
     rotateError: "Impossible de régénérer le code.",
-    membersTitle: "Membres de la famille",
+    membersTitle: "Membres",
     refresh: "Actualiser",
-    loadingMembers: "Chargement des membres…",
-    roleLabel: "Rôle : {role}",
-    joinedAt: "Rejoint le {date}",
-    noMembers: "Aucun membre trouvé.",
+    noMembers: "Aucun membre pour l’instant.",
     membersError: "Impossible de charger les membres de la famille.",
     noFamily: "Crée ou rejoins d’abord une famille.",
+    noFamilyAction: "Créer une famille",
   },
   signIn: {
     kicker: "Sans mot de passe",
