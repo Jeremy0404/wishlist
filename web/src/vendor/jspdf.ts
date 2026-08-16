@@ -27,7 +27,62 @@ interface RectOperation {
   fill: boolean;
 }
 
-type Operation = TextOperation | RectOperation;
+interface ImageOperation {
+  type: "image";
+  index: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+type Operation = TextOperation | RectOperation | ImageOperation;
+
+interface ImageAsset {
+  bytes: Uint8Array;
+  width: number;
+  height: number;
+}
+
+function decodeDataUrl(dataUrl: string) {
+  const binary = atob(dataUrl.slice(dataUrl.indexOf(",") + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/** The pixel dimensions live in the JPEG's own start-of-frame marker; a PDF
+ *  image XObject has to declare them. */
+function readJpegSize(bytes: Uint8Array): [number, number] {
+  let offset = 2;
+  while (offset + 9 < bytes.length) {
+    if (bytes[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+    const marker = bytes[offset + 1] ?? 0;
+    const isStartOfFrame =
+      marker >= 0xc0 &&
+      marker <= 0xcf &&
+      marker !== 0xc4 &&
+      marker !== 0xc8 &&
+      marker !== 0xcc;
+    if (isStartOfFrame) {
+      return [
+        ((bytes[offset + 7] ?? 0) << 8) | (bytes[offset + 8] ?? 0),
+        ((bytes[offset + 5] ?? 0) << 8) | (bytes[offset + 6] ?? 0),
+      ];
+    }
+    offset += 2 + (((bytes[offset + 2] ?? 0) << 8) | (bytes[offset + 3] ?? 0));
+  }
+  return [0, 0];
+}
+
+function toImageAsset(dataUrl: string): ImageAsset {
+  const bytes = decodeDataUrl(dataUrl);
+  const [width, height] = readJpegSize(bytes);
+  return { bytes, width, height };
+}
 
 function toPdfHex(text: string) {
   const winAnsiExtras: Record<number, number> = {
@@ -64,7 +119,12 @@ function toRgb(opacity: [number, number, number]) {
   return opacity.map((v) => (v / 255).toFixed(3)).join(" ");
 }
 
-function buildPdf(pages: Operation[][], pageWidth: number, pageHeight: number) {
+function buildPdf(
+  pages: Operation[][],
+  pageWidth: number,
+  pageHeight: number,
+  images: ImageAsset[],
+) {
   const encoder = new TextEncoder();
   const parts: Uint8Array[] = [];
   const offsets: number[] = [];
@@ -88,10 +148,24 @@ function buildPdf(pages: Operation[][], pageWidth: number, pageHeight: number) {
   };
 
   const contentsStartId = 5;
+  const imageStartId = contentsStartId + pages.length * 2;
+  const imageResources = images
+    .map((_, index) => `/Im${index} ${imageStartId + index} 0 R`)
+    .join(" ");
+  const xObjectResource = images.length
+    ? ` /XObject << ${imageResources} >>`
+    : "";
 
   pages.forEach((ops, pageIndex) => {
     const contentLines = ops
       .map((op) => {
+        if (op.type === "image") {
+          const y = pageHeight - (op.y + op.height);
+          return `q ${op.width.toFixed(2)} 0 0 ${op.height.toFixed(2)} ${op.x.toFixed(2)} ${y.toFixed(
+            2,
+          )} cm /Im${op.index} Do Q\n`;
+        }
+
         if (op.type === "rect") {
           const y = pageHeight - (op.y + op.height);
           return `${toRgb(op.color)} rg\n${op.x.toFixed(2)} ${y.toFixed(2)} ${op.width.toFixed(2)} ${op.height.toFixed(2)} re ${
@@ -112,23 +186,44 @@ function buildPdf(pages: Operation[][], pageWidth: number, pageHeight: number) {
     const pageId = contentsStartId + pageIndex * 2 + 1;
     pageIds.push(pageId);
 
-    addObject(contentId, `<< /Length ${contentLength} >>\nstream\n${contentLines}endstream`);
+    addObject(
+      contentId,
+      `<< /Length ${contentLength} >>\nstream\n${contentLines}endstream`,
+    );
     addObject(
       pageId,
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth.toFixed(2)} ${pageHeight.toFixed(
         2,
-      )}] /Contents ${contentId} 0 R /Resources << /Font << /F${fontNormalId} ${fontNormalId} 0 R /F${fontBoldId} ${fontBoldId} 0 R >> >> >>`,
+      )}] /Contents ${contentId} 0 R /Resources << /Font << /F${fontNormalId} ${fontNormalId} 0 R /F${fontBoldId} ${fontBoldId} 0 R >>${xObjectResource} >> >>`,
     );
   });
 
-  addObject(fontNormalId, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
-  addObject(fontBoldId, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+  addObject(
+    fontNormalId,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+  );
+  addObject(
+    fontBoldId,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+  );
+
+  images.forEach((image, index) => {
+    const id = imageStartId + index;
+    offsets[id] = position;
+    pushPart(
+      `${id} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height}` +
+        ` /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${image.bytes.length} >>\nstream\n`,
+    );
+    parts.push(image.bytes);
+    position += image.bytes.length;
+    pushPart("\nendstream\nendobj\n");
+  });
 
   const kids = pageIds.map((id) => `${id} 0 R`).join(" ");
   addObject(2, `<< /Type /Pages /Kids [${kids}] /Count ${pageIds.length} >>`);
   addObject(1, "<< /Type /Catalog /Pages 2 0 R >>");
 
-  const totalObjects = 4 + pages.length * 2;
+  const totalObjects = 4 + pages.length * 2 + images.length;
   const xrefPosition = position;
 
   pushPart(`xref\n0 ${totalObjects + 1}\n`);
@@ -138,7 +233,9 @@ function buildPdf(pages: Operation[][], pageWidth: number, pageHeight: number) {
     pushPart(`${offset.toString().padStart(10, "0")} 00000 n \n`);
   }
 
-  pushPart(`trailer\n<< /Size ${totalObjects + 1} /Root 1 0 R >>\nstartxref\n${xrefPosition}\n%%EOF`);
+  pushPart(
+    `trailer\n<< /Size ${totalObjects + 1} /Root 1 0 R >>\nstartxref\n${xrefPosition}\n%%EOF`,
+  );
 
   const totalLength = parts.reduce((acc, p) => acc + p.length, 0);
   const buffer = new Uint8Array(totalLength);
@@ -163,6 +260,7 @@ function normalizeFormat(format?: string | [number, number]): [number, number] {
 
 export class jsPDF {
   private pages: Operation[][] = [[]];
+  private images: string[] = [];
   private currentPage = 0;
   private fillColor: [number, number, number] = [0, 0, 0];
   private textColor: [number, number, number] = [0, 0, 0];
@@ -205,9 +303,60 @@ export class jsPDF {
     return this;
   }
 
-  roundedRect(x: number, y: number, width: number, height: number, _rx: number, _ry: number, style = "S") {
+  rect(x: number, y: number, width: number, height: number, style = "S") {
     const fill = style.includes("F");
-    this.pages[this.currentPage]?.push({ type: "rect", x, y, width, height, color: this.fillColor, fill });
+    this.pages[this.currentPage]?.push({
+      type: "rect",
+      x,
+      y,
+      width,
+      height,
+      color: this.fillColor,
+      fill,
+    });
+    return this;
+  }
+
+  addImage(
+    imageData: string,
+    _format: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) {
+    let index = this.images.indexOf(imageData);
+    if (index === -1) index = this.images.push(imageData) - 1;
+    this.pages[this.currentPage]?.push({
+      type: "image",
+      index,
+      x,
+      y,
+      width,
+      height,
+    });
+    return this;
+  }
+
+  roundedRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    _rx: number,
+    _ry: number,
+    style = "S",
+  ) {
+    const fill = style.includes("F");
+    this.pages[this.currentPage]?.push({
+      type: "rect",
+      x,
+      y,
+      width,
+      height,
+      color: this.fillColor,
+      fill,
+    });
     return this;
   }
 
@@ -228,7 +377,10 @@ export class jsPDF {
   }
 
   splitTextToSize(text: string, width: number) {
-    const charsPerLine = Math.max(1, Math.floor(width / (this.fontSize * 0.52)));
+    const charsPerLine = Math.max(
+      1,
+      Math.floor(width / (this.fontSize * 0.52)),
+    );
     const words = text.split(/\s+/).filter(Boolean);
     const lines: string[] = [];
     let current = "";
@@ -252,7 +404,12 @@ export class jsPDF {
   }
 
   output(type: string) {
-    const buffer = buildPdf(this.pages, this.pageWidth, this.pageHeight);
+    const buffer = buildPdf(
+      this.pages,
+      this.pageWidth,
+      this.pageHeight,
+      this.images.map(toImageAsset),
+    );
     if (type === "blob") return new Blob([buffer], { type: "application/pdf" });
     return buffer;
   }

@@ -7,44 +7,34 @@
       :loading="exporting"
       @click="toggleDropdown"
     >
-      <span class="inline-flex items-center gap-1">
-        {{ t("my.export.action") }}
-        <svg
-          class="h-4 w-4 text-neutral-600"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </span>
+      <Icon name="download" />
+      {{ t("my.export.action") }}
+      <Icon
+        name="chevronDown"
+        :size="14"
+        class="transition-transform"
+        :class="dropdownOpen && 'rotate-180'"
+      />
     </Button>
 
-    <div
+    <Card
       v-if="dropdownOpen"
-      class="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-300 bg-surface shadow-lg"
+      elevation="md"
+      class="absolute right-0 z-10 mt-2 w-max min-w-56"
+      data-test="wishlist-export-menu"
     >
       <button
-        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-200"
-        data-test="wishlist-export-pdf"
+        v-for="format in formats"
+        :key="format.test"
+        class="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-2 text-left text-control text-ink transition-colors hover:bg-ink/7"
+        :data-test="format.test"
         :disabled="exporting"
-        @click="exportPdf"
+        @click="format.run"
       >
-        📄 {{ t("my.export.pdf") }}
+        <Icon name="download" :size="14" />
+        {{ format.label }}
       </button>
-      <button
-        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-neutral-200"
-        data-test="wishlist-export-markdown"
-        :disabled="exporting"
-        @click="exportMarkdown"
-      >
-        📝 {{ t("my.export.markdown") }}
-      </button>
-    </div>
+    </Card>
   </div>
 </template>
 
@@ -53,19 +43,31 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { jsPDF } from "jspdf";
 import Button from "../ui/Button.vue";
+import Card from "../ui/Card.vue";
+import Icon from "../ui/Icon.vue";
+import { iconDataUrl } from "../ui/icons";
 import { useToasts } from "../ui/useToasts";
 import { fmtEUR } from "../../utils/money";
 import { priorityLevel } from "../../utils/priority";
+import {
+  absoluteImageUrl,
+  isStoredImage,
+  toJpegDataUrl,
+} from "../../utils/image";
 import { useAuth } from "../../stores/auth";
 import type { WishlistItem } from "../../types.ts";
 import {
-  createRenderContext,
-  ensureSpace,
-  formatLink,
-  palette,
-  pdfConfig,
-} from "./pdfUtils";
-import type { Color, RenderContext } from "./pdfUtils";
+  EM_DASH,
+  buildMarkdown,
+  fmtExportDate,
+  type ExportDocument,
+  type ExportRow,
+} from "./exportDocument";
+import { PAPER, renderExportPdf } from "./pdfUtils";
+
+const MARK_PIXELS = 48;
+const PHOTO_PIXELS = 96;
+const LOWEST_PRIORITY = 6;
 
 const props = defineProps<{ items: WishlistItem[] }>();
 const exporting = ref(false);
@@ -77,21 +79,23 @@ const auth = useAuth();
 
 const safeItems = computed(() => props.items ?? []);
 const sortedItems = computed(() =>
-  [...safeItems.value].sort((a, b) => {
-    const priorityA = a.priority ?? 6;
-    const priorityB = b.priority ?? 6;
-    return priorityA - priorityB;
-  }),
+  [...safeItems.value].sort(
+    (a, b) => (a.priority ?? LOWEST_PRIORITY) - (b.priority ?? LOWEST_PRIORITY),
+  ),
 );
-const familyLabel = computed(
-  () => auth.myFamily?.name || t("my.export.noFamily"),
+const heading = computed(() =>
+  auth.user?.name
+    ? t("my.export.docTitle", { name: auth.user.name })
+    : t("my.title"),
 );
-const noValue = computed(() => t("my.export.none"));
-
-function priorityText(priority?: number | null) {
-  const level = priorityLevel(priority);
-  return level ? t(`priority.${level}`) : "";
-}
+const formats = computed(() => [
+  { test: "wishlist-export-pdf", label: t("my.export.pdf"), run: exportPdf },
+  {
+    test: "wishlist-export-markdown",
+    label: t("my.export.markdown"),
+    run: exportMarkdown,
+  },
+]);
 
 function closeDropdown() {
   dropdownOpen.value = false;
@@ -113,242 +117,99 @@ function onClickOutside(event: MouseEvent) {
 onMounted(() => document.addEventListener("click", onClickOutside));
 onUnmounted(() => document.removeEventListener("click", onClickOutside));
 
-function renderHero(doc: jsPDF, ctx: RenderContext) {
-  const { margin, contentWidth, noValue, now } = ctx;
-  const heroHeight = pdfConfig.heroHeight;
-  ensureSpace(doc, ctx, heroHeight + 12);
-  doc.setFillColor(...palette.heroBg);
-  doc.roundedRect(margin, ctx.cursorY, contentWidth, heroHeight, 8, 8, "F");
-  doc.setTextColor(...palette.heroTitle);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text(
-    `${t("my.title")} - ${ctx.familyLabel}`.toUpperCase(),
-    margin + 14,
-    ctx.cursorY + 26,
-  );
-
-  doc.setTextColor(...palette.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(12);
-  doc.text(t("my.export.subtitle"), margin + 14, ctx.cursorY + 46);
-
-  doc.setTextColor(...palette.heroAccent);
-  doc.setFontSize(11);
-  doc.text(
-    t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }),
-    margin + 14,
-    ctx.cursorY + 64,
-  );
-  doc.text(
-    t("my.export.itemsCount", { count: safeItems.value.length || noValue }),
-    margin + 14,
-    ctx.cursorY + 80,
-  );
-
-  ctx.cursorY += heroHeight + pdfConfig.heroSpacing;
+function toRow(item: WishlistItem): ExportRow {
+  const level = priorityLevel(item.priority);
+  const photoUrl = absoluteImageUrl(item.image_url);
+  return {
+    photoUrl,
+    embedUrl: isStoredImage(item.image_url) ? photoUrl : null,
+    title: (item.original_title || item.title || "").trim() || EM_DASH,
+    price: item.price_eur == null ? EM_DASH : fmtEUR.format(item.price_eur),
+    priority: level ? t(`priority.${level}`) : EM_DASH,
+  };
 }
 
-function renderTitle(
-  doc: jsPDF,
-  ctx: RenderContext,
-  text: string,
-  background: Color,
-) {
-  const height = pdfConfig.cardTitleHeight + 6;
-  ensureSpace(doc, ctx, height);
-  doc.setFillColor(...background);
-  doc.roundedRect(ctx.margin, ctx.cursorY, ctx.contentWidth, height, 8, 8, "F");
-  doc.setTextColor(...palette.text);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text(text, ctx.margin + 14, ctx.cursorY + 18);
-  ctx.cursorY += height + 6;
+function buildDocument(): ExportDocument {
+  const date = fmtExportDate.format(new Date());
+  return {
+    brand: t("nav.wishlist"),
+    heading: heading.value,
+    exportedOn: t("my.export.exportedOn", { date }),
+    footer: t("my.export.footer", { date }),
+    columns: [
+      t("my.export.photoColumn"),
+      t("my.export.itemColumn"),
+      t("my.export.priceColumn"),
+      t("my.export.priorityColumn"),
+    ],
+    rows: sortedItems.value.map(toRow),
+  };
 }
 
-function renderDetail(
-  doc: jsPDF,
-  ctx: RenderContext,
-  label: string,
-  value: string,
-  options: {
-    color?: Color;
-    labelColor?: Color;
-    fontSize?: number;
-  } = {},
-) {
-  const color = options.color ?? palette.text;
-  const labelColor = options.labelColor ?? palette.muted;
-  const fontSize = options.fontSize ?? 11;
-  const textLines = doc.splitTextToSize(
-    value || ctx.noValue,
-    ctx.contentWidth - 60,
+async function withPhotos(exportDoc: ExportDocument) {
+  await Promise.all(
+    exportDoc.rows.map(async (row) => {
+      if (!row.embedUrl) return;
+      row.photoData = await toJpegDataUrl(row.embedUrl, PHOTO_PIXELS, PAPER);
+    }),
   );
-  const height = 14 + textLines.length * 14;
-  ensureSpace(doc, ctx, height);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(...labelColor);
-  doc.text(label.toUpperCase(), ctx.margin + 14, ctx.cursorY + 10);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(fontSize);
-  doc.setTextColor(...color);
-  doc.text(textLines, ctx.margin + 14, ctx.cursorY + 24);
-  ctx.cursorY += height;
+  return exportDoc;
 }
 
-function renderItemCard(
-  doc: jsPDF,
-  ctx: RenderContext,
-  item: WishlistItem,
-  index: number,
+function download(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function runExport(
+  build: () => Promise<void>,
+  successKey: string,
+  errorKey: string,
 ) {
-  const cardBg = index % 2 === 0 ? palette.cardA : palette.cardB;
-  ensureSpace(doc, ctx, 30);
-
-  // Header
-  const displayTitle =
-    (item.original_title || item.title || "").trim() || ctx.noValue;
-  const priorityLabel = priorityText(item.priority);
-  const priorityBadge = priorityLabel ? `(${priorityLabel})` : "";
-  renderTitle(
-    doc,
-    ctx,
-    `#${index + 1} ${displayTitle} ${priorityBadge}`,
-    cardBg,
-  );
-
-  // Details
-  const priceValue =
-    item.price_eur == null ? ctx.noValue : fmtEUR.format(item.price_eur);
-  renderDetail(doc, ctx, t("my.export.priceLabel"), priceValue, {
-    color: palette.accent,
-    labelColor: palette.text,
-    fontSize: 13,
-  });
-  renderDetail(
-    doc,
-    ctx,
-    t("my.export.linkLabel"),
-    formatLink(item.url, ctx.noValue),
-    { color: palette.link, labelColor: palette.link, fontSize: 12 },
-  );
-  renderDetail(
-    doc,
-    ctx,
-    t("my.export.priorityLabel"),
-    priorityLabel || ctx.noValue,
-    { color: palette.text },
-  );
-  renderDetail(doc, ctx, t("my.export.notesLabel"), item.notes || ctx.noValue, {
-    color: palette.notes,
-  });
-  if (item.created_at) {
-    renderDetail(
-      doc,
-      ctx,
-      t("my.export.createdLabel"),
-      new Date(item.created_at).toLocaleDateString("fr-FR"),
-      { color: palette.muted },
-    );
+  if (!safeItems.value.length) return;
+  exporting.value = true;
+  closeDropdown();
+  try {
+    await build();
+    push(t(successKey), "success");
+  } catch (e) {
+    console.error(e);
+    push(t(errorKey), "error");
+  } finally {
+    exporting.value = false;
   }
-
-  // Spacer between cards
-  ctx.cursorY += pdfConfig.cardSpacing + 8;
-}
-
-function downloadDoc(doc: jsPDF) {
-  const blob = doc.output("blob") as Blob;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "wishlist.pdf";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function downloadText(content: string, filename: string, mimeType = "text/plain") {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 async function exportPdf() {
-  if (!safeItems.value.length) return;
-  exporting.value = true;
-  closeDropdown();
-  try {
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const ctx = createRenderContext(doc, familyLabel.value, noValue.value);
-
-    renderHero(doc, ctx);
-    sortedItems.value.forEach((item, index) =>
-      renderItemCard(doc, ctx, item, index),
-    );
-    downloadDoc(doc);
-    push(t("my.export.success"), "success");
-  } catch (e) {
-    console.error(e);
-    push(t("my.export.error"), "error");
-  } finally {
-    exporting.value = false;
-  }
-}
-
-function toMarkdown(item: WishlistItem, index: number) {
-  const title = (item.original_title || item.title || "").trim() || noValue.value;
-  const priorityLabel = priorityText(item.priority);
-  const priceValue = item.price_eur == null ? noValue.value : fmtEUR.format(item.price_eur);
-  const linkValue = item.url?.trim() || noValue.value;
-  const priorityValue = priorityLabel || noValue.value;
-  const notesValue = item.notes?.trim() || noValue.value;
-  const createdValue = item.created_at
-    ? new Date(item.created_at).toLocaleDateString("fr-FR")
-    : noValue.value;
-
-  const priorityBadge = priorityLabel ? ` (${priorityLabel})` : "";
-
-  return `## ${index + 1}. ${title}${priorityBadge}\n` +
-    `- ${t("my.export.priceLabel")}: ${priceValue}\n` +
-    `- ${t("my.export.linkLabel")}: ${linkValue}\n` +
-    `- ${t("my.export.priorityLabel")}: ${priorityValue}\n` +
-    `- ${t("my.export.notesLabel")}: ${notesValue}\n` +
-    `- ${t("my.export.createdLabel")}: ${createdValue}\n`;
-}
-
-function buildMarkdown() {
-  const now = new Date();
-  const header = [
-    `# ${t("my.title")} - ${familyLabel.value}`,
-    t("my.export.subtitle"),
-    t("my.export.generatedAt", { date: now.toLocaleString("fr-FR") }),
-    t("my.export.itemsCount", { count: safeItems.value.length || noValue.value }),
-    "",
-  ];
-
-  const body = sortedItems.value.map(toMarkdown);
-  return [...header, ...body].join("\n\n");
+  await runExport(
+    async () => {
+      const exportDoc = await withPhotos(buildDocument());
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const mark = await toJpegDataUrl(
+        iconDataUrl("gift", "#201e1d", MARK_PIXELS),
+        MARK_PIXELS,
+        PAPER,
+      );
+      renderExportPdf(pdf, exportDoc, mark);
+      download(pdf.output("blob") as Blob, "wishlist.pdf");
+    },
+    "my.export.success",
+    "my.export.error",
+  );
 }
 
 async function exportMarkdown() {
-  if (!safeItems.value.length) return;
-  exporting.value = true;
-  closeDropdown();
-  try {
-    const content = buildMarkdown();
-    downloadText(content, "wishlist.md", "text/markdown");
-    push(t("my.export.markdownSuccess"), "success");
-  } catch (e) {
-    console.error(e);
-    push(t("my.export.markdownError"), "error");
-  } finally {
-    exporting.value = false;
-  }
+  await runExport(
+    async () => {
+      const content = buildMarkdown(buildDocument());
+      download(new Blob([content], { type: "text/markdown" }), "wishlist.md");
+    },
+    "my.export.markdownSuccess",
+    "my.export.markdownError",
+  );
 }
 </script>
