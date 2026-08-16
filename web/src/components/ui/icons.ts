@@ -121,6 +121,10 @@ export const icons = {
   circle: {
     circles: [[12, 12, 10]],
   },
+  circleSlash: {
+    circles: [[12, 12, 10]],
+    lines: [[4.93, 4.93, 19.07, 19.07]],
+  },
   alertCircle: {
     circles: [[12, 12, 10]],
     lines: [

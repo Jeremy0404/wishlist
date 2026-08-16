@@ -12,6 +12,8 @@ import FamilyInvite from "./pages/FamilyInvite.vue";
 import SampleList from "./pages/SampleList.vue";
 import SignIn from "./pages/SignIn.vue";
 import PublicWishlist from "./pages/PublicWishlist.vue";
+import NotFound from "./pages/NotFound.vue";
+import SessionExpired from "./pages/SessionExpired.vue";
 
 const routes = [
   // Signing in and signing up are the same act, on the same screen as the pitch.
@@ -43,6 +45,10 @@ const routes = [
 
   // Invites
   { path: "/family/invite", component: FamilyInvite },
+
+  // A session that failed, and anything else
+  { path: "/oops", component: SessionExpired, meta: { public: true } },
+  { path: "/:pathMatch(.*)*", component: NotFound, meta: { public: true } },
 ];
 
 /** The two old auth paths survive as redirects: bookmarks and family invite
