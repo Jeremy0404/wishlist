@@ -3,7 +3,7 @@
     :class="[
       'min-h-screen text-neutral-900',
       isMinimalLayout
-        ? 'bg-gradient-to-b from-accent-100 via-bg to-accent-100'
+        ? 'bg-bg'
         : 'bg-gradient-to-br from-neutral-100 via-bg to-neutral-200',
     ]"
   >

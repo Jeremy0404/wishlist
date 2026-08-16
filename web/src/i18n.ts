@@ -8,7 +8,6 @@ const fr = {
     close: "Fermer",
     cancel: "Annuler",
     loading: "Chargement…",
-    createdAt: "Créé le",
   },
   nav: {
     wishlist: "Wishlist",
@@ -202,8 +201,8 @@ const fr = {
     validation: {
       titleRequired: "Le titre est obligatoire.",
     },
-    empty:
-      "Aucun article — ajoute ton premier pour débloquer les listes des autres.",
+    empty: "Rien ici pour l’instant.",
+    emptyAction: "Ajoute ta première envie",
     delete: "Supprimer",
   },
   browse: {
@@ -215,7 +214,8 @@ const fr = {
     reservedCount: "{count} réservé par toi | {count} réservés par toi",
     reservedNone: "rien de réservé",
     hint: "Tu peux voir les autres quand ta liste contient au moins un article.",
-    empty: "Aucune autre liste pour l’instant.",
+    empty: "Invite des proches pour commencer à parcourir.",
+    emptyAction: "Inviter des proches",
     noFamily:
       "Rejoins une famille — ou crées-en une — pour voir les listes des autres et réserver.",
     inviteCard: {
@@ -243,21 +243,20 @@ const fr = {
     purchasedByYou: "Acheté — bien joué",
     reservedByOther: "Réservé par {name}",
     link: "Voir le cadeau",
-    empty: "Aucun article ici pour le moment.",
+    empty: "Rien sur cette liste pour l’instant.",
   },
   public: {
-    eyebrow: "Liste partagée",
     title: "La liste de {name}",
-    subtitle: "",
-    stamp: "Wishlist",
-    online: "En ligne",
-    back: "Découvrir l’application",
-    link: "Voir le cadeau",
-    empty: "La liste est encore vide pour le moment.",
-    signature: "— {name}",
-    footer: "Fait avec Wishlist",
+    subtitle: "Partagée publiquement · lecture seule",
+    empty: "Rien sur cette liste pour l’instant.",
     someone: "un·e proche",
     missing: "Cette liste n’est pas disponible ou a été retirée.",
+    convert: {
+      title: "Envie de ta propre liste ?",
+      body: "Ça prend une dizaine de secondes, sans mot de passe à retenir.",
+      action: "Créer ma liste",
+    },
+    footer: "Propulsé par Wishlist",
   },
   notFound: {
     title: "Cette page n’existe pas",

@@ -28,6 +28,7 @@ type Details = {
 
 const priorityOptions = usePriorityOptions();
 
+const entryInput = ref<InstanceType<typeof Input> | null>(null);
 const entry = ref("");
 const showDetails = ref(false);
 const submitting = ref(false);
@@ -92,6 +93,8 @@ function reset() {
   resolvedUrl.value = null;
 }
 
+defineExpose({ focus: () => entryInput.value?.focus() });
+
 async function submit() {
   const entered = entry.value.trim();
   if (!entered || submitting.value) return;
@@ -129,6 +132,7 @@ async function submit() {
     <form class="grid gap-2" @submit.prevent="submit">
       <div class="flex flex-wrap items-end gap-2">
         <Input
+          ref="entryInput"
           v-model="entry"
           class="min-w-[220px] flex-1"
           name="entry"

@@ -105,6 +105,18 @@ export default {
                 6: '26.4px',
                 8: '35.2px',
             },
+            height: {
+                skeleton: '14px',
+            },
+            keyframes: {
+                shimmer: {
+                    '0%, 100%': { opacity: '0.5' },
+                    '50%': { opacity: '1' },
+                },
+            },
+            animation: {
+                shimmer: 'shimmer 1.2s ease-in-out infinite',
+            },
             borderRadius: {
                 sm: '8px',
                 md: '16px',

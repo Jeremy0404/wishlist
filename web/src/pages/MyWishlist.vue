@@ -8,13 +8,27 @@
 
   <InviteNudge />
 
-  <QuickAdd @added="onAdded" />
+  <QuickAdd ref="quickAdd" @added="onAdded" />
 
-  <div v-if="items.length === 0" class="text-neutral-700">
-    {{ t("my.empty") }}
-  </div>
+  <ListSkeleton v-if="loading" />
 
-  <ul class="grid gap-3">
+  <EmptyState
+    v-else-if="items.length === 0"
+    icon="plus"
+    :message="t('my.empty')"
+  >
+    <template #action>
+      <Button
+        variant="secondary"
+        data-test="empty-add"
+        @click="quickAdd?.focus()"
+      >
+        {{ t("my.emptyAction") }}
+      </Button>
+    </template>
+  </EmptyState>
+
+  <ul v-else class="grid gap-3">
     <li
       v-for="it in items"
       :key="it.id"
@@ -44,6 +58,9 @@ import { onMounted, ref } from "vue";
 import { api } from "../services/api";
 import { useToasts } from "../components/ui/useToasts";
 import { useI18n } from "vue-i18n";
+import Button from "../components/ui/Button.vue";
+import EmptyState from "../components/ui/EmptyState.vue";
+import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import QuickAdd from "../components/wishlist/QuickAdd.vue";
 import WishlistItemCard from "../components/wishlist/WishlistItemCard.vue";
 import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
@@ -55,6 +72,8 @@ import type { Wishlist, WishlistItem, WishlistItemForm } from "../types.ts";
 const { push } = useToasts();
 const { t } = useI18n();
 
+const quickAdd = ref<InstanceType<typeof QuickAdd> | null>(null);
+const loading = ref(true);
 const items = ref<WishlistItem[]>([]);
 const wishlist = ref<Wishlist | null>(null);
 const editSubmitting = ref(false);
@@ -65,9 +84,13 @@ function normalizeItem(item: WishlistItem): WishlistItem {
 }
 
 async function load() {
-  const data = await api.getMyWishlist();
-  items.value = (data.items ?? []).map(normalizeItem);
-  wishlist.value = data.wishlist ?? null;
+  try {
+    const data = await api.getMyWishlist();
+    items.value = (data.items ?? []).map(normalizeItem);
+    wishlist.value = data.wishlist ?? null;
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function onAdded(created: WishlistItem) {
