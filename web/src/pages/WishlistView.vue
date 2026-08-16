@@ -16,7 +16,9 @@
 
   <p v-if="error" class="text-accent-700">{{ error }}</p>
 
-  <ul v-if="items.length" class="grid gap-3">
+  <ListSkeleton v-else-if="loading" />
+
+  <ul v-else-if="items.length" class="grid gap-3">
     <li v-for="it in items" :key="it.id">
       <PersonWishlistItem
         :item="it"
@@ -28,7 +30,7 @@
     </li>
   </ul>
 
-  <div v-else-if="!error" class="text-muted">{{ t("view.empty") }}</div>
+  <EmptyState v-else icon="circle" :message="t('view.empty')" />
 </template>
 
 <script setup lang="ts">
@@ -37,7 +39,9 @@ import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
+import EmptyState from "../components/ui/EmptyState.vue";
 import Icon from "../components/ui/Icon.vue";
+import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth.ts";
@@ -48,6 +52,7 @@ const { push } = useToasts();
 const auth = useAuth();
 
 const ownerName = ref("");
+const loading = ref(true);
 const items = ref<WishlistItem[]>([]);
 const error = ref("");
 
@@ -64,6 +69,8 @@ async function load() {
     items.value = list.items ?? [];
   } catch (e: any) {
     error.value = e.message ?? "Erreur";
+  } finally {
+    loading.value = false;
   }
 }
 async function reserve(id: string) {
