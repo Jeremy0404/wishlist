@@ -1,21 +1,22 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
 import { useAuth } from "./stores/auth";
 
 // Pages
-import Login from "./pages/Login.vue";
 import MagicLink from "./pages/MagicLink.vue";
-import Register from "./pages/Register.vue";
 import FamilyCreate from "./pages/FamilyCreate.vue";
 import FamilyJoin from "./pages/FamilyJoin.vue";
 import MyWishlist from "./pages/MyWishlist.vue";
 import Others from "./pages/Others.vue";
 import WishlistView from "./pages/WishlistView.vue";
 import FamilyInvite from "./pages/FamilyInvite.vue";
-import Landing from "./pages/Landing.vue";
+import SampleList from "./pages/SampleList.vue";
+import SignIn from "./pages/SignIn.vue";
 import PublicWishlist from "./pages/PublicWishlist.vue";
 
 const routes = [
-  { path: "/", component: Landing, meta: { public: true } },
+  // Signing in and signing up are the same act, on the same screen as the pitch.
+  { path: "/", component: SignIn, meta: { public: true, onlyGuest: true } },
+  { path: "/sample", component: SampleList, meta: { public: true } },
   {
     path: "/share/:slug",
     component: PublicWishlist,
@@ -23,17 +24,9 @@ const routes = [
   },
 
   // Auth
-  {
-    path: "/auth/login",
-    component: Login,
-    meta: { public: true, onlyGuest: true },
-  },
+  { path: "/auth/login", redirect: keepRedirect },
+  { path: "/auth/register", redirect: keepRedirect },
   { path: "/auth/magic", component: MagicLink, meta: { public: true } },
-  {
-    path: "/auth/register",
-    component: Register,
-    meta: { public: true, onlyGuest: true },
-  },
 
   // Family
   { path: "/family/create", component: FamilyCreate },
@@ -51,6 +44,12 @@ const routes = [
   // Invites
   { path: "/family/invite", component: FamilyInvite },
 ];
+
+/** The two old auth paths survive as redirects: bookmarks and family invite
+ *  links carry a `redirect` that has to reach the merged screen intact. */
+function keepRedirect(to: RouteLocation) {
+  return { path: "/", query: to.query };
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -77,7 +76,7 @@ router.beforeEach(async (to) => {
   }
 
   if (!isPublic && !auth.isLogged) {
-    return { path: "/auth/login", query: { redirect: to.fullPath } };
+    return { path: "/", query: { redirect: to.fullPath } };
   }
 
   if (to.meta?.requireNoFamily && auth.isLogged && auth.inFamily) {

@@ -12,44 +12,12 @@ const fr = {
   },
   nav: {
     wishlist: "Wishlist",
-    home: "Accueil",
     myList: "Ma liste",
     others: "Parcourir",
     invite: "Inviter",
     joinFamily: "Rejoindre une famille",
-    login: "Se connecter",
-    register: "Créer un compte",
     logout: "Déconnexion",
     profile: "Profil",
-  },
-  landing: {
-    helloAnon: "Bienvenue !",
-    helloUser: "Salut {name} 👋",
-    subAnon: "Une petite app pour préparer les cadeaux sans se spoiler.",
-    subUser: "Content de te revoir. On jette un œil à ta liste ?",
-
-    // états
-    youAreIn: "Tu es dans la famille {fam}.",
-    yourInviteCode: "Ton code d’invitation",
-    copied: "Code copié",
-
-    // actions
-    start: "Créer un compte",
-    login: "Se connecter",
-    goMyList: "Aller à ma liste",
-    createFamily: "Créer une famille",
-    joinFamily: "Rejoindre une famille",
-
-    // petites features très simples
-    fPrivacyT: "Pas de spoiler",
-    fPrivacyD: "Le propriétaire ne voit jamais les réservations.",
-    fSimpleT: "Juste ce qu’il faut",
-    fSimpleD: "Un titre, un lien, une note, un prix. Et voilà.",
-    fFamilyT: "Pensé pour la famille",
-    fFamilyD: "Un code à partager, et tout le monde est dedans.",
-
-    // footer
-    footer: "Fait maison",
   },
   family: {
     badge: "Famille",
@@ -100,6 +68,37 @@ const fr = {
     membersError: "Impossible de charger les membres de la famille.",
     noFamily: "Crée ou rejoins d’abord une famille.",
   },
+  signIn: {
+    kicker: "Sans mot de passe",
+    title: "Qu’est-ce qui vous ferait plaisir ? Dites-le, tout simplement.",
+    subtitle:
+      "Ajoutez ce dont vous avez envie. Partagez votre liste quand vous le sentez.",
+    getStarted: "On commence",
+    sampleLink: "Voir une liste d’exemple",
+    props: {
+      quick: {
+        title: "Une ligne suffit",
+        body: "Collez un lien, le titre et le prix se remplissent tout seuls.",
+      },
+      familyOptional: {
+        title: "La famille est optionnelle",
+        body: "Votre liste vous attend dès maintenant, même sans personne autour.",
+      },
+      noDuplicates: {
+        title: "Jamais deux fois le même cadeau",
+        body: "Les autres voient ce qui est déjà réservé. Vous, non.",
+      },
+    },
+  },
+  sample: {
+    title: "Une liste, en aperçu",
+    badge: "Exemple",
+    disclaimer: "Liste fictive, montrée à titre d’illustration.",
+    pageTitle: "La liste d’{name}",
+    pageSubtitle:
+      "Voilà à quoi ressemble une liste partagée. Celle-ci est inventée.",
+    start: "Créer la mienne",
+  },
   auth: {
     login: "Connexion",
     loginSuccess: "Bienvenue 👋",
@@ -109,6 +108,8 @@ const fr = {
     password: "Mot de passe",
     name: "Nom",
     create: "Créer le compte",
+    haveAccount: "J’ai déjà un compte",
+    noAccount: "Je n’ai pas encore de compte",
     magic: {
       title: "Continuer avec l’e-mail",
       send: "Envoyez-moi un lien",

@@ -2,12 +2,12 @@ import { test, expect } from '@playwright/test';
 import { addWishlistItemViaForm, registerUser, createFamily } from './helpers';
 
 test.describe('Route Guards', () => {
-    test('guest visiting protected route redirects to login', async ({ page }) => {
+    test('guest visiting protected route redirects to the sign-in screen', async ({ page }) => {
         // Guest tries to visit /me
         await page.goto('/me');
 
-        // Should be redirected to login with redirect query parameter
-        await expect(page).toHaveURL(/\/auth\/login/);
+        // Should be redirected to the merged screen with a redirect query parameter
+        await expect(page).toHaveURL(/\/\?redirect=/);
         await expect(page.url()).toContain('redirect');
     });
 
@@ -16,7 +16,7 @@ test.describe('Route Guards', () => {
         await registerUser(page);
         await createFamily(page);
 
-        // Try to visit login page while logged in
+        // The old login path redirects onto the merged screen, which is guest-only
         await page.goto('/auth/login');
 
         // Should be redirected to /me
@@ -28,7 +28,7 @@ test.describe('Route Guards', () => {
         await registerUser(page);
         await createFamily(page);
 
-        // Try to visit register page while logged in
+        // Same for the old register path
         await page.goto('/auth/register');
 
         // Should be redirected to /me

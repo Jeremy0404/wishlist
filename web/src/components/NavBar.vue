@@ -49,31 +49,25 @@ onMounted(() => {
             </Button>
           </template>
           <template v-else>
-            <Button variant="secondary" to="/auth/login">
-              {{ t("nav.login") }}
-            </Button>
-            <Button variant="primary" to="/auth/register">
-              {{ t("nav.register") }}
+            <Button variant="ghost" to="/sample" data-test="nav-sample">
+              {{ t("signIn.sampleLink") }}
+              <span aria-hidden="true">→</span>
             </Button>
           </template>
         </div>
       </div>
 
-      <div class="mt-2 flex flex-wrap items-center gap-3">
-        <RouterLink class="nav-link" to="/">{{ t("nav.home") }}</RouterLink>
-
-        <template v-if="auth.user">
-          <RouterLink class="nav-link" to="/me">{{ t("nav.myList") }}</RouterLink>
-          <RouterLink v-if="auth.inFamily" class="nav-link" to="/wishlists">
-            {{ t("nav.others") }}
-          </RouterLink>
-          <RouterLink v-if="auth.inFamily" class="nav-link" to="/family/invite">
-            {{ t("nav.invite") }}
-          </RouterLink>
-          <RouterLink v-else class="nav-link" to="/family/join">
-            {{ t("nav.joinFamily") }}
-          </RouterLink>
-        </template>
+      <div v-if="auth.user" class="mt-2 flex flex-wrap items-center gap-3">
+        <RouterLink class="nav-link" to="/me">{{ t("nav.myList") }}</RouterLink>
+        <RouterLink v-if="auth.inFamily" class="nav-link" to="/wishlists">
+          {{ t("nav.others") }}
+        </RouterLink>
+        <RouterLink v-if="auth.inFamily" class="nav-link" to="/family/invite">
+          {{ t("nav.invite") }}
+        </RouterLink>
+        <RouterLink v-else class="nav-link" to="/family/join">
+          {{ t("nav.joinFamily") }}
+        </RouterLink>
       </div>
     </div>
   </nav>

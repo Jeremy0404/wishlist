@@ -6,7 +6,7 @@
           {{ t("auth.magic.expiredTitle") }}
         </h1>
         <p class="text-meta text-muted">{{ t("auth.magic.expiredHint") }}</p>
-        <Button variant="primary" block to="/auth/login">
+        <Button variant="primary" block to="/">
           {{ t("auth.magic.requestNew") }}
         </Button>
       </div>
