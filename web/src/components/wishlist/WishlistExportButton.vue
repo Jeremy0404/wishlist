@@ -45,7 +45,7 @@ import { jsPDF } from "jspdf";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
-import { iconDataUrl } from "../ui/icons";
+import { brandMarkDataUrl } from "../ui/brandMark";
 import { useToasts } from "../ui/useToasts";
 import { fmtEUR } from "../../utils/money";
 import { priorityLevel } from "../../utils/priority";
@@ -190,7 +190,7 @@ async function exportPdf() {
       const exportDoc = await withPhotos(buildDocument());
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
       const mark = await toJpegDataUrl(
-        iconDataUrl("gift", "#201e1d", MARK_PIXELS),
+        brandMarkDataUrl(MARK_PIXELS),
         MARK_PIXELS,
         PAPER,
       );

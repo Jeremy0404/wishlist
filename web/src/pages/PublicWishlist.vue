@@ -1,9 +1,6 @@
 <template>
   <div class="mx-auto max-w-[760px] px-4 py-6 sm:py-8" data-test="public-page">
-    <div class="mb-6 inline-flex items-center gap-2 font-heading text-h5">
-      <Icon name="gift" :size="22" class="text-accent-700" />
-      <span>{{ t("nav.wishlist") }}</span>
-    </div>
+    <BrandLockup class="mb-6" />
 
     <header class="mb-6 flex items-center gap-3">
       <Avatar :name="ownerDisplay" size="lg" />
@@ -87,7 +84,7 @@ import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
-import Icon from "../components/ui/Icon.vue";
+import BrandLockup from "../components/ui/BrandLockup.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import ItemThumbnail from "../components/wishlist/ItemThumbnail.vue";
 import { fmtEUR } from "../utils/money";

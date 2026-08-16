@@ -142,28 +142,3 @@ export const icons = {
 } satisfies Record<string, IconShapes>;
 
 export type IconName = keyof typeof icons;
-
-/** jsPDF draws images, not vectors: the brand mark reaches the export as a
- *  rasterisable data URL built from the very same shapes `Icon.vue` renders. */
-export function iconDataUrl(name: IconName, color: string, size = 24): string {
-  const shapes: IconShapes = icons[name];
-  const elements = [
-    ...(shapes.paths ?? []).map((d) => `<path d="${d}"/>`),
-    ...(shapes.circles ?? []).map(
-      ([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}"/>`,
-    ),
-    ...(shapes.rects ?? []).map(
-      ([x, y, w, h, rx]) =>
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/>`,
-    ),
-    ...(shapes.lines ?? []).map(
-      ([x1, y1, x2, y2]) =>
-        `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`,
-    ),
-  ].join("");
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"` +
-    ` viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.75"` +
-    ` stroke-linecap="round" stroke-linejoin="round">${elements}</svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
