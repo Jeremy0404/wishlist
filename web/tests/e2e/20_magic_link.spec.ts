@@ -4,7 +4,7 @@ import { uniqueEmail } from "./helpers";
 test("the sign-in card leads with the magic link and keeps passwords one click away", async ({
   page,
 }) => {
-  await page.goto("/auth/login");
+  await page.goto("/");
 
   await expect(page.locator('[data-test="magic-email"]')).toBeVisible();
   await expect(page.locator('input[name="password"]')).toHaveCount(0);
@@ -16,7 +16,7 @@ test("the sign-in card leads with the magic link and keeps passwords one click a
 test("requesting a link confirms the inbox without revealing whether the account exists", async ({
   page,
 }) => {
-  await page.goto("/auth/login");
+  await page.goto("/");
 
   const email = uniqueEmail();
   const requested = page.waitForResponse(

@@ -16,7 +16,9 @@ export async function registerUser(
 ): Promise<{ email: string; password: string }> {
   const email = uniqueEmail();
   const password = "password123";
-  await page.goto("/auth/register");
+  await page.goto("/");
+  await usePasswordForm(page);
+  await page.click('button[data-test="want-register"]');
   await page.fill('input[name="name"]', name);
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="new-password"]', password);
@@ -160,7 +162,7 @@ export async function deleteWishlistItem(
 }
 
 /** Passwords are the fallback branch of the sign-in card: the magic-link form
- *  is what the page opens on. */
+ *  is what the merged screen opens on. */
 export async function usePasswordForm(page: Page): Promise<void> {
   await page.click('button[data-test="use-password"]');
 }
@@ -171,7 +173,7 @@ export async function loginUser(
   email: string,
   password: string,
 ): Promise<void> {
-  await page.goto("/auth/login");
+  await page.goto("/");
   await usePasswordForm(page);
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);

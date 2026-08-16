@@ -17,11 +17,10 @@ test("family join link keeps invite code through register flow", async ({ browse
   const guestPage = await guestContext.newPage();
 
   await guestPage.goto(`/family/join?code=${inviteCode}`);
-  await expect(guestPage).toHaveURL(/\/auth\/login\?redirect=.*code=/);
+  await expect(guestPage).toHaveURL(/\/\?redirect=.*code=/);
 
   await usePasswordForm(guestPage);
-  await guestPage.getByRole("link", { name: "Inscription" }).click();
-  await expect(guestPage).toHaveURL(/\/auth\/register\?redirect=.*code=/);
+  await guestPage.click('button[data-test="want-register"]');
 
   const email = uniqueEmail();
   const password = "password123";
