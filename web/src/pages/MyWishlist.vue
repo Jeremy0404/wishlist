@@ -4,6 +4,8 @@
     <WishlistExportButton :items="items" />
   </div>
 
+  <DisplayName />
+
   <ShareCard :wishlist="wishlist" @change="(updated) => (wishlist = updated)" />
 
   <InviteNudge />
@@ -67,6 +69,7 @@ import WishlistItemEditor from "../components/wishlist/WishlistItemEditor.vue";
 import WishlistExportButton from "../components/wishlist/WishlistExportButton.vue";
 import ShareCard from "../components/wishlist/ShareCard.vue";
 import InviteNudge from "../components/InviteNudge.vue";
+import DisplayName from "../components/DisplayName.vue";
 import type { Wishlist, WishlistItem, WishlistItemForm } from "../types.ts";
 
 const { push } = useToasts();

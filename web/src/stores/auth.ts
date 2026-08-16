@@ -66,10 +66,16 @@ export const useAuth = defineStore("auth", {
       await api.requestMagicLink(email);
     },
     async signInWithMagicLink(token: string) {
-      const user = await api.consumeMagicLink(token);
-      this.user = user ?? null;
+      const { created, ...user } = await api.consumeMagicLink(token);
+      this.user = user;
       this.hydrated = true;
       await this.refreshFamilies();
+      return { user: this.user, created };
+    },
+    /** A magic-link account never chose the name it is shown under, so the
+     *  name stays writable for the account's whole life. */
+    async updateName(name: string) {
+      this.user = await api.updateMyName(name);
       return this.user;
     },
     async logout() {
