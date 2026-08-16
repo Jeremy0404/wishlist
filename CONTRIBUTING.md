@@ -72,7 +72,8 @@ workspace to version.
 
 ## Deployment
 
-`release.yml` publishes and signs the images; it does not deploy them yet.
+Merging the Release PR tags `vX.Y.Z`, and that tag push builds, signs **and deploys** to
+`mediaserver`, serving <https://wishlist.jerco.fr>. See `deploy/README.md`.
 
 `deploy.yml` is the older, unsigned path: it builds and pushes GHCR images tagged by commit SHA on
 every push to `main`, while its `deploy` job is gated `if: github.event_name == 'workflow_dispatch'`
