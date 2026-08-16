@@ -2,11 +2,15 @@
 import { useI18n } from "vue-i18n";
 import Button from "./Button.vue";
 
-defineProps<{
-  question: string;
-  confirmLabel: string;
-  loading?: boolean;
-}>();
+withDefaults(
+  defineProps<{
+    question: string;
+    confirmLabel: string;
+    confirmVariant?: "danger" | "secondary";
+    loading?: boolean;
+  }>(),
+  { confirmVariant: "danger" },
+);
 
 const emit = defineEmits<{
   confirm: [];
@@ -27,7 +31,7 @@ const { t } = useI18n();
       {{ t("common.cancel") }}
     </Button>
     <Button
-      variant="danger"
+      :variant="confirmVariant"
       class="whitespace-nowrap"
       data-test="inline-confirm-accept"
       :loading="loading"
