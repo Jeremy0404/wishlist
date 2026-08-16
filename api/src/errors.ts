@@ -75,6 +75,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class TooManyRequestsError extends AppError {
+  constructor(message = "too many requests") {
+    super({ message, statusCode: 429, code: "TOO_MANY_REQUESTS" });
+  }
+}
+
 export class UnexpectedError extends AppError {
   constructor(message = "Erreur serveur", details?: unknown) {
     super({ message, statusCode: 500, code: "UNEXPECTED_ERROR", details });
