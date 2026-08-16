@@ -20,10 +20,11 @@
         :label="t('my.form.price')"
       />
 
-      <Input
-        v-model.number="form.priority"
+      <Select
+        v-model="form.priority"
         name="priority"
-        type="number"
+        :options="priorityOptions"
+        :placeholder="t('priority.none')"
         :label="t('my.form.priority')"
       />
       <div class="sm:col-span-2">
@@ -67,6 +68,8 @@ import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Input from "../ui/Input.vue";
+import Select from "../ui/Select.vue";
+import { usePriorityOptions } from "../../composables/usePriorityOptions";
 import type { WishlistItem, WishlistItemForm } from "../../types.ts";
 
 const props = withDefaults(
@@ -105,6 +108,8 @@ watch(
 );
 
 const { t } = useI18n();
+
+const priorityOptions = usePriorityOptions();
 
 const titleError = ref("");
 

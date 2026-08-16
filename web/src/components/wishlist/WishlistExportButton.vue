@@ -55,6 +55,7 @@ import { jsPDF } from "jspdf";
 import Button from "../ui/Button.vue";
 import { useToasts } from "../ui/useToasts";
 import { fmtEUR } from "../../utils/money";
+import { priorityLevel } from "../../utils/priority";
 import { useAuth } from "../../stores/auth";
 import type { WishlistItem } from "../../types.ts";
 import {
@@ -86,6 +87,11 @@ const familyLabel = computed(
   () => auth.myFamily?.name || t("my.export.noFamily"),
 );
 const noValue = computed(() => t("my.export.none"));
+
+function priorityText(priority?: number | null) {
+  const level = priorityLevel(priority);
+  return level ? t(`priority.${level}`) : "";
+}
 
 function closeDropdown() {
   dropdownOpen.value = false;
@@ -205,8 +211,8 @@ function renderItemCard(
   // Header
   const displayTitle =
     (item.original_title || item.title || "").trim() || ctx.noValue;
-  const priorityBadge =
-    typeof item.priority === "number" ? `P${item.priority}` : "";
+  const priorityLabel = priorityText(item.priority);
+  const priorityBadge = priorityLabel ? `(${priorityLabel})` : "";
   renderTitle(
     doc,
     ctx,
@@ -233,7 +239,7 @@ function renderItemCard(
     doc,
     ctx,
     t("my.export.priorityLabel"),
-    `${item.priority ?? ctx.noValue}`,
+    priorityLabel || ctx.noValue,
     { color: palette.text },
   );
   renderDetail(doc, ctx, t("my.export.notesLabel"), item.notes || ctx.noValue, {
@@ -297,17 +303,18 @@ async function exportPdf() {
 
 function toMarkdown(item: WishlistItem, index: number) {
   const title = (item.original_title || item.title || "").trim() || noValue.value;
-  const priorityLabel =
-    typeof item.priority === "number" ? ` (P${item.priority})` : "";
+  const priorityLabel = priorityText(item.priority);
   const priceValue = item.price_eur == null ? noValue.value : fmtEUR.format(item.price_eur);
   const linkValue = item.url?.trim() || noValue.value;
-  const priorityValue = item.priority == null ? noValue.value : `${item.priority}`;
+  const priorityValue = priorityLabel || noValue.value;
   const notesValue = item.notes?.trim() || noValue.value;
   const createdValue = item.created_at
     ? new Date(item.created_at).toLocaleDateString("fr-FR")
     : noValue.value;
 
-  return `## ${index + 1}. ${title}${priorityLabel}\n` +
+  const priorityBadge = priorityLabel ? ` (${priorityLabel})` : "";
+
+  return `## ${index + 1}. ${title}${priorityBadge}\n` +
     `- ${t("my.export.priceLabel")}: ${priceValue}\n` +
     `- ${t("my.export.linkLabel")}: ${linkValue}\n` +
     `- ${t("my.export.priorityLabel")}: ${priorityValue}\n` +

@@ -7,7 +7,7 @@ import Icon from "../ui/Icon.vue";
 import InlineConfirm from "../ui/InlineConfirm.vue";
 import Tag from "../ui/Tag.vue";
 import { fmtEUR } from "../../utils/money";
-import { isHighPriority } from "../../utils/priority";
+import { PRIORITY_TAG_VARIANTS, priorityLevel } from "../../utils/priority";
 import type { WishlistItem } from "../../types.ts";
 
 const props = defineProps<{ item: WishlistItem }>();
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const high = computed(() => isHighPriority(props.item.priority));
+const level = computed(() => priorityLevel(props.item.priority));
 const confirming = ref(false);
 
 function confirmDelete() {
@@ -48,11 +48,11 @@ function confirmDelete() {
             {{ fmtEUR.format(item.price_eur) }}
           </span>
           <Tag
-            v-if="item.priority != null"
-            :variant="high ? 'accent' : 'neutral'"
+            v-if="level"
+            :variant="PRIORITY_TAG_VARIANTS[level]"
             data-test="wishlist-priority"
           >
-            {{ high ? t("my.priority.high") : t("my.priority.nice") }}
+            {{ t(`priority.${level}`) }}
           </Tag>
         </div>
 

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { buildJoinUrl } from "../../src/utils/buildJoinUrl.ts";
 import { fmtEUR } from "../../src/utils/money.ts";
 import { toHttpUrl } from "../../src/utils/link.ts";
-import { isHighPriority } from "../../src/utils/priority.ts";
+import { priorityLevel } from "../../src/utils/priority.ts";
 
 test.describe("buildJoinUrl", () => {
   test("sets join path and invite code while preserving other params", () => {
@@ -60,13 +60,20 @@ test.describe("toHttpUrl", () => {
   });
 });
 
-test.describe("isHighPriority", () => {
-  test("maps the 1-5 column onto the two tags, 1 being the highest", () => {
-    expect(isHighPriority(1)).toBe(true);
-    expect(isHighPriority(2)).toBe(true);
-    expect(isHighPriority(3)).toBe(false);
-    expect(isHighPriority(5)).toBe(false);
-    expect(isHighPriority(null)).toBe(false);
-    expect(isHighPriority(undefined)).toBe(false);
+test.describe("priorityLevel", () => {
+  test("maps the 1-5 column onto the three levels, 1 being the highest", () => {
+    expect(priorityLevel(1)).toBe("high");
+    expect(priorityLevel(2)).toBe("medium");
+    expect(priorityLevel(3)).toBe("low");
+  });
+
+  test("shows legacy 4 and 5 as the lowest level", () => {
+    expect(priorityLevel(4)).toBe("low");
+    expect(priorityLevel(5)).toBe("low");
+  });
+
+  test("has no level when the item carries no priority", () => {
+    expect(priorityLevel(null)).toBeNull();
+    expect(priorityLevel(undefined)).toBeNull();
   });
 });

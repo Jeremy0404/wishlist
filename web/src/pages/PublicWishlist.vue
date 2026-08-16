@@ -88,9 +88,7 @@
                   <div
                     class="mt-2 flex items-center justify-between text-xs text-neutral-600"
                   >
-                    <span>{{
-                      t("public.priority", { value: item.priority ?? 3 })
-                    }}</span>
+                    <span>{{ priorityText(item.priority) }}</span>
                     <a
                       v-if="item.url"
                       :href="item.url ?? undefined"
@@ -131,10 +129,16 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import { fmtEUR } from "../utils/money";
+import { priorityLevel } from "../utils/priority";
 import type { WishlistItem } from "../types.ts";
 
 const route = useRoute();
 const { t } = useI18n();
+
+function priorityText(priority?: number | null) {
+  const level = priorityLevel(priority);
+  return level ? t(`priority.${level}`) : "";
+}
 
 const loading = ref(true);
 const error = ref<string | null>(null);

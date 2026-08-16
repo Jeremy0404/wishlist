@@ -5,9 +5,11 @@ import { api } from "../../services/api";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Input from "../ui/Input.vue";
+import Select from "../ui/Select.vue";
 import Spinner from "../ui/Spinner.vue";
 import { useToasts } from "../ui/useToasts";
 import { toHttpUrl } from "../../utils/link";
+import { usePriorityOptions } from "../../composables/usePriorityOptions";
 import type { WishlistItem } from "../../types.ts";
 
 const emit = defineEmits<{ added: [WishlistItem] }>();
@@ -19,8 +21,10 @@ type Details = {
   url: string;
   price_eur: number | string | undefined;
   notes: string;
-  priority: number | string | undefined;
+  priority: number | undefined;
 };
+
+const priorityOptions = usePriorityOptions();
 
 const entry = ref("");
 const showDetails = ref(false);
@@ -171,13 +175,12 @@ async function submit() {
           :max="1000000"
           :label="t('my.form.price')"
         />
-        <Input
+        <Select
           v-model="details.priority"
           name="priority"
           data-test="item-priority"
-          type="number"
-          min="1"
-          max="5"
+          :options="priorityOptions"
+          :placeholder="t('priority.none')"
           :label="t('my.form.priority')"
         />
         <div class="sm:col-span-2">

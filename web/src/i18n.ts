@@ -110,6 +110,12 @@ const fr = {
     name: "Nom",
     create: "Créer le compte",
   },
+  priority: {
+    none: "Sans priorité",
+    high: "Priorité haute",
+    medium: "J’aimerais beaucoup",
+    low: "Ça me ferait plaisir",
+  },
   my: {
     title: "Ma wishlist",
     export: {
@@ -160,15 +166,11 @@ const fr = {
       hideDetails: "Masquer les détails",
       resolving: "On regarde ce que dit la page…",
     },
-    priority: {
-      high: "Priorité haute",
-      nice: "Ça me ferait plaisir",
-    },
     form: {
       title: "Titre",
       url: "Lien (optionnel)",
       price: "Prix (€)",
-      priority: "Priorité (1–5)",
+      priority: "Priorité",
       notes: "Notes",
     },
     addBtn: "Ajouter",
@@ -229,7 +231,6 @@ const fr = {
     stamp: "Wishlist",
     online: "En ligne",
     back: "Découvrir l’application",
-    priority: "Priorité : {value}/5",
     link: "Voir le cadeau",
     empty: "La liste est encore vide pour le moment.",
     signature: "— {name}",

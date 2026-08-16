@@ -11,7 +11,7 @@ test("edit an existing wishlist item", async ({ page }) => {
     title: "Retro Camera",
     url: "https://example.com/camera",
     price: 150,
-    priority: 4,
+    priority: 3,
     notes: "Film preferred",
   });
 
@@ -29,7 +29,7 @@ test("edit an existing wishlist item", async ({ page }) => {
     .locator('input[name="url"]')
     .fill("https://example.com/camera-pro");
   await item.locator('input[name="price_eur"]').fill("249");
-  await item.locator('input[name="priority"]').fill("2");
+  await item.locator('select[name="priority"]').selectOption("1");
   await item.locator('textarea[name="notes"]').fill("Now with better lens");
 
   const saveResponse = page.waitForResponse(
