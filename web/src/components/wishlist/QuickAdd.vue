@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { api } from "../../services/api";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
+import ImageField from "./ImageField.vue";
 import Input from "../ui/Input.vue";
 import Select from "../ui/Select.vue";
 import Spinner from "../ui/Spinner.vue";
@@ -22,6 +23,7 @@ type Details = {
   price_eur: number | string | undefined;
   notes: string;
   priority: number | undefined;
+  image_url: string;
 };
 
 const priorityOptions = usePriorityOptions();
@@ -31,11 +33,13 @@ const showDetails = ref(false);
 const submitting = ref(false);
 const resolving = ref(false);
 const resolvedUrl = ref<string | null>(null);
+const photo = ref<File | null>(null);
 const details = reactive<Details>({
   url: "",
   price_eur: undefined,
   notes: "",
   priority: undefined,
+  image_url: "",
 });
 
 function isEmpty(value: number | string | undefined) {
@@ -58,6 +62,8 @@ async function resolve(url: string) {
     if (isEmpty(details.price_eur) && preview.price_eur != null) {
       details.price_eur = preview.price_eur;
     }
+    if (!details.image_url && !photo.value && preview.image_url)
+      details.image_url = preview.image_url;
     if (preview.title || preview.price_eur != null) showDetails.value = true;
   } catch {
     /* the fetch is a convenience, never a gate */
@@ -79,6 +85,8 @@ function reset() {
   details.price_eur = undefined;
   details.notes = "";
   details.priority = undefined;
+  details.image_url = "";
+  photo.value = null;
   showDetails.value = false;
   resolvedUrl.value = null;
 }
@@ -92,13 +100,17 @@ async function submit() {
 
   submitting.value = true;
   try {
-    const created = await api.addMyItem({
-      title: entry.value.trim(),
-      url: details.url || url || undefined,
-      price_eur: toNumber(details.price_eur),
-      notes: details.notes || undefined,
-      priority: toNumber(details.priority),
-    });
+    const created = await api.addMyItem(
+      {
+        title: entry.value.trim(),
+        url: details.url || url || undefined,
+        price_eur: toNumber(details.price_eur),
+        notes: details.notes || undefined,
+        priority: toNumber(details.priority),
+        image_url: details.image_url || undefined,
+      },
+      photo.value,
+    );
 
     emit("added", created);
     reset();
@@ -183,6 +195,12 @@ async function submit() {
           :placeholder="t('priority.none')"
           :label="t('my.form.priority')"
         />
+        <div class="sm:col-span-2">
+          <ImageField
+            v-model:image-url="details.image_url"
+            v-model:file="photo"
+          />
+        </div>
         <div class="sm:col-span-2">
           <label
             class="mb-1 block text-label text-ink/70"

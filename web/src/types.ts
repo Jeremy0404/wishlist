@@ -35,6 +35,8 @@ export interface WishlistItemForm {
   price_eur?: number;
   notes?: string;
   priority?: number;
+  /** An empty string clears the image; leaving it out keeps the current one. */
+  image_url?: string;
 }
 
 export interface WishlistItem {
@@ -44,6 +46,7 @@ export interface WishlistItem {
   price_eur?: number | null;
   notes?: string | null;
   priority?: number | null;
+  image_url?: string | null;
   original_title?: string | null;
   reserved?: boolean;
   reserver_user_id?: string | null;

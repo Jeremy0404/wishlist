@@ -28,6 +28,9 @@
         :label="t('my.form.priority')"
       />
       <div class="sm:col-span-2">
+        <ImageField v-model:image-url="imageUrl" v-model:file="photo" />
+      </div>
+      <div class="sm:col-span-2">
         <label class="block text-sm mb-1" for="notes">{{
           t("my.form.notes")
         }}</label>
@@ -67,6 +70,7 @@ import { reactive, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
+import ImageField from "./ImageField.vue";
 import Input from "../ui/Input.vue";
 import Select from "../ui/Select.vue";
 import { usePriorityOptions } from "../../composables/usePriorityOptions";
@@ -83,9 +87,12 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  save: [WishlistItemForm];
+  save: [WishlistItemForm, File | null];
   cancel: [];
 }>();
+
+const photo = ref<File | null>(null);
+const imageUrl = ref("");
 
 const form = reactive<WishlistItemForm>({
   title: "",
@@ -103,6 +110,8 @@ watch(
     form.price_eur = val?.price_eur ?? undefined;
     form.notes = val?.notes ?? "";
     form.priority = val?.priority ?? undefined;
+    imageUrl.value = val?.image_url ?? "";
+    photo.value = null;
   },
   { immediate: true, deep: true },
 );
@@ -119,13 +128,18 @@ const emitSave = () => {
     return;
   }
 
-  emit("save", {
-    title: form.title,
-    url: form.url || undefined,
-    price_eur: form.price_eur,
-    notes: form.notes || undefined,
-    priority: form.priority,
-  });
+  emit(
+    "save",
+    {
+      title: form.title,
+      url: form.url || undefined,
+      price_eur: form.price_eur,
+      notes: form.notes || undefined,
+      priority: form.priority,
+      image_url: imageUrl.value,
+    },
+    photo.value,
+  );
 };
 
 const emitCancel = () => emit("cancel");

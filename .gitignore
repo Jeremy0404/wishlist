@@ -56,3 +56,6 @@ docker-data/
 playwright-report/
 test-results/
 test-results-*/
+
+# Uploaded item images (dev runs the API on the host)
+api/uploads/

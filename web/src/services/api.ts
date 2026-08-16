@@ -9,7 +9,7 @@ import type {
   WishlistItemForm,
 } from "../types.ts";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "/api";
+export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 type Method = "GET" | "POST" | "PATCH" | "DELETE";
 type UnauthorizedHandler = () => void;
@@ -26,6 +26,9 @@ function buildOptions({
   body,
   headers = {},
 }: RequestOpts): RequestInit {
+  if (body instanceof FormData)
+    return { method, credentials: "include", headers, body };
+
   const h =
     body === undefined
       ? headers
@@ -36,6 +39,19 @@ function buildOptions({
     headers: h,
     body: body === undefined ? undefined : JSON.stringify(body),
   };
+}
+
+/** The API accepts the same item fields as JSON or as multipart; only the
+ *  second can carry an uploaded photo. */
+function itemPayload(body: WishlistItemForm, image?: File | null) {
+  if (!image) return body;
+
+  const form = new FormData();
+  for (const [key, value] of Object.entries(body)) {
+    if (value !== undefined) form.append(key, String(value));
+  }
+  form.append("image", image);
+  return form;
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -107,12 +123,15 @@ export const api = {
       method: "POST",
       body: { url },
     }),
-  addMyItem: (body: WishlistItemForm) =>
-    request<WishlistItem>("/wishlists/me/items", { method: "POST", body }),
-  updateMyItem: (id: string, body: WishlistItemForm) =>
+  addMyItem: (body: WishlistItemForm, image?: File | null) =>
+    request<WishlistItem>("/wishlists/me/items", {
+      method: "POST",
+      body: itemPayload(body, image),
+    }),
+  updateMyItem: (id: string, body: WishlistItemForm, image?: File | null) =>
     request<WishlistItem>(`/wishlists/me/items/${id}`, {
       method: "PATCH",
-      body,
+      body: itemPayload(body, image),
     }),
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),

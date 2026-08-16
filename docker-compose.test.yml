@@ -28,6 +28,7 @@ services:
       POSTGRES_DB: wishlist_test
       DATABASE_URL: postgres://wishlist_test:wishlist_test@db:5432/wishlist_test
       JWT_SECRET: test_secret
+      UPLOADS_DIR: /data/uploads
       CORS_ORIGIN: http://localhost:8889
     depends_on:
       db:

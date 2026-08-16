@@ -11,6 +11,7 @@ import { logger } from "./logging/logger.js";
 import { pinoHttp } from "pino-http";
 import { notFoundHandler } from "./middleware/not-found.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { UPLOADS_ROUTE, uploadsDir } from "./uploads.js";
 
 const app = express();
 app.use(helmet());
@@ -67,6 +68,18 @@ app.use(
 app.set("trust proxy", true);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
+
+app.use(
+  UPLOADS_ROUTE,
+  express.static(uploadsDir(), {
+    index: false,
+    dotfiles: "ignore",
+    immutable: true,
+    maxAge: "1y",
+    setHeaders: (res) =>
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"),
+  }),
+);
 
 app.use("/auth", authRoutes);
 app.use("/families", familyRoutes);

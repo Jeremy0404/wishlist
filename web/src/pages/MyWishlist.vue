@@ -26,7 +26,7 @@
         v-if="editingId === it.id"
         :initial-item="it"
         :loading="editSubmitting"
-        @save="(payload) => saveEdit(it.id, payload)"
+        @save="(payload, photo) => saveEdit(it.id, payload, photo)"
         @cancel="cancelEdit"
       />
       <WishlistItemCard
@@ -90,7 +90,11 @@ function cancelEdit() {
   editSubmitting.value = false;
 }
 
-async function saveEdit(id: string, form: WishlistItemForm) {
+async function saveEdit(
+  id: string,
+  form: WishlistItemForm,
+  photo: File | null,
+) {
   if (!form.title?.trim()) {
     push(t("my.validation.titleRequired"), "error");
     return;
@@ -99,13 +103,18 @@ async function saveEdit(id: string, form: WishlistItemForm) {
   editingId.value = id;
   editSubmitting.value = true;
   try {
-    const updated = await api.updateMyItem(id, {
-      title: form.title.trim(),
-      url: form.url || undefined,
-      price_eur: form.price_eur,
-      notes: form.notes || undefined,
-      priority: form.priority,
-    });
+    const updated = await api.updateMyItem(
+      id,
+      {
+        title: form.title.trim(),
+        url: form.url || undefined,
+        price_eur: form.price_eur,
+        notes: form.notes || undefined,
+        priority: form.priority,
+        image_url: form.image_url,
+      },
+      photo,
+    );
     items.value = items.value.map((it) =>
       it.id === id
         ? normalizeItem({
