@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 let uid = 0;
 const props = defineProps<{
@@ -14,6 +14,10 @@ const emit = defineEmits<{ "update:modelValue": [string | number] }>();
 defineOptions({ inheritAttrs: false });
 
 const inputId = computed(() => props.id ?? `in-${++uid}`);
+
+const el = ref<HTMLInputElement | null>(null);
+
+defineExpose({ focus: () => el.value?.focus() });
 
 function onInput(e: Event) {
   const el = e.target as HTMLInputElement;
@@ -40,6 +44,7 @@ function onInput(e: Event) {
     </label>
     <input
       :id="inputId"
+      ref="el"
       v-bind="$attrs"
       :value="modelValue"
       :class="[

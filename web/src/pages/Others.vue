@@ -4,7 +4,26 @@
 
   <p v-if="error" class="text-accent-700">{{ error }}</p>
 
+  <ListSkeleton v-else-if="loading" />
+
+  <EmptyState
+    v-else-if="!rows.length"
+    icon="users"
+    :message="auth.inFamily ? t('browse.empty') : t('browse.noFamily')"
+  >
+    <template v-if="auth.inFamily" #action>
+      <Button
+        variant="secondary"
+        data-test="browse-invite"
+        @click="inviteOpen = true"
+      >
+        {{ t("browse.emptyAction") }}
+      </Button>
+    </template>
+  </EmptyState>
+
   <div
+    v-else
     class="grid gap-4"
     style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))"
   >
@@ -31,8 +50,12 @@
       class="flex flex-col items-center justify-center gap-2 rounded-card border-[1.5px] border-dashed border-divider p-4 text-center"
     >
       <Icon name="users" :size="20" class="text-accent" />
-      <div class="font-heading text-card-title">{{ t("browse.inviteCard.title") }}</div>
-      <p class="mb-0 text-caption opacity-80">{{ t("browse.inviteCard.body") }}</p>
+      <div class="font-heading text-card-title">
+        {{ t("browse.inviteCard.title") }}
+      </div>
+      <p class="mb-0 text-caption opacity-80">
+        {{ t("browse.inviteCard.body") }}
+      </p>
       <Button
         variant="secondary"
         class="mt-1"
@@ -44,10 +67,6 @@
     </div>
   </div>
 
-  <p v-if="!rows.length && !error" class="mt-4 text-muted">
-    {{ auth.inFamily ? t("browse.empty") : t("browse.noFamily") }}
-  </p>
-
   <InviteDialog :open="inviteOpen" @close="inviteOpen = false" />
 </template>
 
@@ -58,13 +77,16 @@ import { api } from "../services/api";
 import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
+import EmptyState from "../components/ui/EmptyState.vue";
 import Icon from "../components/ui/Icon.vue";
+import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import InviteDialog from "../components/InviteDialog.vue";
 import { useAuth } from "../stores/auth.ts";
 import type { FamilyWishlist } from "../types.ts";
 
 const { t } = useI18n();
 const auth = useAuth();
+const loading = ref(true);
 const rows = ref<FamilyWishlist[]>([]);
 const error = ref("");
 const inviteOpen = ref(false);
@@ -78,11 +100,12 @@ function summary(row: FamilyWishlist) {
 }
 
 onMounted(async () => {
-  if (!auth.inFamily) return;
   try {
-    rows.value = await api.others();
+    if (auth.inFamily) rows.value = await api.others();
   } catch (e: any) {
     error.value = e.message ?? "Erreur";
+  } finally {
+    loading.value = false;
   }
 });
 </script>

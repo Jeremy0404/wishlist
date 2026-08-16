@@ -202,8 +202,8 @@ const fr = {
     validation: {
       titleRequired: "Le titre est obligatoire.",
     },
-    empty:
-      "Aucun article — ajoute ton premier pour débloquer les listes des autres.",
+    empty: "Rien ici pour l’instant.",
+    emptyAction: "Ajoute ta première envie",
     delete: "Supprimer",
   },
   browse: {
@@ -215,7 +215,8 @@ const fr = {
     reservedCount: "{count} réservé par toi | {count} réservés par toi",
     reservedNone: "rien de réservé",
     hint: "Tu peux voir les autres quand ta liste contient au moins un article.",
-    empty: "Aucune autre liste pour l’instant.",
+    empty: "Invite des proches pour commencer à parcourir.",
+    emptyAction: "Inviter des proches",
     noFamily:
       "Rejoins une famille — ou crées-en une — pour voir les listes des autres et réserver.",
     inviteCard: {
@@ -243,7 +244,7 @@ const fr = {
     purchasedByYou: "Acheté — bien joué",
     reservedByOther: "Réservé par {name}",
     link: "Voir le cadeau",
-    empty: "Aucun article ici pour le moment.",
+    empty: "Rien sur cette liste pour l’instant.",
   },
   public: {
     eyebrow: "Liste partagée",

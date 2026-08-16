@@ -118,6 +118,9 @@ export const icons = {
       "M10.3 21a1.94 1.94 0 0 0 3.4 0",
     ],
   },
+  circle: {
+    circles: [[12, 12, 10]],
+  },
   alertCircle: {
     circles: [[12, 12, 10]],
     lines: [
