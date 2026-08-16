@@ -40,13 +40,17 @@ const accent2 = {
 
 const ink = '#201e1d';
 
+/** The warm near-white the mocks put on every filled surface — accent, danger
+ *  and the three toast fills. Organic ships no equivalent. */
+const onFill = '#fdf6ee';
+
 /** Organic ships two accents and nothing semantic — these are the app's own,
  *  taken from the mocks, and will never arrive from an upstream retune. */
 const danger = {
     DEFAULT: '#a8432e',
     dark: '#874028',
     tint: '#f3ded6',
-    on: '#fdf6ee',
+    on: onFill,
 };
 
 /** @type {import('tailwindcss').Config} */
@@ -60,6 +64,7 @@ export default {
                 ink,
                 divider: `color-mix(in srgb, ${ink} 16%, transparent)`,
                 muted: `color-mix(in srgb, ${ink} 55%, transparent)`,
+                'on-fill': onFill,
                 neutral,
                 accent,
                 'accent-2': accent2,

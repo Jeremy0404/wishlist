@@ -10,13 +10,19 @@ export type Toast = {
 const items: Ref<Toast[]> = ref([]);
 let seq = 1;
 
+const DISMISS_AFTER_MS = 3000;
+
 /** Singleton composable — every import shares the same list */
 export function useToasts() {
-  function push(text: string, kind: Toast["kind"] = "info", ms = 2500) {
+  function push(
+    text: string,
+    kind: Toast["kind"] = "info",
+    ms = DISMISS_AFTER_MS,
+  ) {
     const t = String(text ?? "").trim();
     if (!t) return; // ignore empty -> prevents the “black dots”
     const toast: Toast = { id: seq++, text: t, kind, ms };
-    items.value.push(toast);
+    items.value.unshift(toast);
     setTimeout(() => {
       const i = items.value.findIndex((x) => x.id === toast.id);
       if (i !== -1) items.value.splice(i, 1);
