@@ -64,6 +64,16 @@ export const useAuth = defineStore("auth", {
       await this.refreshFamilies();
       return this.user;
     },
+    async requestMagicLink(email: string) {
+      await api.requestMagicLink(email);
+    },
+    async signInWithMagicLink(token: string) {
+      const user = await api.consumeMagicLink(token);
+      this.user = user ?? null;
+      this.hydrated = true;
+      await this.refreshFamilies();
+      return this.user;
+    },
     async logout() {
       try {
         await api.logout();

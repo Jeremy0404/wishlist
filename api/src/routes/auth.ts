@@ -3,6 +3,15 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "../db/knex.js";
 import { authCookie, signUser } from "../auth/jwt.js";
+import {
+  buildMagicLinkUrl,
+  consumeMagicLink,
+  findOrCreateUserByEmail,
+  issueMagicLink,
+  normalizeEmail,
+} from "../auth/magic-link.js";
+import { magicLinkEmail } from "../mail/magic-link-email.js";
+import { sendMail } from "../mail/mailer.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import {
@@ -72,6 +81,61 @@ router.post(
     }
 
     log.info({ userId: user.id }, "User logged in");
+
+    const token = signUser({ id: user.id, email: user.email });
+    res
+      .cookie(authCookie.name, token, authCookie.options)
+      .json({ id: user.id, email: user.email });
+  }),
+);
+
+const MagicLinkRequest = z.object({
+  email: z.string().email(),
+});
+
+/** The answer never depends on whether the address has an account: signing in
+ *  and signing up are the same act, so there is nothing to enumerate. */
+router.post(
+  "/magic-link",
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, {
+      module: "auth",
+      action: "magic-link-request",
+    });
+    const parse = MagicLinkRequest.safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+    const email = normalizeEmail(parse.data.email);
+    const token = await issueMagicLink(db, email);
+    await sendMail(magicLinkEmail(email, buildMagicLinkUrl(token)));
+
+    log.info({ email }, "Magic link issued");
+    res.json({ ok: true });
+  }),
+);
+
+const MagicLinkConsume = z.object({
+  token: z.string().min(1),
+});
+
+router.post(
+  "/magic-link/consume",
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, {
+      module: "auth",
+      action: "magic-link-consume",
+    });
+    const parse = MagicLinkConsume.safeParse(req.body);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+    const email = await consumeMagicLink(db, parse.data.token);
+    if (!email) {
+      log.warn("Magic link rejected: unknown, spent or expired");
+      throw new UnauthorizedError("invalid or expired link");
+    }
+
+    const { user, created } = await findOrCreateUserByEmail(db, email);
+    log.info({ userId: user.id, created }, "User signed in with a magic link");
 
     const token = signUser({ id: user.id, email: user.email });
     res

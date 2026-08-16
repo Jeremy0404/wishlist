@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { createFamily, registerUser, uniqueEmail } from "./helpers";
+import {
+  createFamily,
+  registerUser,
+  uniqueEmail,
+  usePasswordForm,
+} from "./helpers";
 
 test("family join link keeps invite code through register flow", async ({ browser }) => {
   const ownerContext = await browser.newContext();
@@ -14,6 +19,7 @@ test("family join link keeps invite code through register flow", async ({ browse
   await guestPage.goto(`/family/join?code=${inviteCode}`);
   await expect(guestPage).toHaveURL(/\/auth\/login\?redirect=.*code=/);
 
+  await usePasswordForm(guestPage);
   await guestPage.getByRole("link", { name: "Inscription" }).click();
   await expect(guestPage).toHaveURL(/\/auth\/register\?redirect=.*code=/);
 

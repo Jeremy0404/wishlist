@@ -3,7 +3,8 @@
     <h1 class="text-2xl font-semibold mb-4">{{ t("auth.login") }}</h1>
 
     <Card>
-      <form class="grid gap-3" @submit.prevent="submit">
+      <MagicLinkForm v-if="!withPassword" />
+      <form v-else class="grid gap-3" @submit.prevent="submit">
         <Input
           v-model="email"
           type="email"
@@ -33,6 +34,17 @@
           </RouterLink>
         </div>
       </form>
+
+      <Button
+        v-if="!withPassword"
+        variant="ghost"
+        block
+        class="mt-3"
+        data-test="use-password"
+        @click="withPassword = true"
+      >
+        {{ t("auth.magic.passwordInstead") }}
+      </Button>
     </Card>
   </div>
 </template>
@@ -42,6 +54,7 @@ import { computed, ref } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import Card from "../components/ui/Card.vue";
+import MagicLinkForm from "../components/auth/MagicLinkForm.vue";
 import Input from "../components/ui/Input.vue";
 import Button from "../components/ui/Button.vue";
 import { useToasts } from "../components/ui/useToasts";
@@ -65,6 +78,7 @@ const registerLink = computed(() => {
   return { path: "/auth/register" };
 });
 
+const withPassword = ref(false);
 const email = ref("");
 const password = ref("");
 const submitting = ref(false);
