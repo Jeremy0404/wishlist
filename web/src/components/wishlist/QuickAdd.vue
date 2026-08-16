@@ -64,7 +64,8 @@ async function resolve(url: string) {
     }
     if (!details.image_url && !photo.value && preview.image_url)
       details.image_url = preview.image_url;
-    if (preview.title || preview.price_eur != null) showDetails.value = true;
+    if (preview.title || preview.price_eur != null || preview.image_url)
+      showDetails.value = true;
   } catch {
     /* the fetch is a convenience, never a gate */
   } finally {
