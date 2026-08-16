@@ -5,7 +5,9 @@
         v-model="form.title"
         name="title"
         :label="t('my.form.title')"
+        :error="titleError"
         required
+        @update:model-value="titleError = ''"
       />
       <Input v-model="form.url" name="url" :label="t('my.form.url')" />
       <Input
@@ -60,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
@@ -104,7 +106,14 @@ watch(
 
 const { t } = useI18n();
 
+const titleError = ref("");
+
 const emitSave = () => {
+  if (!form.title.trim()) {
+    titleError.value = t("my.validation.titleRequired");
+    return;
+  }
+
   emit("save", {
     title: form.title,
     url: form.url || undefined,

@@ -22,7 +22,7 @@ const visible = computed<Toast[]>(() =>
         class="flex min-w-56 max-w-sm items-start gap-3 rounded-pill px-4 py-2 text-control shadow-md"
         :class="{
           'bg-accent-2-700 text-bg': toast.kind === 'success',
-          'bg-accent-700 text-bg': toast.kind === 'error',
+          'bg-danger text-danger-on': toast.kind === 'error',
           'bg-neutral-800 text-bg': !toast.kind || toast.kind === 'info',
         }"
       >
@@ -31,7 +31,7 @@ const visible = computed<Toast[]>(() =>
             toast.kind === 'success'
               ? 'checkCircle'
               : toast.kind === 'error'
-                ? 'alert'
+                ? 'alertCircle'
                 : 'bell'
           "
         />

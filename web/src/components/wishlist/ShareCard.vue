@@ -5,6 +5,7 @@ import { api } from "../../services/api";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
+import InlineConfirm from "../ui/InlineConfirm.vue";
 import Input from "../ui/Input.vue";
 import Segmented from "../ui/Segmented.vue";
 import { useToasts } from "../ui/useToasts";
@@ -20,6 +21,7 @@ const COPIED_FEEDBACK_MS = 2000;
 
 const submitting = ref(false);
 const copied = ref(false);
+const confirmingPrivate = ref(false);
 
 const isShared = computed(() => Boolean(props.wishlist?.published_at));
 const link = computed(() =>
@@ -33,11 +35,18 @@ const options = computed(() => [
   { value: "private", label: t("my.share.private") },
 ]);
 
-async function setVisibility(next: string) {
+function setVisibility(next: string) {
   const shared = next === "shared";
   if (shared === isShared.value) return;
-  if (!shared && !window.confirm(t("my.share.privateConfirm"))) return;
+  if (!shared) {
+    confirmingPrivate.value = true;
+    return;
+  }
+  return applyVisibility(true);
+}
 
+async function applyVisibility(shared: boolean) {
+  confirmingPrivate.value = false;
   submitting.value = true;
   try {
     const { wishlist } = shared
@@ -95,7 +104,19 @@ async function copyLink() {
         @update:model-value="setVisibility"
       />
     </div>
-    <p v-if="!isShared" class="mb-0 text-meta text-muted" data-test="share-private-hint">
+    <InlineConfirm
+      v-if="confirmingPrivate"
+      :question="t('my.share.privateConfirm')"
+      :confirm-label="t('my.share.makePrivate')"
+      :loading="submitting"
+      @confirm="applyVisibility(false)"
+      @cancel="confirmingPrivate = false"
+    />
+    <p
+      v-if="!isShared"
+      class="mb-0 text-meta text-muted"
+      data-test="share-private-hint"
+    >
       {{ t("my.share.privateHint") }}
     </p>
   </Card>

@@ -15,6 +15,10 @@ async function setVisibility(page: Page, value: "shared" | "private") {
     (res) => res.url().includes("/api/wishlists/me/publish") && res.ok(),
   );
   await page.click(`[data-test="share-visibility-${value}"]`);
+  // Going private asks inline before it commits; going public asks nothing.
+  if (value === "private") {
+    await page.click('[data-test="inline-confirm-accept"]');
+  }
   await response;
 }
 
@@ -33,7 +37,9 @@ test.describe("Share slug and visibility", () => {
     await expect(page.locator('[data-test="share-link"]')).toHaveValue(
       new RegExp(`/share/${created.public_slug}$`),
     );
-    await expect(page.locator('[data-test="share-private-hint"]')).toBeVisible();
+    await expect(
+      page.locator('[data-test="share-private-hint"]'),
+    ).toBeVisible();
     await expect(page.locator('[data-test="share-copy"]')).toBeDisabled();
 
     const beforeSharing = await page.request.get(
@@ -41,11 +47,12 @@ test.describe("Share slug and visibility", () => {
     );
     expect(beforeSharing.status()).toBe(404);
 
-    // Turning sharing on asks nothing: an unhandled confirm would be dismissed
+    // Turning sharing on asks nothing — no inline confirm appears
     await setVisibility(page, "shared");
-    await expect(
-      page.locator('[data-test="share-private-hint"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('[data-test="inline-confirm"]')).toHaveCount(0);
+    await expect(page.locator('[data-test="share-private-hint"]')).toHaveCount(
+      0,
+    );
     expect((await readOwnWishlist(page)).public_slug).toBe(created.public_slug);
 
     const publicView = await page.request.get(
@@ -68,22 +75,28 @@ test.describe("Share slug and visibility", () => {
       });
     });
     await page.click('[data-test="share-copy"]');
-    await expect(page.locator('[data-test="share-copy"]')).toHaveText("Copié !");
+    await expect(page.locator('[data-test="share-copy"]')).toHaveText(
+      "Copié !",
+    );
 
-    // Turning it off asks for confirmation, and declining changes nothing
-    page.once("dialog", (dialog) => dialog.dismiss());
+    // Turning it off asks inline, and cancelling changes nothing
     await page.click('[data-test="share-visibility-private"]');
-    await expect(
-      page.locator('[data-test="share-private-hint"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('[data-test="inline-confirm"]')).toBeVisible();
+    await page.click('[data-test="inline-confirm-cancel"]');
+    await expect(page.locator('[data-test="inline-confirm"]')).toHaveCount(0);
+    await expect(page.locator('[data-test="share-private-hint"]')).toHaveCount(
+      0,
+    );
     expect(
-      (await page.request.get(`/api/wishlists/public/${created.public_slug}`))
-        .status(),
+      (
+        await page.request.get(`/api/wishlists/public/${created.public_slug}`)
+      ).status(),
     ).toBe(200);
 
-    page.once("dialog", (dialog) => dialog.accept());
     await setVisibility(page, "private");
-    await expect(page.locator('[data-test="share-private-hint"]')).toBeVisible();
+    await expect(
+      page.locator('[data-test="share-private-hint"]'),
+    ).toBeVisible();
 
     const unshared = await readOwnWishlist(page);
     expect(unshared.public_slug).toBe(created.public_slug);

@@ -13,16 +13,30 @@
           auth.inviteCode
         }}</code>
       </p>
-      <div v-if="auth.myFamily" class="flex gap-2 mt-2">
+      <div v-if="auth.myFamily" class="flex flex-wrap gap-2 mt-2">
         <Button variant="ghost" @click="copy">{{ t("common.copy") }}</Button>
         <InviteShareButton
           v-if="canShare"
           :name="auth.myFamily.name"
           :code="auth.myFamily.invite_code"
         />
-        <Button :disabled="rotating" variant="primary" @click="rotate">
+        <Button
+          v-if="!confirmingRotate"
+          :disabled="rotating"
+          variant="primary"
+          data-test="invite-rotate"
+          @click="confirmingRotate = true"
+        >
           {{ rotating ? t("common.loading") : t("familyInvite.rotate") }}
         </Button>
+        <InlineConfirm
+          v-else
+          :question="t('familyInvite.rotateConfirm')"
+          :confirm-label="t('familyInvite.rotate')"
+          :loading="rotating"
+          @confirm="rotate"
+          @cancel="confirmingRotate = false"
+        />
       </div>
       <p v-if="copied" class="text-accent-2-700 text-sm mt-2">
         {{ t("familyInvite.copied") }}
@@ -34,7 +48,11 @@
         <h2 class="text-lg font-semibold">
           {{ t("familyInvite.membersTitle") }}
         </h2>
-        <Button variant="ghost" :disabled="loadingMembers" @click="fetchMembers">
+        <Button
+          variant="ghost"
+          :disabled="loadingMembers"
+          @click="fetchMembers"
+        >
           {{ loadingMembers ? t("common.loading") : t("familyInvite.refresh") }}
         </Button>
       </div>
@@ -54,11 +72,16 @@
             </p>
           </div>
           <p class="text-sm text-neutral-700">
-            {{ t("familyInvite.joinedAt", { date: formatDate(member.joined_at) }) }}
+            {{
+              t("familyInvite.joinedAt", { date: formatDate(member.joined_at) })
+            }}
           </p>
         </li>
       </ul>
-      <p v-if="!loadingMembers && members.length === 0" class="text-neutral-700 text-sm">
+      <p
+        v-if="!loadingMembers && members.length === 0"
+        class="text-neutral-700 text-sm"
+      >
         {{ t("familyInvite.noMembers") }}
       </p>
     </Card>
@@ -71,6 +94,7 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../components/ui/Button.vue";
+import InlineConfirm from "../components/ui/InlineConfirm.vue";
 import Card from "../components/ui/Card.vue";
 import { useAuth } from "../stores/auth";
 import InviteShareButton from "../components/InviteShareButton.vue";
@@ -85,6 +109,7 @@ const copied = ref(false);
 const members = ref<FamilyMember[]>([]);
 const loadingMembers = ref(false);
 const rotating = ref(false);
+const confirmingRotate = ref(false);
 const canShare = computed(
   () => typeof navigator !== "undefined" && !!(navigator as any).share,
 );
@@ -117,9 +142,7 @@ async function fetchMembers() {
 async function rotate() {
   if (!auth.inFamily || rotating.value) return;
 
-  const ok = window.confirm(t("familyInvite.rotateConfirm"));
-  if (!ok) return;
-
+  confirmingRotate.value = false;
   rotating.value = true;
   try {
     await auth.rotateFamilyInvite();

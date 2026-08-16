@@ -150,6 +150,7 @@ export async function deleteWishlistItem(
       res.status() === 200,
   );
   await item.locator('[data-test="wishlist-delete"]').click();
+  await item.locator('[data-test="inline-confirm-accept"]').click();
   await deleteResponse;
 
   await expect(item).toHaveCount(0, { timeout: 10000 });
