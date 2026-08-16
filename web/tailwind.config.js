@@ -40,6 +40,15 @@ const accent2 = {
 
 const ink = '#201e1d';
 
+/** Organic ships two accents and nothing semantic — these are the app's own,
+ *  taken from the mocks, and will never arrive from an upstream retune. */
+const danger = {
+    DEFAULT: '#a8432e',
+    dark: '#874028',
+    tint: '#f3ded6',
+    on: '#fdf6ee',
+};
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: ['./index.html', './src/**/*.{vue,ts}'],
@@ -54,6 +63,7 @@ export default {
                 neutral,
                 accent,
                 'accent-2': accent2,
+                danger,
             },
             fontFamily: {
                 heading: ['Caprasimo', 'system-ui', 'sans-serif'],

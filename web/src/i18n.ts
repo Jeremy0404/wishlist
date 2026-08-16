@@ -6,6 +6,7 @@ const fr = {
     share: "Partager…",
     copy: "Copier",
     close: "Fermer",
+    cancel: "Annuler",
     loading: "Chargement…",
     createdAt: "Créé le",
   },
@@ -139,6 +140,7 @@ const fr = {
         "Ta liste est privée : personne ne peut ouvrir ce lien pour l’instant.",
       privateConfirm:
         "Rendre ta liste privée ? Le lien cessera de fonctionner.",
+      makePrivate: "Rendre privée",
       nowShared: "Ta liste est partagée.",
       nowPrivate: "Ta liste est redevenue privée.",
       copy: "Copier",
@@ -170,6 +172,7 @@ const fr = {
       notes: "Notes",
     },
     addBtn: "Ajouter",
+    confirmDelete: "Supprimer cet article ?",
     edit: "Modifier",
     save: "Enregistrer",
     cancel: "Annuler",

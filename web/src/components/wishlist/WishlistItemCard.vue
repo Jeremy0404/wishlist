@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
+import InlineConfirm from "../ui/InlineConfirm.vue";
 import Tag from "../ui/Tag.vue";
 import { fmtEUR } from "../../utils/money";
 import { isHighPriority } from "../../utils/priority";
@@ -19,6 +20,12 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const high = computed(() => isHighPriority(props.item.priority));
+const confirming = ref(false);
+
+function confirmDelete() {
+  confirming.value = false;
+  emit("delete");
+}
 </script>
 
 <template>
@@ -54,27 +61,39 @@ const high = computed(() => isHighPriority(props.item.priority));
         </p>
       </div>
 
-      <div class="flex flex-none gap-1">
-        <Button
-          variant="ghost"
-          icon
-          data-test="wishlist-edit"
-          :aria-label="t('my.edit')"
-          :title="t('my.edit')"
-          @click="emit('edit')"
+      <div class="flex flex-none items-center gap-1">
+        <template v-if="!confirming">
+          <Button
+            variant="ghost"
+            icon
+            data-test="wishlist-edit"
+            :aria-label="t('my.edit')"
+            :title="t('my.edit')"
+            @click="emit('edit')"
+          >
+            <Icon name="pencil" :size="16" />
+          </Button>
+          <Button
+            variant="ghost-danger"
+            icon
+            data-test="wishlist-delete"
+            :aria-label="t('my.delete')"
+            :title="t('my.delete')"
+            @click="confirming = true"
+          >
+            <Icon name="trash" :size="16" />
+          </Button>
+        </template>
+
+        <InlineConfirm
+          v-else
+          :question="t('my.confirmDelete')"
+          :confirm-label="t('my.delete')"
+          @confirm="confirmDelete"
+          @cancel="confirming = false"
         >
-          <Icon name="pencil" :size="16" />
-        </Button>
-        <Button
-          variant="ghost"
-          icon
-          data-test="wishlist-delete"
-          :aria-label="t('my.delete')"
-          :title="t('my.delete')"
-          @click="emit('delete')"
-        >
-          <Icon name="trash" :size="16" />
-        </Button>
+          <template #icon><Icon name="trash" :size="14" /></template>
+        </InlineConfirm>
       </div>
     </div>
   </Card>
