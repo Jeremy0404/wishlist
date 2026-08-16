@@ -6,9 +6,8 @@ on:
 
 # This workflow builds the two production images (api and web) from their own
 # Dockerfiles, pushes them to GHCR, and signs them keylessly with cosign using
-# the GitHub Actions OIDC identity. It does not deploy — the deploy and
-# verify-deploy jobs are added separately, once the server target is
-# provisioned.
+# the GitHub Actions OIDC identity, then deploys the tag to mediaserver and
+# confirms the containers actually running match the digests it verified.
 permissions:
   contents: read
 
@@ -97,3 +96,107 @@ jobs:
             --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/\.github/workflows/release\.yml@refs/tags/v.*$" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "${{ steps.image.outputs.ref }}"
+
+  deploy:
+    name: Deploy to mediaserver
+    needs: [build, sign]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    outputs:
+      api_digest: ${{ steps.digests.outputs.api }}
+      web_digest: ${{ steps.digests.outputs.web }}
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Resolve digests
+        id: digests
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for c in api web; do
+            repo="ghcr.io/${GITHUB_REPOSITORY,,}-${c}"
+            digest="$(docker buildx imagetools inspect "${repo}:${version}" --format '{{ .Manifest.Digest }}')"
+            echo "${c}=${digest}" >> "$GITHUB_OUTPUT"
+          done
+
+      # Both images are verified before either is deployed: rollback.sh restarts
+      # web and api together, so a signature failure on one must stop the deploy
+      # of the other.
+      - name: Verify both images are signed by this workflow
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for c in api web; do
+            repo="ghcr.io/${GITHUB_REPOSITORY,,}-${c}"
+            digest="$(docker buildx imagetools inspect "${repo}:${version}" --format '{{ .Manifest.Digest }}')"
+            cosign verify \
+              --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/\.github/workflows/release\.yml@refs/tags/v.*$" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              "${repo}@${digest}"
+          done
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: RELEASE_VERSION
+          script: |
+            set -euo pipefail
+            cd ~/wishlist
+
+            # rollback.sh rewrites RELEASE_VERSION, pulls, restarts web and api
+            # together and polls the health endpoint — the same operation
+            # whether this is a forward deploy or a manual rollback. The API
+            # self-migrates on startup, so no separate migration step exists.
+            ./deploy/rollback.sh "${RELEASE_VERSION#v}"
+
+  verify-deploy:
+    name: Verify running digests
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Confirm the running containers match the verified, signed digests
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        env:
+          API_DIGEST: ${{ needs.deploy.outputs.api_digest }}
+          WEB_DIGEST: ${{ needs.deploy.outputs.web_digest }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: API_DIGEST,WEB_DIGEST
+          script: |
+            set -euo pipefail
+            cd ~/wishlist
+
+            check() {
+              svc="$1"; expected="$2"
+              cid="$(docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env ps -q "$svc")"
+              img="$(docker inspect --format '{{.Image}}' "$cid")"
+              running="$(docker inspect --format '{{join .RepoDigests "\n"}}' "$img" | head -1)"
+              echo "${svc} running: ${running}"
+              case "$running" in
+                *"$expected") echo "  matches the verified, signed release." ;;
+                *) echo "  does NOT match ${expected}" >&2; exit 1 ;;
+              esac
+            }
+
+            check api "$API_DIGEST"
+            check web "$WEB_DIGEST"

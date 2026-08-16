@@ -61,15 +61,16 @@ The loopback port is only for host-local health checks (`rollback.sh`) and debug
 
 ## Deployment
 
-The `deploy` job is **not** wired into `release.yml` yet. A tag push builds, pushes and cosign-signs
-both images and stops there; the deploy itself is run deliberately, by hand, from the server:
+Every tag push deploys automatically. `release.yml`'s `deploy` job verifies both images' cosign
+signatures, then runs `rollback.sh` over SSH (rewrite `RELEASE_VERSION`, pull, restart `web` and
+`api`, poll the health endpoint); `verify-deploy` then confirms the running containers match the
+exact digests it verified, not whatever the mutable tag resolved to.
+
+Manual rollback to any already-published version stays available:
 
 ```bash
 ssh mediaserver "cd ~/wishlist && ./deploy/rollback.sh <version>"
 ```
-
-Automating this on every tag is a separate decision, deferred until the pipeline has been run
-manually and verified end to end at least once.
 
 ## Required GitHub Actions secrets
 
