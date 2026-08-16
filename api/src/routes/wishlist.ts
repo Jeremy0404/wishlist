@@ -131,9 +131,13 @@ router.get(
   }),
 );
 
+/** Matches the link preview's own cap, so an image it resolved can always be
+ *  stored. */
+const MAX_IMAGE_URL_LENGTH = 2048;
+
 const ItemImage = z
   .string()
-  .max(2000)
+  .max(MAX_IMAGE_URL_LENGTH)
   .refine((v) => v === "" || isStoredImage(v) || isLinkedImage(v), {
     message: "Lien d’image invalide",
   });
