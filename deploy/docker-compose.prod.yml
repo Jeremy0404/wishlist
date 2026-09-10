@@ -18,6 +18,7 @@ name: wishlist
 services:
   web:
     image: ghcr.io/jeremy0404/wishlist-web:${RELEASE_VERSION}
+    mem_limit: 128m
     restart: unless-stopped
     depends_on:
       api:
@@ -33,6 +34,7 @@ services:
 
   api:
     image: ghcr.io/jeremy0404/wishlist-api:${RELEASE_VERSION}
+    mem_limit: 512m
     restart: unless-stopped
     depends_on:
       postgres:
@@ -63,6 +65,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    mem_limit: 256m
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
