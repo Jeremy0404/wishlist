@@ -8,12 +8,15 @@
 # critical and warning go to ALERT_WEBHOOK_URL (the app's alert channel), info to
 # INFO_WEBHOOK_URL (info-apps). recovery is posted as [info] to the alert channel, where
 # the alert it closes was. Both must be set, or nothing is sent and it exits 78.
+# Each post sent is recorded in NOTIFY_LOG (time, severity, app; never the text) when its
+# directory exists, which it does on the host and not in CI; notification-report.sh counts it.
 # The webhook URL is passed to curl through its config on stdin, never through argv.
 
 set -euo pipefail
 
 EXIT_USAGE=64
 EXIT_CONFIG=78
+NOTIFY_LOG="${NOTIFY_LOG:-$HOME/mediaserver-infra/logs/notifications.log}"
 
 usage() {
   echo "usage: notify.sh <critical|warning|info|recovery> <app> <what> <impact> <action>" >&2
@@ -45,6 +48,12 @@ format() {
   printf '[%s] %s — %s — %s — %s' "$@"
 }
 
+record() {
+  if [[ -d "$(dirname "$NOTIFY_LOG")" ]]; then
+    printf '%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" >>"$NOTIFY_LOG" || true
+  fi
+}
+
 if [[ "${1:-}" == "--test" ]]; then
   if (( $# != 2 )) || [[ -z "$2" ]]; then
     usage
@@ -62,8 +71,8 @@ done
 
 require_webhooks
 case "$1" in
-  critical | warning) post "$ALERT_WEBHOOK_URL" "$(format "$@")" ;;
-  info) post "$INFO_WEBHOOK_URL" "$(format "$@")" ;;
-  recovery) post "$ALERT_WEBHOOK_URL" "$(format info "${@:2}")" ;;
+  critical | warning) post "$ALERT_WEBHOOK_URL" "$(format "$@")" && record "$1" "$2" ;;
+  info) post "$INFO_WEBHOOK_URL" "$(format "$@")" && record "$1" "$2" ;;
+  recovery) post "$ALERT_WEBHOOK_URL" "$(format info "${@:2}")" && record "$1" "$2" ;;
   *) usage ;;
 esac
