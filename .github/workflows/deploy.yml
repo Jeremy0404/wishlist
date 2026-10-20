@@ -145,3 +145,28 @@ jobs:
             echo "Healthcheck FAILED, dumping logs"
             docker compose -f docker-compose.production.yml logs --tail=200 web api
             exit 1
+
+  notify-deploy:
+    needs: [build-and-push, deploy]
+    if: always() && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Post to Discord
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          INFO_WEBHOOK_URL: ${{ secrets.INFO_WEBHOOK_URL }}
+          OUTCOME: ${{ needs.deploy.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [[ "$OUTCOME" == "success" ]]; then
+            deploy/notify.sh info wishlist "deployed ${GITHUB_SHA::7} by hand" "none" "nothing to do"
+          elif curl --silent --fail --max-time 10 -o /dev/null https://wishlist.jerco.fr/api/health; then
+            deploy/notify.sh warning wishlist "manual deploy of ${GITHUB_SHA::7} failed" \
+              "production still answers on the previous version" "read ${RUN_URL}"
+          else
+            deploy/notify.sh critical wishlist "manual deploy of ${GITHUB_SHA::7} failed" \
+              "https://wishlist.jerco.fr does not answer" "read ${RUN_URL}, then roll back with deploy/rollback.sh"
+          fi

@@ -32,3 +32,10 @@ jobs:
       - name: Unit tests
         if: matrix.package == 'api'
         run: npm test
+
+  deploy-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck deploy/*.sh
+      - run: deploy/backup-freshness-check.test.sh
