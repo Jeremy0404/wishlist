@@ -16,7 +16,10 @@ proxies `/api/` to the API), `api` (Node, self-migrating on startup), and `postg
   and `api` together. Never touches the database.
 - `backup.sh` — dumps Postgres *and* archives the uploads volume, encrypts both with `age`.
 - `backup-freshness-check.sh` — cron-friendly check that fails loudly if either the newest database
-  dump or the newest uploads archive is older than a threshold.
+  dump or the newest uploads archive is older than a threshold. It alerts through `notify.sh` when
+  backups go stale, at most once a day while they stay stale, and once on recovery.
+- `notify.sh` — posts one message in the shared notification format to the alert or info webhook.
+  A copy of the one in `mediaserver-infra`.
 
 There is no `migrate.sh`: the API self-migrates. `api/package.json`'s `start:prod` runs
 `knex migrate:latest` before starting the server, so a forward deploy applies pending migrations
@@ -37,12 +40,15 @@ as a side effect of `rollback.sh` restarting the container.
      and handed to the operator once — never written to the server or committed anywhere.
    - `BACKUP_OFFHOST_DESTINATION` — blank for now: backups are local-only and `backup.sh` warns on
      every run. Tracked as a follow-up issue.
-   - `BACKUP_ALERT_DISCORD_WEBHOOK` — blank for now. Tracked as a follow-up issue.
+   - `ALERT_WEBHOOK_URL` and `INFO_WEBHOOK_URL` — wishlist's Discord webhooks in `alerts-apps` and
+     `info-apps`. Both are required. The same two values are repository secrets for the deploy
+     notifications.
 3. `docker login ghcr.io` on the server, if not already authenticated from another app's deploy.
 4. `docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d`.
 5. Join NPM to the stack's private network (see "Networking") and configure the
    `wishlist.jerco.fr` proxy host in the NPM UI.
-6. Add `backup.sh` and `backup-freshness-check.sh` to cron.
+6. Add `backup.sh` and `backup-freshness-check.sh` to cron. The backup line ends with
+   `&& ~/mediaserver-infra/heartbeat.sh wishlist-backup`, which Uptime Kuma reads.
 
 ## Networking
 
