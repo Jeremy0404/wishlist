@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.1](https://github.com/Jeremy0404/wishlist/compare/v0.3.0...v0.3.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* drop the unused jspdf dependency ([#93](https://github.com/Jeremy0404/wishlist/issues/93)) ([6615060](https://github.com/Jeremy0404/wishlist/commit/661506046f6b50b455fe102de8021f16cc28feaa))
+* move the images and CI to Node 22 ([#97](https://github.com/Jeremy0404/wishlist/issues/97)) ([1178094](https://github.com/Jeremy0404/wishlist/commit/117809431901872f4fcfd52c251ae709db98e3c3))
+* update nodemailer to 10 ([#94](https://github.com/Jeremy0404/wishlist/issues/94)) ([68d8e13](https://github.com/Jeremy0404/wishlist/commit/68d8e134ea36242f3a0d058f4393663607883257))
+* update tailwindcss to 4 ([#98](https://github.com/Jeremy0404/wishlist/issues/98)) ([9ba3424](https://github.com/Jeremy0404/wishlist/commit/9ba34246f0d95ae06e246087242e9590a6c14c68))
+* update zod to 4 ([#95](https://github.com/Jeremy0404/wishlist/issues/95)) ([145a0c7](https://github.com/Jeremy0404/wishlist/commit/145a0c7b33a0d7fef41844c07cff6cb34088730e))
+
 ## [0.3.0](https://github.com/Jeremy0404/wishlist/compare/v0.2.0...v0.3.0) (2026-10-24)
 
 
