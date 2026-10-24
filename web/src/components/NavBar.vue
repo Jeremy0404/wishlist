@@ -25,7 +25,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur">
+  <nav class="sticky top-0 z-50 bg-bg/90 backdrop-blur-sm">
     <div class="mx-auto max-w-5xl px-4 py-3">
       <div class="flex flex-wrap items-center gap-4">
         <RouterLink to="/">
@@ -70,6 +70,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
+@reference "../index.css";
+
 .nav-link {
   @apply inline-flex items-center gap-2 text-control text-ink no-underline;
 }

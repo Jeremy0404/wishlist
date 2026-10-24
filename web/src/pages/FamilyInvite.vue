@@ -107,7 +107,7 @@ watch(
         </p>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <code
-            class="font-mono text-h3 uppercase tracking-[0.05em]"
+            class="font-mono text-h3 uppercase tracking-wider"
             data-test="invite-code"
           >
             {{ auth.inviteCode }}

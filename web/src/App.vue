@@ -4,7 +4,7 @@
       'min-h-screen text-neutral-900',
       isMinimalLayout
         ? 'bg-bg'
-        : 'bg-gradient-to-br from-neutral-100 via-bg to-neutral-200',
+        : 'bg-linear-to-br from-neutral-100 via-bg to-neutral-200',
     ]"
   >
     <NavBar v-if="!isMinimalLayout" />
@@ -22,7 +22,7 @@
       </div>
       <div
         v-else
-        class="bg-surface/80 backdrop-blur-xl border border-divider shadow-lg rounded-card p-6 sm:p-8 lg:p-10 space-y-6"
+        class="bg-surface/80 backdrop-blur-xl border border-divider shadow-lg rounded-card p-6 sm:p-8 lg:p-10 *:not-first:mt-6 *:not-first:mb-0"
       >
         <ToastContainer />
         <router-view />
@@ -46,9 +46,3 @@ onMounted(() => {
 });
 </script>
 
-<style>
-a {
-  text-decoration: none;
-  color: inherit;
-}
-</style>

@@ -89,7 +89,7 @@ async function copy() {
         {{ t("familyCreate.inviteCode") }}
       </p>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <code class="font-mono text-h3 uppercase tracking-[0.05em]">
+        <code class="font-mono text-h3 uppercase tracking-wider">
           {{ family.invite_code }}
         </code>
         <div class="flex items-center gap-2">
