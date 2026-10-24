@@ -53,7 +53,7 @@ async function submit() {
         <Input
           v-model="code"
           name="code"
-          class="font-mono uppercase tracking-[0.05em]"
+          class="font-mono uppercase tracking-wider"
           data-test="family-code-input"
           :label="t('familyJoin.codeLabel')"
           :placeholder="t('familyJoin.codePlaceholder')"

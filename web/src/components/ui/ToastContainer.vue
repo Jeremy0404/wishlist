@@ -37,7 +37,7 @@ const visible = computed<Toast[]>(() =>
                 : 'bell'
           "
         />
-        <div class="flex-1 break-words">
+        <div class="flex-1 wrap-break-word">
           {{ toast.text }}
         </div>
         <button

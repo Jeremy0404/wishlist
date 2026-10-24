@@ -36,12 +36,13 @@
       <Button
         variant="secondary"
         block
-        class="justify-between"
         data-test="wishlist-open"
         :to="`/wishlists/${row.user_id}`"
       >
-        {{ t("browse.open") }}
-        <Icon name="arrowRight" :size="14" />
+        <span class="flex w-full items-center justify-between">
+          {{ t("browse.open") }}
+          <Icon name="arrowRight" :size="14" />
+        </span>
       </Button>
     </Card>
 

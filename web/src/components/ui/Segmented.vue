@@ -24,7 +24,7 @@ function onChange(event: Event, value: string) {
       v-for="opt in options"
       :key="opt.value"
       :data-test="`${name}-${opt.value}`"
-      class="inline-flex cursor-pointer items-center gap-1 border-l border-divider px-3 py-1 text-caption first:border-l-0 has-[:focus-visible]:outline has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent"
+      class="inline-flex cursor-pointer items-center gap-1 border-l border-divider px-3 py-1 text-caption first:border-l-0 has-focus-visible:outline-solid has-focus-visible:-outline-offset-2 has-focus-visible:outline-2 has-focus-visible:outline-accent"
       :class="
         opt.value === modelValue
           ? 'bg-accent text-bg'
