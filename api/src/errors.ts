@@ -37,9 +37,9 @@ export class ValidationError extends AppError {
   }
 
   static fromZod(error: ZodError, message = "Données invalides") {
-    const fieldErrors = Object.entries(error.flatten().fieldErrors).flatMap(
-      ([field, reasons]) => (reasons ?? []).map((reason) => ({ field, reason })),
-    );
+    const fieldErrors = error.issues
+      .filter((issue) => issue.path.length > 0)
+      .map((issue) => ({ field: String(issue.path[0]), reason: issue.message }));
 
     return new ValidationError(message, fieldErrors);
   }
