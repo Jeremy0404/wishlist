@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.0](https://github.com/Jeremy0404/wishlist/compare/v0.2.0...v0.3.0) (2026-10-24)
+
+
+### Features
+
+* ask a magic-link sign-up for its name, and keep it editable ([#88](https://github.com/Jeremy0404/wishlist/issues/88)) ([68b8c56](https://github.com/Jeremy0404/wishlist/commit/68b8c56315fdec18f004e635afc5b6bf9544dd51))
+* deploy to mediaserver on every tagged release ([9af5aba](https://github.com/Jeremy0404/wishlist/commit/9af5aba7528f651668dd4db47bdf581339a9fa9a))
+
+
+### Bug Fixes
+
+* make deploy/.env safe to source and to interpolate ([#83](https://github.com/Jeremy0404/wishlist/issues/83)) ([0b2e4cd](https://github.com/Jeremy0404/wishlist/commit/0b2e4cde480407f1340a929b274a31c785f47f9c))
+* update dependencies with published security advisories ([#92](https://github.com/Jeremy0404/wishlist/issues/92)) ([08f9e28](https://github.com/Jeremy0404/wishlist/commit/08f9e28598be939fb4666f8f6c09366c549c1007))
+
+
+### Miscellaneous
+
+* add the mediaserver production deploy artifacts ([#81](https://github.com/Jeremy0404/wishlist/issues/81)) ([e545ecb](https://github.com/Jeremy0404/wishlist/commit/e545ecb337525da3edb7d8d10feb96c94ab8222c))
+* follow the notification standard for backup alerts and deploys ([#90](https://github.com/Jeremy0404/wishlist/issues/90)) ([1a174ab](https://github.com/Jeremy0404/wishlist/commit/1a174ab0a55b1caf5d7b47357c9ef2596525343c))
+* record each notification sent from the host ([#91](https://github.com/Jeremy0404/wishlist/issues/91)) ([d7f91e7](https://github.com/Jeremy0404/wishlist/commit/d7f91e7c1c10feb043fec3391b2ad9ab75519ddb))
+
 ## [0.2.0](https://github.com/Jeremy0404/wishlist/compare/v0.1.0...v0.2.0) (2026-08-16)
 
 
