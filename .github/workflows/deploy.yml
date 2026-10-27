@@ -59,7 +59,7 @@ jobs:
 
       # Build & push WEB
       - name: Build & push web
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./web
           push: true
@@ -73,7 +73,7 @@ jobs:
 
       # Build & push API
       - name: Build & push api
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./api
           push: true
