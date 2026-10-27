@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Jeremy0404/wishlist/compare/v0.3.1...v0.3.2) (2026-10-27)
+
+
+### Miscellaneous
+
+* check dependencies monthly with Dependabot ([#99](https://github.com/Jeremy0404/wishlist/issues/99)) ([fd94fbd](https://github.com/Jeremy0404/wishlist/commit/fd94fbda32427ae8a4a5f4ec836b79861407768f))
+
 ## [0.3.1](https://github.com/Jeremy0404/wishlist/compare/v0.3.0...v0.3.1) (2026-10-24)
 
 
