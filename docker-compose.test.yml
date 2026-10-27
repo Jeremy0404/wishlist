@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
 
   tests:
-    image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    image: mcr.microsoft.com/playwright:v1.64.1-jammy
     working_dir: /app
     volumes:
       - ./web:/app
