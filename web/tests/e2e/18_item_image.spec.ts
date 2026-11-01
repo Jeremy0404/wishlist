@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { registerUser } from "./helpers";
+import { openAddSheet, registerUser } from "./helpers";
 
 /** A 1x1 transparent PNG — the smallest thing the API will accept as an image. */
 const PNG = Buffer.from(
@@ -16,6 +16,7 @@ async function addItem(
   photo?: { name: string; mimeType: string; buffer: Buffer },
 ) {
   await page.goto("/me");
+  await openAddSheet(page);
   await page.fill('[data-test="quick-add-entry"]', title);
 
   if (photo) {
@@ -82,6 +83,7 @@ test("a linked photo that fails to load leaves no broken image", async ({
   await registerUser(page);
 
   await page.goto("/me");
+  await openAddSheet(page);
   await page.fill('[data-test="quick-add-entry"]', "Lien cassé");
   await page.click('[data-test="quick-add-toggle"]');
   await page.fill('[data-test="item-image-url"]', "http://web/nowhere.png");
@@ -106,7 +108,7 @@ test("removing a photo deletes the stored file", async ({ page }) => {
   expect(src).toBeTruthy();
 
   await item.locator('[data-test="wishlist-edit"]').click();
-  await item.locator('[data-test="item-image-remove"]').click();
+  await page.locator('[data-test="sheet"] [data-test="item-image-remove"]').click();
 
   const saved = page.waitForResponse(
     (res) =>
@@ -114,7 +116,7 @@ test("removing a photo deletes the stored file", async ({ page }) => {
       res.request().method() === "PATCH" &&
       res.status() === 200,
   );
-  await item.locator('[data-test="wishlist-edit-save"]').click();
+  await page.locator('[data-test="wishlist-edit-save"]').click();
   await saved;
 
   await expect(item.locator(thumbnail)).toHaveCount(0);
@@ -127,6 +129,7 @@ test("a file that is not an image is refused", async ({ page }) => {
   await registerUser(page);
 
   await page.goto("/me");
+  await openAddSheet(page);
   await page.fill('[data-test="quick-add-entry"]', "Faux fichier");
   await page.click('[data-test="quick-add-toggle"]');
   await page.setInputFiles('[data-test="item-image-file"]', {

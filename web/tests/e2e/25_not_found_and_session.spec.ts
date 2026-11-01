@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { registerUser } from "./helpers";
+import { openAddSheet, registerUser } from "./helpers";
 
 const NEUTRAL_500 = "rgb(161, 156, 148)";
 
@@ -40,6 +40,7 @@ test("a session that expires under the user lands on the designed screen", async
   page,
 }) => {
   await registerUser(page);
+  await openAddSheet(page);
 
   // The cookie is dropped behind the app's back: the next call it makes gets a
   // 401 while the app still believes someone is signed in.

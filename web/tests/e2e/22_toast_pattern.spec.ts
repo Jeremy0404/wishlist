@@ -6,8 +6,10 @@ const ON_FILL = "rgb(255, 255, 255)";
 
 async function deleteFirstItem(page: Page) {
   const item = page.locator('[data-test="wishlist-item"]').first();
-  await item.locator('[data-test="wishlist-delete"]').click();
-  await item.locator('[data-test="inline-confirm-accept"]').click();
+  await item.locator('[data-test="wishlist-edit"]').click();
+  const sheet = page.locator('[data-test="sheet"]');
+  await sheet.locator('[data-test="wishlist-delete"]').click();
+  await sheet.locator('[data-test="inline-confirm-accept"]').click();
 }
 
 test("a deletion raises a success toast on the delivered pattern", async ({

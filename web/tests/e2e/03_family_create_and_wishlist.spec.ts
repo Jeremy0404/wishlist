@@ -31,7 +31,7 @@ test('complete family creation and wishlist management flow', async ({ page }) =
     title: `${originalTitle} Pro`,
     url: "https://example.com/switch-pro",
     price: 349.99,
-    priority: 2,
+    favorite: true,
     notes: "Prefer OLED model in red with case",
   });
 

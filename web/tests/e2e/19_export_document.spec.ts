@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import type { Download, Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { openAccount, registerUser } from "./helpers";
+import { openAccount, openAddSheet, registerUser } from "./helpers";
 
 /** A 1x1 transparent PNG — the smallest thing the API will accept as an image. */
 const PNG = Buffer.from(
@@ -13,10 +13,11 @@ const OWNER = "Alexa Fixture";
 
 async function addPhotoItem(page: Page, title: string) {
   await page.goto("/me");
+  await openAddSheet(page);
   await page.fill('[data-test="quick-add-entry"]', title);
   await page.click('[data-test="quick-add-toggle"]');
   await page.fill('[data-test="item-price"]', "79");
-  await page.selectOption('[data-test="item-priority"]', "1");
+  await page.click('[data-test="item-favorite"]');
   await page.setInputFiles('[data-test="item-image-file"]', {
     name: "photo.png",
     mimeType: "image/png",
@@ -78,6 +79,7 @@ test("a linked photo is not fetched for the PDF", async ({
 }) => {
   await registerUser(page, OWNER);
   await page.goto("/me");
+  await openAddSheet(page);
   await page.fill('[data-test="quick-add-entry"]', "Écharpe");
   await page.click('[data-test="quick-add-toggle"]');
   await page.fill(

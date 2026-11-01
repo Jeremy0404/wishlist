@@ -48,10 +48,10 @@ function onInput(e: Event) {
       v-bind="$attrs"
       :value="modelValue"
       :class="[
-        'min-h-9 w-full rounded-pill border bg-surface px-4 py-1 text-control text-ink caret-accent transition-colors focus:ring-0 focus-visible:outline-offset-0',
+        'min-h-12 w-full rounded-md border bg-surface px-4 py-2 text-body text-ink caret-accent transition-colors placeholder:text-neutral-600 focus:ring-0 focus-visible:outline-offset-0',
         error
           ? 'border-danger hover:border-danger focus:border-danger focus-visible:border-danger'
-          : 'border-divider hover:border-ink/45 focus:border-accent focus-visible:border-accent',
+          : 'border-neutral-400 hover:border-ink/45 focus:border-accent focus-visible:border-accent',
       ]"
       :aria-invalid="error ? 'true' : undefined"
       @input="onInput"

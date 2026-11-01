@@ -7,27 +7,22 @@ import {
   registerUser,
 } from "./helpers";
 
-const NEUTRAL_500 = "rgb(161, 156, 148)";
 const NEUTRAL_200 = "rgb(241, 238, 232)";
 
 async function userId(page: Page): Promise<string> {
   return (await (await page.request.get("/api/auth/me")).json()).id;
 }
 
-test("an empty own list points at the field that fills it", async ({
+test("an empty own list says so, under the one button that fills it", async ({
   page,
 }) => {
   await registerUser(page);
 
   const empty = page.locator('[data-test="empty-state"]');
-  await expect(empty).toContainText("Rien ici pour l’instant.");
-  await expect(empty).toHaveCSS("padding", "26.4px");
+  await expect(empty).toContainText("Rien pour l’instant");
+  await expect(empty).toContainText("Un lien ou quelques mots suffisent.");
 
-  const icon = empty.locator("svg");
-  await expect(icon).toHaveAttribute("width", "26");
-  await expect(icon).toHaveCSS("color", NEUTRAL_500);
-
-  await empty.locator('[data-test="empty-add"]').click();
+  await page.click('[data-test="wishlist-add-open"]');
   await expect(page.locator('[data-test="quick-add-entry"]')).toBeFocused();
 });
 
