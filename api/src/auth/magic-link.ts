@@ -23,12 +23,22 @@ function mintToken(): string {
   return crypto.randomBytes(TOKEN_BYTES).toString("base64url");
 }
 
-export function buildMagicLinkUrl(token: string): string {
+/** `//host` and `/\host` are read by browsers as another origin. */
+export function isInAppPath(path: string): boolean {
+  return path.startsWith("/") && !/^\/[/\\]/.test(path);
+}
+
+/** The page the sign-in started from, such as a family invite, rides along in
+ *  the link so the account lands back on it. */
+export function buildMagicLinkUrl(token: string, redirect?: string): string {
   const url = new URL(
     MAGIC_LINK_PATH,
     process.env.APP_URL ?? DEFAULT_APP_URL,
   );
   url.searchParams.set("token", token);
+  if (redirect && isInAppPath(redirect)) {
+    url.searchParams.set("redirect", redirect);
+  }
   return url.toString();
 }
 

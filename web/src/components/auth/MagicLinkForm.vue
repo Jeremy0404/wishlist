@@ -60,6 +60,8 @@ import Input from "../ui/Input.vue";
 import { useToasts } from "../ui/useToasts";
 import { useAuth } from "../../stores/auth";
 
+const props = defineProps<{ redirect: string }>();
+
 const { t } = useI18n();
 const { push } = useToasts();
 const auth = useAuth();
@@ -75,7 +77,7 @@ async function submit() {
 
   submitting.value = true;
   try {
-    await auth.requestMagicLink(address);
+    await auth.requestMagicLink(address, props.redirect);
     sentTo.value = address;
   } catch (e: any) {
     push(e?.message, "error");

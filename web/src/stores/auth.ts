@@ -62,8 +62,8 @@ export const useAuth = defineStore("auth", {
       await this.refreshFamilies();
       return this.user;
     },
-    async requestMagicLink(email: string) {
-      await api.requestMagicLink(email);
+    async requestMagicLink(email: string, redirect: string) {
+      await api.requestMagicLink(email, redirect);
     },
     async signInWithMagicLink(token: string) {
       const { created, ...user } = await api.consumeMagicLink(token);

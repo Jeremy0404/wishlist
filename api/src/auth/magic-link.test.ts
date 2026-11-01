@@ -150,6 +150,28 @@ test("the emailed link lands on the app, carrying the token", () => {
   delete process.env.APP_URL;
 });
 
+test("the emailed link carries the in-app page the sign-in started from", () => {
+  const url = new URL(
+    buildMagicLinkUrl("raw-token", "/family/join?code=FAM-ABC123"),
+  );
+
+  assert.equal(url.searchParams.get("token"), "raw-token");
+  assert.equal(url.searchParams.get("redirect"), "/family/join?code=FAM-ABC123");
+});
+
+test("the emailed link never sends anyone off the app", () => {
+  for (const outside of [
+    "https://evil.test/",
+    "//evil.test/",
+    "/\\evil.test/",
+    "javascript:alert(1)",
+    "family/join",
+  ]) {
+    const url = new URL(buildMagicLinkUrl("raw-token", outside));
+    assert.equal(url.searchParams.get("redirect"), null, outside);
+  }
+});
+
 test("addresses are compared in one case", () => {
   assert.equal(normalizeEmail("  Alexa@Example.COM "), "alexa@example.com");
 });
