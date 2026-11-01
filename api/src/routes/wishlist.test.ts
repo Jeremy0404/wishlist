@@ -21,10 +21,13 @@ function createFakeDb(rows: unknown[] = []) {
   };
 
   const db = (table: string) => {
-    if (table !== "wishlists as w") throw new Error(`Unexpected table ${table}`);
+    if (table !== "family_memberships as fm") throw new Error(`Unexpected table ${table}`);
 
     const query = {
       join() {
+        return this;
+      },
+      leftJoin() {
         return this;
       },
       where(column: string, value: string) {
@@ -58,13 +61,13 @@ function createFakeDb(rows: unknown[] = []) {
   return { db: db as never, recorded };
 }
 
-test("excludes the caller's own wishlist from the family listing", async () => {
+test("lists every other member of the family, with or without a wishlist", async () => {
   const { db, recorded } = createFakeDb();
 
   await listFamilyWishlists(db, "family-1", "user-1");
 
-  assert.deepEqual(recorded.where, [["w.family_id", "family-1"]]);
-  assert.deepEqual(recorded.andWhereNot, [["w.user_id", "user-1"]]);
+  assert.deepEqual(recorded.where, [["fm.family_id", "family-1"]]);
+  assert.deepEqual(recorded.andWhereNot, [["fm.user_id", "user-1"]]);
 });
 
 test("counts items and reservations in the query rather than in memory", async () => {

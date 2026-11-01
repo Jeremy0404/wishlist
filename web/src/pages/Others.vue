@@ -20,10 +20,15 @@
       class="border-b border-divider"
       data-test="browse-card"
     >
-      <RouterLink
-        :to="`/wishlists/${row.user_id}`"
-        class="flex items-center gap-3.5 px-1 py-3.5 text-ink no-underline transition-colors hover:bg-neutral-200 active:bg-neutral-300"
-        data-test="wishlist-open"
+      <component
+        :is="row.item_count ? RouterLink : 'div'"
+        v-bind="row.item_count ? { to: `/wishlists/${row.user_id}` } : {}"
+        class="flex items-center gap-3.5 px-1 py-3.5 text-ink no-underline"
+        :class="
+          row.item_count &&
+          'transition-colors hover:bg-neutral-200 active:bg-neutral-300'
+        "
+        :data-test="row.item_count ? 'wishlist-open' : 'wishlist-pending'"
       >
         <Avatar
           :name="row.name"
@@ -37,8 +42,13 @@
             {{ summary(row) }}
           </span>
         </span>
-        <Icon name="chevronRight" :size="20" class="text-neutral-500" />
-      </RouterLink>
+        <Icon
+          v-if="row.item_count"
+          name="chevronRight"
+          :size="20"
+          class="text-neutral-500"
+        />
+      </component>
     </li>
   </ul>
 
@@ -82,6 +92,7 @@ const error = ref("");
 const inviteOpen = ref(false);
 
 function summary(row: FamilyWishlist) {
+  if (!row.item_count) return t("browse.noWish");
   const wishes = t("browse.wishCount", row.item_count);
   return row.reserved_by_me_count
     ? `${wishes} · ${t("browse.givingCount", { count: row.reserved_by_me_count })}`
