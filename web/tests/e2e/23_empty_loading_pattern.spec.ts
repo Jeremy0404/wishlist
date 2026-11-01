@@ -34,10 +34,10 @@ test("browse with nobody around invites instead of apologising", async ({
 
   await page.goto("/wishlists");
 
-  const empty = page.locator('[data-test="empty-state"]');
-  await expect(empty).toContainText(
-    "Invite des proches pour commencer à parcourir.",
+  await expect(page.locator("main header")).toContainText(
+    "Personne d’autre pour l’instant.",
   );
+  const empty = page.locator('[data-test="empty-state"]');
   await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
 
   await empty.locator('[data-test="browse-invite"]').click();
@@ -66,7 +66,7 @@ test("someone else's empty list says so and offers nothing", async ({
   await alexa.goto(`/wishlists/${bobId}`);
 
   const empty = alexa.locator('[data-test="empty-state"]');
-  await expect(empty).toContainText("Rien sur cette liste pour l’instant.");
+  await expect(empty).toContainText("Bob Marley n’a encore rien noté.");
   await expect(empty.locator("button")).toHaveCount(0);
   await expect(empty.locator("a")).toHaveCount(0);
 });

@@ -62,10 +62,12 @@ test.describe('Route Guards', () => {
         // Register but don't create family
         await registerUser(page);
 
-        // /wishlists no longer redirects; it explains why there is nothing there
+        // /wishlists no longer redirects; it says nobody is there yet and offers to invite
         await page.goto('/wishlists');
         await expect(page).toHaveURL(/\/wishlists/);
         await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
-        await expect(page.getByText('Rejoins une famille')).toBeVisible();
+        await expect(page.getByText('Personne d’autre pour l’instant.')).toBeVisible();
+        await page.click('[data-test="browse-create"]');
+        await expect(page).toHaveURL(/\/family\/create/);
     });
 });
