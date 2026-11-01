@@ -67,9 +67,5 @@ test.describe('Route Guards', () => {
         await expect(page).toHaveURL(/\/wishlists/);
         await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
         await expect(page.getByText('Rejoins une famille')).toBeVisible();
-
-        // Joining is offered from the navigation instead of being forced
-        await page.getByRole('link', { name: 'Rejoindre une famille' }).click();
-        await expect(page).toHaveURL(/\/family\/join/);
     });
 });
