@@ -1,5 +1,7 @@
 // web/src/services/api.ts
 import type {
+  AdminOverview,
+  AdminUserDetail,
   Family,
   FamilyMember,
   FamilyWishlist,
@@ -82,6 +84,7 @@ export type User = {
   name: string;
   email: string | null;
   username: string | null;
+  isAdmin: boolean;
 };
 
 /** `created` tells a brand-new account from one that just signed back in. */
@@ -168,6 +171,11 @@ export const api = {
     request(`/wishlists/items/${itemId}/unreserve`, { method: "POST" }),
   purchase: (itemId: string) =>
     request(`/wishlists/items/${itemId}/purchase`, { method: "POST" }),
+
+  // --- Admin ---
+  adminOverview: () => request<AdminOverview>("/admin/families"),
+  adminUser: (userId: string) =>
+    request<AdminUserDetail>(`/admin/users/${userId}`),
 };
 
 export function onUnauthorized(handler: UnauthorizedHandler) {

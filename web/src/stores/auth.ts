@@ -19,6 +19,9 @@ export const useAuth = defineStore("auth", {
     isLogged(state): boolean {
       return !!state.user?.id;
     },
+    isAdmin(state): boolean {
+      return !!state.user?.isAdmin;
+    },
   },
   actions: {
     async hydrate(): Promise<void> {

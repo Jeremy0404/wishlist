@@ -12,6 +12,8 @@ import SignIn from "./pages/SignIn.vue";
 import Welcome from "./pages/Welcome.vue";
 import NotFound from "./pages/NotFound.vue";
 import SessionExpired from "./pages/SessionExpired.vue";
+import AdminHome from "./pages/AdminHome.vue";
+import AdminUser from "./pages/AdminUser.vue";
 
 const routes = [
   // Signing in and signing up are the same act, on the same screen as the pitch.
@@ -38,6 +40,15 @@ const routes = [
 
   // Invites
   { path: "/family/invite", redirect: "/wishlists" },
+
+  // Admin
+  { path: "/admin", component: AdminHome, meta: { adminOnly: true } },
+  {
+    path: "/admin/users/:userId",
+    component: AdminUser,
+    props: true,
+    meta: { adminOnly: true },
+  },
 
   // A session that failed, and anything else
   { path: "/oops", component: SessionExpired, meta: { public: true } },
@@ -79,6 +90,10 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta?.requireNoFamily && auth.isLogged && auth.inFamily) {
+    return { path: "/me", replace: true };
+  }
+
+  if (to.meta?.adminOnly && !auth.isAdmin) {
     return { path: "/me", replace: true };
   }
 
