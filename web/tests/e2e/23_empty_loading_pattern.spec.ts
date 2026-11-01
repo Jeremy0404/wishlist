@@ -7,8 +7,8 @@ import {
   registerUser,
 } from "./helpers";
 
-const NEUTRAL_500 = "rgb(161, 151, 134)";
-const NEUTRAL_200 = "rgb(238, 231, 219)";
+const NEUTRAL_500 = "rgb(161, 156, 148)";
+const NEUTRAL_200 = "rgb(241, 238, 232)";
 
 async function userId(page: Page): Promise<string> {
   return (await (await page.request.get("/api/auth/me")).json()).id;

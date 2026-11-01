@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { addWishlistItem, registerUser } from "./helpers";
 
-const ACCENT_2_600 = "rgb(114, 129, 87)";
-const ON_FILL = "rgb(253, 246, 238)";
+const ACCENT_2_600 = "rgb(74, 125, 70)";
+const ON_FILL = "rgb(255, 255, 255)";
 
 async function deleteFirstItem(page: Page) {
   const item = page.locator('[data-test="wishlist-item"]').first();

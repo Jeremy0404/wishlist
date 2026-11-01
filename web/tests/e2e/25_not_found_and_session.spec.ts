@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { registerUser } from "./helpers";
 
-const NEUTRAL_500 = "rgb(161, 151, 134)";
+const NEUTRAL_500 = "rgb(161, 156, 148)";
 
 test("an unknown URL lands on the 404 screen, not on an empty frame", async ({
   page,

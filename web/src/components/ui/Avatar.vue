@@ -20,7 +20,7 @@ const initials = computed(() =>
 <template>
   <span
     :class="[
-      'inline-flex flex-none items-center justify-center rounded-full bg-accent-2-200 font-heading text-accent-2-800',
+      'inline-flex flex-none items-center justify-center rounded-full bg-tone-green font-semibold text-tone-green-ink',
       size === 'sm' && 'h-9 w-9 text-caption',
       size === 'md' && 'h-11 w-11 text-body',
       size === 'lg' && 'h-12 w-12 text-h5',
