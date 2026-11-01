@@ -107,6 +107,103 @@ test("keeps an unusable image out of the preview", () => {
   assert.equal(parseLinkPreview(page, PAGE_URL).image_url, null);
 });
 
+test("falls back to the Twitter card image", () => {
+  const page = `<html><head><meta name="twitter:image" content="https://cdn.shop.example/a.jpg"></head></html>`;
+
+  assert.equal(
+    parseLinkPreview(page, PAGE_URL).image_url,
+    "https://cdn.shop.example/a.jpg",
+  );
+});
+
+test("falls back to the image_src link", () => {
+  const page = `<html><head><link rel="image_src" href="/a.jpg"></head></html>`;
+
+  assert.equal(
+    parseLinkPreview(page, PAGE_URL).image_url,
+    "https://shop.example/a.jpg",
+  );
+});
+
+test("skips an unusable image and keeps the next candidate", () => {
+  const page = `<html><head>
+    <meta property="og:image" content="javascript:alert(1)">
+    <meta name="twitter:image" content="/b.jpg">
+  </head></html>`;
+
+  assert.equal(
+    parseLinkPreview(page, PAGE_URL).image_url,
+    "https://shop.example/b.jpg",
+  );
+});
+
+test("reads the product image from schema.org, in each shape it comes in", () => {
+  for (const image of [
+    `"/c.jpg"`,
+    `["/c.jpg", "/d.jpg"]`,
+    `{"@type":"ImageObject","url":"/c.jpg"}`,
+    `[{"@type":"ImageObject","contentUrl":"/c.jpg"}]`,
+  ]) {
+    const page = `<html><head><script type="application/ld+json">
+      {"@context":"https://schema.org","@graph":[
+        {"@type":"WebSite","image":"/logo.png"},
+        {"@type":"Product","name":"x","image":${image}}
+      ]}
+    </script></head></html>`;
+
+    assert.equal(
+      parseLinkPreview(page, PAGE_URL).image_url,
+      "https://shop.example/c.jpg",
+      image,
+    );
+  }
+});
+
+test("reads the lowest price of a schema.org aggregate offer", () => {
+  const page = `<html><head><script type="application/ld+json">
+    {"@type":"Product","offers":{"@type":"AggregateOffer","lowPrice":"19.90","highPrice":"29.90","priceCurrency":"EUR"}}
+  </script></head></html>`;
+
+  assert.equal(parseLinkPreview(page, PAGE_URL).price_eur, 19.9);
+});
+
+test("reads a schema.org price given as a price specification", () => {
+  const page = `<html><head><script type="application/ld+json">
+    {"@type":"Product","offers":[{"@type":"Offer","priceSpecification":{"@type":"UnitPriceSpecification","price":34.5,"priceCurrency":"EUR"}}]}
+  </script></head></html>`;
+
+  assert.equal(parseLinkPreview(page, PAGE_URL).price_eur, 34.5);
+});
+
+test("reads price and image from microdata", () => {
+  const page = `<html><body><div itemscope itemtype="https://schema.org/Product">
+    <img itemprop="image" src="/e.jpg" alt="">
+    <span itemprop="price" content="59.00">59,00 €</span>
+    <meta itemprop="priceCurrency" content="EUR">
+  </div></body></html>`;
+
+  assert.deepEqual(parseLinkPreview(page, PAGE_URL), {
+    title: null,
+    price_eur: 59,
+    image_url: "https://shop.example/e.jpg",
+  });
+});
+
+test("reads a microdata price written as text", () => {
+  const page = `<html><body><span itemprop="price">1 249,99 €</span></body></html>`;
+
+  assert.equal(parseLinkPreview(page, PAGE_URL).price_eur, 1249.99);
+});
+
+test("ignores a microdata price in another currency", () => {
+  const page = `<html><body>
+    <span itemprop="price" content="59.00"></span>
+    <meta itemprop="priceCurrency" content="GBP">
+  </body></html>`;
+
+  assert.equal(parseLinkPreview(page, PAGE_URL).price_eur, null);
+});
+
 test("parses the amount formats product pages actually use", () => {
   assert.equal(parseAmount("129,90"), 129.9);
   assert.equal(parseAmount("1 299,00 €"), 1299);
@@ -156,6 +253,64 @@ test("resolves a reachable page into its metadata", async () => {
     assert.equal(preview.title, "Chaise en chêne");
     assert.equal(preview.price_eur, 129.9);
     assert.equal(preview.image_url, `${server.url}img/chaise.jpg`);
+  } finally {
+    await server.close();
+  }
+});
+
+test("decodes a page in the charset its header declares", async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { "content-type": "text/html; charset=iso-8859-1" });
+    res.end(Buffer.from("<title>Théière émaillée</title>", "latin1"));
+  });
+
+  try {
+    const preview = await fetchLinkPreview(server.url, {
+      isAddressAllowed: ONLY_LOOPBACK,
+    });
+
+    assert.equal(preview.title, "Théière émaillée");
+  } finally {
+    await server.close();
+  }
+});
+
+test("decodes a page in the charset its meta tag declares", async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end(
+      Buffer.from(
+        '<meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><title>Cafetière</title>',
+        "latin1",
+      ),
+    );
+  });
+
+  try {
+    const preview = await fetchLinkPreview(server.url, {
+      isAddressAllowed: ONLY_LOOPBACK,
+    });
+
+    assert.equal(preview.title, "Cafetière");
+  } finally {
+    await server.close();
+  }
+});
+
+test("reaches structured data at the end of a large page", async () => {
+  const filler = `<div class="x">${"y".repeat(500)}</div>\n`.repeat(1000);
+  const page = `<html><head><title>Lampe</title></head><body>${filler}
+    <script type="application/ld+json">{"@type":"Product","image":"/f.jpg","offers":{"@type":"Offer","price":"75","priceCurrency":"EUR"}}</script>
+  </body></html>`;
+  const server = await startServer(html(page));
+
+  try {
+    const preview = await fetchLinkPreview(server.url, {
+      isAddressAllowed: ONLY_LOOPBACK,
+    });
+
+    assert.equal(preview.price_eur, 75);
+    assert.equal(preview.image_url, `${server.url}f.jpg`);
   } finally {
     await server.close();
   }

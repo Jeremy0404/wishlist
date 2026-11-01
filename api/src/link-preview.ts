@@ -15,7 +15,7 @@ export const EMPTY_PREVIEW: LinkPreview = {
   image_url: null,
 };
 
-export const MAX_BODY_BYTES = 256 * 1024;
+export const MAX_BODY_BYTES = 1024 * 1024;
 
 const MAX_REDIRECTS = 3;
 const REQUEST_TIMEOUT_MS = 5000;
@@ -23,6 +23,9 @@ const MAX_TITLE_LENGTH = 255;
 const MAX_IMAGE_URL_LENGTH = 2048;
 const MAX_PRICE_EUR = 99_999_999.99;
 const USER_AGENT = "wishlist-link-preview";
+const ACCEPT_LANGUAGE = "fr-FR,fr;q=0.9";
+const DEFAULT_CHARSET = "utf-8";
+const CHARSET_SNIFF_BYTES = 1024;
 const HTML_TYPES = ["text/html", "application/xhtml+xml"];
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
@@ -103,6 +106,27 @@ function isHtml(contentType: string | undefined): boolean {
   return HTML_TYPES.includes(type);
 }
 
+const CHARSET = /charset\s*=\s*["']?([\w.:-]+)/i;
+
+function declaredCharset(contentType: string | undefined, body: Buffer) {
+  const head = body.subarray(0, CHARSET_SNIFF_BYTES).toString("latin1");
+  const meta = head.match(/<meta\b[^>]*>/gi)?.find((tag) => CHARSET.test(tag));
+
+  return (
+    contentType?.match(CHARSET)?.[1] ??
+    meta?.match(CHARSET)?.[1] ??
+    DEFAULT_CHARSET
+  );
+}
+
+function decodeBody(body: Buffer, contentType: string | undefined): string {
+  try {
+    return new TextDecoder(declaredCharset(contentType, body)).decode(body);
+  } catch {
+    return new TextDecoder(DEFAULT_CHARSET).decode(body);
+  }
+}
+
 type Fetched = { html: string } | { redirect: string };
 
 function requestOnce(
@@ -122,6 +146,7 @@ function requestOnce(
         headers: {
           accept: "text/html,application/xhtml+xml",
           "accept-encoding": "identity",
+          "accept-language": ACCEPT_LANGUAGE,
           "user-agent": USER_AGENT,
         },
       },
@@ -138,8 +163,11 @@ function requestOnce(
           return settle(null);
         }
 
+        const contentType = res.headers["content-type"];
         const chunks: Buffer[] = [];
         let size = 0;
+        const finish = () =>
+          settle({ html: decodeBody(Buffer.concat(chunks), contentType) });
 
         res.on("data", (chunk: Buffer) => {
           const room = MAX_BODY_BYTES - size;
@@ -147,12 +175,10 @@ function requestOnce(
           size += Math.min(chunk.length, room);
           if (size >= MAX_BODY_BYTES) {
             res.destroy();
-            settle({ html: Buffer.concat(chunks).toString("utf8") });
+            finish();
           }
         });
-        res.on("end", () =>
-          settle({ html: Buffer.concat(chunks).toString("utf8") }),
-        );
+        res.on("end", finish);
         res.on("error", () => settle(null));
       },
     );
@@ -314,50 +340,126 @@ function isEur(currency: unknown): boolean {
   return typeof currency === "string" && /^(eur|€)$/i.test(currency.trim());
 }
 
+type JsonRecord = Record<string, unknown>;
 type Offer = { price: unknown; priceCurrency?: unknown };
 
-function findOffer(node: unknown): Offer | null {
-  if (Array.isArray(node)) {
-    for (const entry of node) {
-      const offer = findOffer(entry);
-      if (offer) return offer;
+type Page = {
+  html: string;
+  metas: Map<string, string>;
+  jsonLd: unknown[];
+  itemprops: Map<string, string>;
+};
+
+const IMAGE_META_KEYS = [
+  "og:image",
+  "og:image:secure_url",
+  "og:image:url",
+  "twitter:image",
+  "twitter:image:src",
+];
+
+function readItemprops(html: string): Map<string, string> {
+  const props = new Map<string, string>();
+
+  for (const [, tag, text] of html.matchAll(
+    /(<[a-z][^>]*\bitemprop\s*=[^>]*>)([^<]*)/gi,
+  )) {
+    const value = clean(
+      attribute(tag, "content") ??
+        attribute(tag, "src") ??
+        attribute(tag, "href") ??
+        text,
+    );
+    if (!value) continue;
+
+    for (const name of attribute(tag, "itemprop")?.split(/\s+/) ?? []) {
+      if (!props.has(name)) props.set(name, value);
     }
-    return null;
-  }
-  if (!node || typeof node !== "object") return null;
-
-  const record = node as Record<string, unknown>;
-  const types = [record["@type"]].flat();
-  if (types.some((type) => typeof type === "string" && /offer/i.test(type))) {
-    if (record.price !== undefined) return record as Offer;
   }
 
-  for (const value of Object.values(record)) {
-    const offer = findOffer(value);
-    if (offer) return offer;
-  }
-  return null;
+  return props;
 }
 
-function offerFromJsonLd(html: string): Offer | null {
+function readJsonLd(html: string): unknown[] {
   const scripts =
     html.match(
       /<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
     ) ?? [];
 
-  for (const script of scripts) {
+  return scripts.flatMap((script) => {
     const body = script.replace(/^[\s\S]*?>/, "").replace(/<\/script>$/i, "");
     try {
-      const offer = findOffer(JSON.parse(body));
-      if (offer) return offer;
+      return [JSON.parse(body)];
     } catch {
-      continue;
+      return [];
     }
-  }
-  return null;
+  });
 }
 
-function readPrice(html: string, metas: Map<string, string>): number | null {
+function findInJson<T>(
+  node: unknown,
+  pick: (record: JsonRecord) => T | null,
+): T | null {
+  if (Array.isArray(node)) {
+    for (const entry of node) {
+      const found = findInJson(entry, pick);
+      if (found !== null) return found;
+    }
+    return null;
+  }
+  if (!node || typeof node !== "object") return null;
+
+  const record = node as JsonRecord;
+  return pick(record) ?? findInJson(Object.values(record), pick);
+}
+
+function hasType(record: JsonRecord, pattern: RegExp): boolean {
+  return [record["@type"]]
+    .flat()
+    .some((type) => typeof type === "string" && pattern.test(type));
+}
+
+function pickOffer(record: JsonRecord): Offer | null {
+  if (!hasType(record, /offer/i)) return null;
+
+  const spec = [record.priceSpecification].flat()[0] as JsonRecord | undefined;
+  const price = record.price ?? record.lowPrice ?? spec?.price;
+  if (price === undefined) return null;
+
+  return { price, priceCurrency: record.priceCurrency ?? spec?.priceCurrency };
+}
+
+function imageSource(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return imageSource(value[0]);
+  if (!value || typeof value !== "object") return null;
+
+  const image = value as JsonRecord;
+  return imageSource(image.url ?? image.contentUrl);
+}
+
+function pickProductImage(record: JsonRecord): string | null {
+  return hasType(record, /product/i) ? imageSource(record.image) : null;
+}
+
+function microdataOffer(itemprops: Map<string, string>): Offer | null {
+  const price = itemprops.get("price") ?? itemprops.get("lowPrice");
+  if (price === undefined) return null;
+
+  return { price, priceCurrency: itemprops.get("priceCurrency") };
+}
+
+function imageSrcLink(html: string): string | null {
+  const link = html
+    .match(/<link\b[^>]*>/gi)
+    ?.find((tag) =>
+      attribute(tag, "rel")?.toLowerCase().split(/\s+/).includes("image_src"),
+    );
+
+  return link ? attribute(link, "href") : null;
+}
+
+function readPrice({ metas, jsonLd, itemprops }: Page): number | null {
   const amount =
     metas.get("og:price:amount") ?? metas.get("product:price:amount");
 
@@ -367,12 +469,12 @@ function readPrice(html: string, metas: Map<string, string>): number | null {
     return isEur(currency) ? inRange(parseAmount(amount)) : null;
   }
 
-  const offer = offerFromJsonLd(html);
+  const offer = findInJson(jsonLd, pickOffer) ?? microdataOffer(itemprops);
   if (!offer) return null;
   return isEur(offer.priceCurrency) ? inRange(parseAmount(offer.price)) : null;
 }
 
-function readTitle(html: string, metas: Map<string, string>): string | null {
+function readTitle({ html, metas }: Page): string | null {
   const meta = metas.get("og:title");
   const tag = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1];
   const title = clean(meta ?? tag ?? "");
@@ -380,23 +482,37 @@ function readTitle(html: string, metas: Map<string, string>): string | null {
   return title ? title.slice(0, MAX_TITLE_LENGTH) : null;
 }
 
-function readImage(metas: Map<string, string>, pageUrl: URL): string | null {
-  const source = metas.get("og:image") ?? metas.get("og:image:url");
-  if (!source) return null;
+function readImage(page: Page, pageUrl: URL): string | null {
+  const candidates = [
+    ...IMAGE_META_KEYS.map((key) => page.metas.get(key)),
+    findInJson(page.jsonLd, pickProductImage),
+    page.itemprops.get("image"),
+    imageSrcLink(page.html),
+  ];
 
-  const image = toPublicUrl(clean(source), pageUrl);
-  if (!image || image.href.length > MAX_IMAGE_URL_LENGTH) return null;
+  for (const candidate of candidates) {
+    const source = candidate && clean(candidate);
+    if (!source) continue;
 
-  return image.href;
+    const image = toPublicUrl(source, pageUrl);
+    if (image && image.href.length <= MAX_IMAGE_URL_LENGTH) return image.href;
+  }
+
+  return null;
 }
 
 export function parseLinkPreview(html: string, pageUrl: URL): LinkPreview {
-  const metas = readMetaTags(html);
+  const page: Page = {
+    html,
+    metas: readMetaTags(html),
+    jsonLd: readJsonLd(html),
+    itemprops: readItemprops(html),
+  };
 
   return {
-    title: readTitle(html, metas),
-    price_eur: readPrice(html, metas),
-    image_url: readImage(metas, pageUrl),
+    title: readTitle(page),
+    price_eur: readPrice(page),
+    image_url: readImage(page, pageUrl),
   };
 }
 
