@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { registerUser, createFamily, addWishlistItem } from "./helpers";
 
-// Ensure wishlist items can be edited inline with updated fields reflected in UI
-// and persisted via the API.
+// Tapping a wish opens it in the sheet; the saved fields show on the row and
+// persist through the API.
 test("edit an existing wishlist item", async ({ page }) => {
   await registerUser(page);
   await createFamily(page, "Inline Edit Family");
@@ -15,22 +15,27 @@ test("edit an existing wishlist item", async ({ page }) => {
     notes: "Film preferred",
   });
 
-  const item = created?.id
-    ? page.locator(`[data-test="wishlist-item"][data-id="${created.id}"]`)
-    : page.locator('[data-test="wishlist-item"]').filter({
-        hasText: "Retro Camera",
-      });
+  const item = page.locator(
+    `[data-test="wishlist-item"][data-id="${created.id}"]`,
+  );
   await expect(item).toBeVisible();
+  await expect(item.locator('[data-test="wishlist-favorite"]')).toHaveCount(0);
 
   await item.locator('[data-test="wishlist-edit"]').click();
+  const sheet = page.locator('[data-test="sheet"]');
+  await expect(sheet).toContainText("Modifier ton envie");
 
-  await item.locator('input[name="title"]').fill("Retro Camera Pro");
-  await item
+  await sheet.locator('input[name="title"]').fill("Retro Camera Pro");
+  await sheet
     .locator('input[name="url"]')
     .fill("https://example.com/camera-pro");
-  await item.locator('input[name="price_eur"]').fill("249");
-  await item.locator('select[name="priority"]').selectOption("1");
-  await item.locator('textarea[name="notes"]').fill("Now with better lens");
+  await sheet.locator('input[name="price_eur"]').fill("249");
+  await sheet.locator('[data-test="item-favorite"]').click();
+  await expect(sheet.locator('[data-test="item-favorite"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await sheet.locator('textarea[name="notes"]').fill("Now with better lens");
 
   const saveResponse = page.waitForResponse(
     (res) =>
@@ -38,18 +43,29 @@ test("edit an existing wishlist item", async ({ page }) => {
       res.request().method() === "PATCH" &&
       res.status() === 200,
   );
-  await item.locator('[data-test="wishlist-edit-save"]').click();
-  await saveResponse;
+  await sheet.locator('[data-test="wishlist-edit-save"]').click();
+  const saved = await (await saveResponse).json();
+  expect(saved.priority).toBe(1);
+  expect(saved.url).toBe("https://example.com/camera-pro");
 
-  await expect(item.locator("text=Retro Camera Pro")).toBeVisible({
-    timeout: 10000,
-  });
-  await expect(
-    item.locator('a[href="https://example.com/camera-pro"]'),
-  ).toBeVisible();
-  await expect(item.locator("text=249")).toBeVisible();
-  await expect(item.locator('[data-test="wishlist-priority"]')).toHaveText(
-    "Priorité haute",
+  await expect(sheet).toHaveCount(0);
+  await expect(item).toContainText("Retro Camera Pro");
+  await expect(item).toContainText("249");
+  await expect(item).toContainText("Now with better lens");
+  await expect(item.locator('[data-test="wishlist-favorite"]')).toBeVisible();
+});
+
+test("an older priority shows as a plain wish, a 1 as a coup de cœur", async ({
+  page,
+}) => {
+  await registerUser(page);
+  await addWishlistItem(page, { title: "Plaid", priority: 2 });
+  await addWishlistItem(page, { title: "Bougie", priority: 1 });
+
+  const plaid = page.locator('[data-test="wishlist-item"][data-title="Plaid"]');
+  const bougie = page.locator(
+    '[data-test="wishlist-item"][data-title="Bougie"]',
   );
-  await expect(item.locator("text=Now with better lens")).toBeVisible();
+  await expect(plaid.locator('[data-test="wishlist-favorite"]')).toHaveCount(0);
+  await expect(bougie.locator('[data-test="wishlist-favorite"]')).toBeVisible();
 });

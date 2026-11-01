@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { registerUser } from "./helpers";
+import { openAddSheet, registerUser } from "./helpers";
 
 const PRODUCT_URL = "https://shop.example/chaise";
 const PRODUCT_IMAGE = "https://cdn.example/chaise.png";
@@ -63,6 +63,7 @@ test("a pasted link fills the item in", async ({ page }) => {
   await stubPreview(page, { title: "Chaise en chêne", price_eur: 129.9 });
 
   await page.goto("/me");
+  await openAddSheet(page);
   await paste(page, '[data-test="quick-add-entry"]', PRODUCT_URL);
 
   await expect(page.locator('[data-test="quick-add-entry"]')).toHaveValue(
@@ -78,7 +79,10 @@ test("a pasted link fills the item in", async ({ page }) => {
     .locator('[data-test="wishlist-item"]')
     .filter({ hasText: "Chaise en chêne" });
   await expect(item).toBeVisible();
-  await expect(item.locator(`a[href="${PRODUCT_URL}"]`)).toBeVisible();
+  await item.locator('[data-test="wishlist-edit"]').click();
+  await expect(
+    page.locator(`[data-test="sheet"] a[href="${PRODUCT_URL}"]`),
+  ).toHaveText("Voir la page");
 });
 
 test("the preview never overrides what the user already typed", async ({
@@ -92,6 +96,7 @@ test("the preview never overrides what the user already typed", async ({
   });
 
   await page.goto("/me");
+  await openAddSheet(page);
   await page.click('[data-test="quick-add-toggle"]');
   await page.fill('[data-test="item-price"]', "80");
   await page.fill('[data-test="item-url"]', "https://shop.example/autre");
@@ -125,6 +130,7 @@ test("a preview that fails degrades to the URL, with no error shown", async ({
   );
 
   await page.goto("/me");
+  await openAddSheet(page);
   await paste(page, '[data-test="quick-add-entry"]', PRODUCT_URL);
   await page.click('[data-test="wishlist-add-submit"]');
 
@@ -132,7 +138,10 @@ test("a preview that fails degrades to the URL, with no error shown", async ({
     .locator('[data-test="wishlist-item"]')
     .filter({ hasText: PRODUCT_URL });
   await expect(item).toBeVisible();
-  await expect(item.locator(`a[href="${PRODUCT_URL}"]`)).toBeVisible();
+  await item.locator('[data-test="wishlist-edit"]').click();
+  await expect(
+    page.locator(`[data-test="sheet"] a[href="${PRODUCT_URL}"]`),
+  ).toHaveText("Voir la page");
   await expect(page.getByText("Une erreur est survenue.")).toHaveCount(0);
 });
 
@@ -150,6 +159,7 @@ test("plain text never calls the preview endpoint", async ({ page }) => {
   });
 
   await page.goto("/me");
+  await openAddSheet(page);
   await paste(page, '[data-test="quick-add-entry"]', "plaid tout doux");
   await page.click('[data-test="wishlist-add-submit"]');
 
@@ -173,6 +183,7 @@ test("a pasted link fills the photo in, and the item keeps it", async ({
   });
 
   await page.goto("/me");
+  await openAddSheet(page);
   await paste(page, '[data-test="quick-add-entry"]', PRODUCT_URL);
 
   // The disclosure opens so the photo is visible before it is saved.
@@ -204,6 +215,7 @@ test("a photo the user picked survives the preview", async ({ page }) => {
   });
 
   await page.goto("/me");
+  await openAddSheet(page);
   await page.click('[data-test="quick-add-toggle"]');
   await page.setInputFiles('[data-test="item-image-file"]', {
     name: "la-mienne.png",

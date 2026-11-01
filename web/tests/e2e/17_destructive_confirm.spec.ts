@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { addWishlistItem, registerUser } from "./helpers";
 
-test("deleting an item asks first, and cancelling keeps it", async ({
+test("removing a wish asks first, and keeping it changes nothing", async ({
   page,
 }) => {
   await registerUser(page);
@@ -10,22 +10,24 @@ test("deleting an item asks first, and cancelling keeps it", async ({
   const item = page
     .locator('[data-test="wishlist-item"]')
     .filter({ hasText: "Théière en fonte" });
-  await expect(item).toBeVisible();
+  await item.locator('[data-test="wishlist-edit"]').click();
 
+  const sheet = page.locator('[data-test="sheet"]');
   // No confirmation is showing until the destructive action is reached for.
-  await expect(item.locator('[data-test="inline-confirm"]')).toHaveCount(0);
+  await expect(sheet.locator('[data-test="inline-confirm"]')).toHaveCount(0);
 
-  await item.locator('[data-test="wishlist-delete"]').click();
-  await expect(item.locator('[data-test="inline-confirm"]')).toBeVisible();
-
-  // The confirmation replaces the row's own actions rather than opening a modal.
-  await expect(item.locator('[data-test="wishlist-edit"]')).toHaveCount(0);
+  await sheet.locator('[data-test="wishlist-delete"]').click();
+  const confirm = sheet.locator('[data-test="inline-confirm"]');
+  await expect(confirm).toContainText(
+    "Retirer « Théière en fonte » de ta liste ?",
+  );
+  // The confirmation replaces the remove button rather than opening a modal.
+  await expect(sheet.locator('[data-test="wishlist-delete"]')).toHaveCount(0);
   await expect(page.locator("dialog")).toHaveCount(0);
 
-  await item.locator('[data-test="inline-confirm-cancel"]').click();
-  await expect(item.locator('[data-test="inline-confirm"]')).toHaveCount(0);
-  await expect(item.locator('[data-test="wishlist-edit"]')).toBeVisible();
-  await expect(item).toBeVisible();
+  await confirm.locator('[data-test="inline-confirm-cancel"]').click();
+  await expect(confirm).toHaveCount(0);
+  await expect(sheet.locator('[data-test="wishlist-delete"]')).toBeVisible();
 
   const deleted = page.waitForResponse(
     (res) =>
@@ -33,37 +35,37 @@ test("deleting an item asks first, and cancelling keeps it", async ({
       res.request().method() === "DELETE" &&
       res.status() === 200,
   );
-  await item.locator('[data-test="wishlist-delete"]').click();
-  await item.locator('[data-test="inline-confirm-accept"]').click();
+  await sheet.locator('[data-test="wishlist-delete"]').click();
+  await sheet.locator('[data-test="inline-confirm-accept"]').click();
   await deleted;
 
+  await expect(sheet).toHaveCount(0);
   await expect(item).toHaveCount(0);
 });
 
-test("the inline editor refuses an empty title in the field itself", async ({
+test("the editor refuses an empty name in the field itself", async ({
   page,
 }) => {
   await registerUser(page);
   await addWishlistItem(page, { title: "Carnet de notes" });
 
-  // Located by data-title, not by text: once the editor opens the title lives in
-  // an input value, and a hasText filter would stop matching the row.
   const item = page.locator(
     '[data-test="wishlist-item"][data-title="Carnet de notes"]',
   );
   await item.locator('[data-test="wishlist-edit"]').click();
 
-  await item.locator('input[name="title"]').fill("");
-  await item.locator('[data-test="wishlist-edit-save"]').click();
+  const sheet = page.locator('[data-test="sheet"]');
+  await sheet.locator('input[name="title"]').fill("");
+  await sheet.locator('[data-test="wishlist-edit-save"]').click();
 
-  await expect(item.locator('[data-test="field-error"]')).toHaveText(
-    "Le titre est obligatoire.",
+  await expect(sheet.locator('[data-test="field-error"]')).toHaveText(
+    "Il manque le nom.",
   );
-  await expect(item.locator('input[name="title"]')).toHaveAttribute(
+  await expect(sheet.locator('input[name="title"]')).toHaveAttribute(
     "aria-invalid",
     "true",
   );
 
-  await item.locator('input[name="title"]').fill("Carnet de notes A5");
-  await expect(item.locator('[data-test="field-error"]')).toHaveCount(0);
+  await sheet.locator('input[name="title"]').fill("Carnet de notes A5");
+  await expect(sheet.locator('[data-test="field-error"]')).toHaveCount(0);
 });

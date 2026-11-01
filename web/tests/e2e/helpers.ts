@@ -55,15 +55,13 @@ export async function addWishlistItemViaForm(
   },
 ): Promise<void> {
   await page.goto("/me");
-  await expect(page.locator('[data-test="wishlist-add-submit"]')).toBeVisible();
+  await openAddSheet(page);
 
   await page.fill('[data-test="quick-add-entry"]', item.title);
+  if (Number(item.priority) === 1) await page.click('[data-test="item-favorite"]');
 
   const hasDetails =
-    item.url !== undefined ||
-    item.price !== undefined ||
-    item.priority !== undefined ||
-    item.notes !== undefined;
+    item.url !== undefined || item.price !== undefined || item.notes !== undefined;
 
   if (hasDetails) {
     await page.click('[data-test="quick-add-toggle"]');
@@ -72,11 +70,6 @@ export async function addWishlistItemViaForm(
     if (item.url) await page.fill('[data-test="item-url"]', item.url);
     if (item.price !== undefined)
       await page.fill('[data-test="item-price"]', String(item.price));
-    if (item.priority !== undefined)
-      await page.selectOption(
-        '[data-test="item-priority"]',
-        String(item.priority),
-      );
     if (item.notes) await page.fill('[data-test="item-notes"]', item.notes);
   }
 
@@ -94,7 +87,7 @@ export async function addWishlistItemViaForm(
   ).toBeVisible({ timeout: 15000 });
 }
 
-/** Edit a wishlist item inline using the UI */
+/** Open a wish in its sheet, edit it and wait for the save */
 export async function editWishlistItem(
   page: Page,
   currentTitle: string,
@@ -103,33 +96,27 @@ export async function editWishlistItem(
     url?: string;
     price?: number | string;
     notes?: string;
-    priority?: number | string;
+    favorite?: boolean;
   },
 ): Promise<void> {
   const item = page.locator(
     `[data-test="wishlist-item"][data-title="${currentTitle}"]`,
   );
-  const fallback = page
-    .locator('[data-test="wishlist-item"]')
-    .filter({ hasText: currentTitle });
+  await item.locator('[data-test="wishlist-edit"]').click();
+  const sheet = page.locator('[data-test="sheet"]');
 
-  const target = (await item.count()) > 0 ? item : fallback;
-  await expect(target).toBeVisible();
-
-  await target.locator('[data-test="wishlist-edit"]').click();
-  await expect(target.locator('input[name="title"]')).toBeVisible();
-
-  await target.locator('input[name="title"]').fill(updates.title);
+  await sheet.locator('input[name="title"]').fill(updates.title);
   if (updates.url !== undefined)
-    await target.locator('input[name="url"]').fill(updates.url);
+    await sheet.locator('input[name="url"]').fill(updates.url);
   if (updates.price !== undefined)
-    await target.locator('input[name="price_eur"]').fill(String(updates.price));
-  if (updates.priority !== undefined)
-    await target
-      .locator('select[name="priority"]')
-      .selectOption(String(updates.priority));
+    await sheet.locator('input[name="price_eur"]').fill(String(updates.price));
   if (updates.notes !== undefined)
-    await target.locator('textarea[name="notes"]').fill(updates.notes);
+    await sheet.locator('textarea[name="notes"]').fill(updates.notes);
+  if (updates.favorite !== undefined) {
+    const toggle = sheet.locator('[data-test="item-favorite"]');
+    if ((await toggle.getAttribute("aria-pressed")) !== String(updates.favorite))
+      await toggle.click();
+  }
 
   const saveResponse = page.waitForResponse(
     (res) =>
@@ -137,15 +124,12 @@ export async function editWishlistItem(
       res.request().method() === "PATCH" &&
       res.status() === 200,
   );
-  await target.locator('[data-test="wishlist-edit-save"]').click();
+  await sheet.locator('[data-test="wishlist-edit-save"]').click();
   await saveResponse;
-
-  await expect(target.locator("text=" + updates.title)).toBeVisible({
-    timeout: 10000,
-  });
+  await expect(item).toContainText(updates.title);
 }
 
-/** Delete a wishlist item via UI and wait for it to disappear */
+/** Remove a wish through its sheet and wait for it to disappear */
 export async function deleteWishlistItem(
   page: Page,
   title: string,
@@ -161,11 +145,19 @@ export async function deleteWishlistItem(
       res.request().method() === "DELETE" &&
       res.status() === 200,
   );
-  await item.locator('[data-test="wishlist-delete"]').click();
-  await item.locator('[data-test="inline-confirm-accept"]').click();
+  await item.locator('[data-test="wishlist-edit"]').click();
+  const sheet = page.locator('[data-test="sheet"]');
+  await sheet.locator('[data-test="wishlist-delete"]').click();
+  await sheet.locator('[data-test="inline-confirm-accept"]').click();
   await deleteResponse;
 
   await expect(item).toHaveCount(0, { timeout: 10000 });
+}
+
+/** Open the "Ajouter une envie" sheet on the own list */
+export async function openAddSheet(page: Page): Promise<void> {
+  await page.click('[data-test="wishlist-add-open"]');
+  await expect(page.locator('[data-test="quick-add-entry"]')).toBeVisible();
 }
 
 /** Passwords are the fallback branch of the sign-in card: the magic-link form
