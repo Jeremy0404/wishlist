@@ -13,6 +13,13 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Must match the Playwright image in docker-compose.test.yml; bump both by hand.
+      - dependency-name: "@playwright/test"
   - package-ecosystem: "docker"
     directories:
       - "/api"
@@ -21,6 +28,9 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-minor-and-patch:
         update-types:
@@ -34,6 +44,8 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "mcr.microsoft.com/playwright"
     groups:
       docker-compose-minor-and-patch:
         update-types:
