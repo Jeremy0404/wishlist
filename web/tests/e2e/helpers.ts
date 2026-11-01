@@ -30,8 +30,15 @@ export async function registerUser(
   return { email, password };
 }
 
-/** Sign out via the navbar control */
+/** Open the account sheet behind the avatar, whichever one is on screen */
+export async function openAccount(page: Page): Promise<void> {
+  await page.locator('[data-test="account-open"]:visible').first().click();
+  await expect(page.locator('[data-test="sheet"]')).toBeVisible();
+}
+
+/** Sign out from the account sheet */
 export async function logout(page: Page): Promise<void> {
+  await openAccount(page);
   await page.click('button[data-test="logout"]');
   await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
 }

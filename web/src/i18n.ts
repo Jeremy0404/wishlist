@@ -12,7 +12,9 @@ const fr = {
   },
   nav: {
     wishlist: "Wishlist",
+    main: "Navigation principale",
     myList: "Ma liste",
+    family: "Famille",
     others: "Parcourir",
     invite: "Inviter",
     joinFamily: "Rejoindre une famille",
@@ -143,6 +145,17 @@ const fr = {
       requestNew: "En demander un nouveau",
     },
   },
+  account: {
+    open: "Mon compte",
+    title: "Mon compte",
+    rename: "Changer mon prénom",
+    nameLabel: "Ton prénom",
+    nameSaved: "C’est enregistré",
+    save: "Enregistrer",
+    cancel: "Annuler",
+    print: "Imprimer ma liste",
+    logout: "Se déconnecter",
+  },
   priority: {
     none: "Sans priorité",
     high: "Priorité haute",
@@ -150,7 +163,7 @@ const fr = {
     low: "Ça me ferait plaisir",
   },
   my: {
-    title: "Ma wishlist",
+    title: "Ma liste",
     name: {
       shownAs: "Ta liste s’affiche sous le nom",
       edit: "Changer",

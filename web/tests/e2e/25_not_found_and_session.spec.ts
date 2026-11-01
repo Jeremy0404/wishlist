@@ -15,9 +15,12 @@ test("an unknown URL lands on the 404 screen, not on an empty frame", async ({
     "Le lien est peut-être ancien, ou mal recopié.",
   );
 
-  // The nav bar stays, and the block is an 880px centred column.
-  await expect(page.locator("nav")).toBeVisible();
-  expect((await screen.boundingBox())!.width).toBe(880);
+  // The nav bar stays, and the block sits inside the page's centred column.
+  await expect(page.locator("nav").first()).toBeVisible();
+  const box = (await screen.boundingBox())!;
+  const viewport = page.viewportSize()!;
+  expect(box.width).toBeLessThanOrEqual(768);
+  expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThan(2);
 
   const icon = screen.locator("svg");
   await expect(icon).toHaveAttribute("width", "36");
