@@ -8,13 +8,12 @@ const JPEG = "data:image/jpeg;base64,/9j/wAARCAAgACADAREAAhEBAxEB/9k=";
 
 const exportDoc: ExportDocument = {
   brand: "Wishlist",
-  heading: "La wishlist de Alexa",
+  heading: "Les envies de Alexa",
   exportedOn: "Exporté le 15 août 2026",
   footer: "Exporté depuis Wishlist le 15 août 2026",
   columns: ["Photo", "Article", "Prix", "Priorité"],
   rows: [
     {
-      photoUrl: "https://wishlist.test/api/uploads/abc.jpg",
       embedUrl: "https://wishlist.test/api/uploads/abc.jpg",
       photoData: JPEG,
       title: "Casque",
@@ -22,7 +21,6 @@ const exportDoc: ExportDocument = {
       priority: "Priorité haute",
     },
     {
-      photoUrl: null,
       embedUrl: null,
       title: "Livre",
       price: "—",

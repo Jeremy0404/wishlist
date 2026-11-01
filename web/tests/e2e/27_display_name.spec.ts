@@ -1,21 +1,7 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-import { addWishlistItem, logout, openAccount, registerUser } from "./helpers";
+import { logout, openAccount, registerUser } from "./helpers";
 
-async function shareOwnList(page: Page): Promise<string> {
-  const published = page.waitForResponse(
-    (res) => res.url().includes("/api/wishlists/me/publish") && res.ok(),
-  );
-  await page.click('[data-test="share-visibility-shared"]');
-  await published;
-
-  const { wishlist } = await (
-    await page.request.get("/api/wishlists/me")
-  ).json();
-  return wishlist.public_slug;
-}
-
-test("the name chosen on the welcome screen is the one the share page shows", async ({
+test("the name chosen on the welcome screen is the one the account shows", async ({
   page,
 }) => {
   await registerUser(page, "Derived Name");
@@ -34,18 +20,6 @@ test("the name chosen on the welcome screen is the one the share page shows", as
   await expect(page.locator('[data-test="display-name-value"]')).toHaveText(
     "Marie Dupont",
   );
-  await page.click('[data-test="sheet-close"]');
-
-  await addWishlistItem(page, { title: "Plaid tout doux" });
-  const slug = await shareOwnList(page);
-
-  const visitor = await (
-    await page.context().browser()!.newContext()
-  ).newPage();
-  await visitor.goto(`/share/${slug}`);
-
-  await expect(visitor.locator("h1")).toContainText("Marie Dupont");
-  await expect(visitor.getByLabel("Marie Dupont")).toBeVisible();
 });
 
 test("the welcome screen is a nudge, not a gate", async ({ page }) => {

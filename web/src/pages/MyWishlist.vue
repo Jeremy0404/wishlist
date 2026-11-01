@@ -39,8 +39,6 @@
     </li>
   </ul>
 
-  <ShareCard :wishlist="wishlist" @change="(updated) => (wishlist = updated)" />
-
   <ItemSheet
     :open="sheetOpen"
     :item="editing"
@@ -60,16 +58,14 @@ import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import WishlistRow from "../components/wishlist/WishlistRow.vue";
-import ShareCard from "../components/wishlist/ShareCard.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { toneAt } from "../utils/tones";
-import type { Wishlist, WishlistItem } from "../types.ts";
+import type { WishlistItem } from "../types.ts";
 
 const { t } = useI18n();
 
 const loading = ref(true);
 const items = ref<WishlistItem[]>([]);
-const wishlist = ref<Wishlist | null>(null);
 const sheetOpen = ref(false);
 const editing = ref<WishlistItem | null>(null);
 
@@ -81,7 +77,6 @@ async function load() {
   try {
     const data = await api.getMyWishlist();
     items.value = (data.items ?? []).map(normalizeItem);
-    wishlist.value = data.wishlist ?? null;
   } finally {
     loading.value = false;
   }
@@ -97,9 +92,8 @@ function openEdit(item: WishlistItem) {
   sheetOpen.value = true;
 }
 
-async function onAdded(created: WishlistItem) {
+function onAdded(created: WishlistItem) {
   items.value.unshift(normalizeItem(created));
-  if (!wishlist.value) wishlist.value = (await api.getMyWishlist()).wishlist;
 }
 
 function onUpdated(updated: WishlistItem) {

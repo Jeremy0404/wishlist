@@ -11,14 +11,13 @@ import {
 } from "../components/wishlist/exportDocument";
 import { PAPER, renderExportPdf } from "../components/wishlist/pdfUtils";
 import { fmtEUR } from "../utils/money";
-import { priorityLevel } from "../utils/priority";
+import { isFavorite } from "../utils/favorite";
 import { absoluteImageUrl, isStoredImage, toJpegDataUrl } from "../utils/image";
 import { useAuth } from "../stores/auth";
 import type { WishlistItem } from "../types.ts";
 
 const MARK_PIXELS = 48;
 const PHOTO_PIXELS = 96;
-const LOWEST_PRIORITY = 6;
 
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -36,22 +35,20 @@ export function usePrintList() {
   const printing = ref(false);
 
   function toRow(item: WishlistItem): ExportRow {
-    const level = priorityLevel(item.priority);
-    const photoUrl = absoluteImageUrl(item.image_url);
     return {
-      photoUrl,
-      embedUrl: isStoredImage(item.image_url) ? photoUrl : null,
+      embedUrl: isStoredImage(item.image_url)
+        ? absoluteImageUrl(item.image_url)
+        : null,
       title: (item.original_title || item.title || "").trim() || EM_DASH,
       price: item.price_eur == null ? EM_DASH : fmtEUR.format(item.price_eur),
-      priority: level ? t(`priority.${level}`) : EM_DASH,
+      priority: isFavorite(item.priority) ? t("item.favorite") : EM_DASH,
     };
   }
 
   function buildDocument(items: WishlistItem[]): ExportDocument {
     const date = fmtExportDate.format(new Date());
     const sorted = [...items].sort(
-      (a, b) =>
-        (a.priority ?? LOWEST_PRIORITY) - (b.priority ?? LOWEST_PRIORITY),
+      (a, b) => Number(isFavorite(b.priority)) - Number(isFavorite(a.priority)),
     );
     return {
       brand: t("nav.wishlist"),
