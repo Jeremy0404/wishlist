@@ -41,7 +41,7 @@ test("browse with nobody around invites instead of apologising", async ({
   await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
 
   await empty.locator('[data-test="browse-invite"]').click();
-  await expect(page.locator('[data-test="invite-code"]')).toBeVisible();
+  await expect(page.locator('[data-test="invite-link"]')).toBeVisible();
 });
 
 test("someone else's empty list says so and offers nothing", async ({

@@ -28,7 +28,6 @@ function buildMessage(t: (k: string, p?: any) => string, opts: ShareOpts) {
     name: opts.name,
     code: opts.code,
     url,
-    catchPhrase: t("family.shareCatchPhrase"),
   });
 
   const payload: ShareData = {

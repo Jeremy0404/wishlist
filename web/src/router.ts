@@ -8,8 +8,6 @@ import FamilyJoin from "./pages/FamilyJoin.vue";
 import MyWishlist from "./pages/MyWishlist.vue";
 import Others from "./pages/Others.vue";
 import WishlistView from "./pages/WishlistView.vue";
-import FamilyInvite from "./pages/FamilyInvite.vue";
-import SampleList from "./pages/SampleList.vue";
 import SignIn from "./pages/SignIn.vue";
 import Welcome from "./pages/Welcome.vue";
 import PublicWishlist from "./pages/PublicWishlist.vue";
@@ -19,7 +17,6 @@ import SessionExpired from "./pages/SessionExpired.vue";
 const routes = [
   // Signing in and signing up are the same act, on the same screen as the pitch.
   { path: "/", component: SignIn, meta: { public: true, onlyGuest: true } },
-  { path: "/sample", component: SampleList, meta: { public: true } },
   {
     path: "/share/:slug",
     component: PublicWishlist,
@@ -46,7 +43,7 @@ const routes = [
   { path: "/wishlists/:userId", component: WishlistView, props: true },
 
   // Invites
-  { path: "/family/invite", component: FamilyInvite },
+  { path: "/family/invite", redirect: "/wishlists" },
 
   // A session that failed, and anything else
   { path: "/oops", component: SessionExpired, meta: { public: true } },

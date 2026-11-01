@@ -67,7 +67,18 @@ test.describe('Route Guards', () => {
         await expect(page).toHaveURL(/\/wishlists/);
         await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
         await expect(page.getByText('Personne d’autre pour l’instant.')).toBeVisible();
-        await page.click('[data-test="browse-create"]');
-        await expect(page).toHaveURL(/\/family\/create/);
+
+        // Inviting someone asks the family's name first, then shows the link
+        await page.click('[data-test="browse-invite"]');
+        const field = page.locator('[data-test="family-name-input"]');
+        await expect(field).toHaveValue('Famille ');
+        await page.click('[data-test="family-name-submit"]');
+        await expect(page.locator('[data-test="field-error"]')).toBeVisible();
+
+        await field.fill('Famille Martin');
+        await page.click('[data-test="family-name-submit"]');
+        await expect(page.locator('[data-test="invite-link"]')).toContainText('/family/join?code=');
+        await page.keyboard.press('Escape');
+        await expect(page.locator('main h1')).toHaveText('Famille Martin');
     });
 });
