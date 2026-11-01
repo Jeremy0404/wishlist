@@ -27,12 +27,6 @@ cd web && npm ci && npm run lint && npm run typecheck
 docker compose -f docker-compose.test.yml up --build --abort-on-container-exit tests
 ```
 
-## Issues
-
-Issues are filed through the forms in `.github/ISSUE_TEMPLATE/` (blank issues are disabled). Every
-issue carries a type label (`feature` / `chore` / `fix`) and a status label (`needs-refining` /
-`ready` / `in-review`), plus an optional `domain:api` / `domain:web` / `domain:infra`.
-
 ## Commits
 
 `<type>: <imperative summary>` (lowercase, no trailing period), type in
@@ -53,8 +47,8 @@ feat!: remove the legacy /api/v1/wishlists endpoint
 BREAKING CHANGE: /api/v1/wishlists is removed, use /api/wishlists instead.
 ```
 
-Whether an issue is a breaking change is decided during triage (`breaking-change` label + a note
-on the issue describing what breaks), not invented at merge time. Since PRs are squash-merged, both
+Whether a change is breaking is decided before the PR is opened and stated in its description,
+not invented at merge time. Since PRs are squash-merged, both
 the `!` and the footer must be set explicitly in the squash-merge commit box — GitHub doesn't carry
 them over from the PR title/description automatically.
 
