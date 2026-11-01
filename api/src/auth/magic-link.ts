@@ -95,7 +95,7 @@ export function displayNameFromEmail(email: string): string {
  *  registration-time choice. */
 export async function findOrCreateUserByEmail(dbConn: Knex, email: string) {
   const existing = await dbConn("users")
-    .select("id", "email", "name")
+    .select("id", "email", "username", "name")
     .whereRaw("lower(email) = ?", [email])
     .first();
   if (existing) return { user: existing, created: false };
@@ -106,7 +106,7 @@ export async function findOrCreateUserByEmail(dbConn: Knex, email: string) {
   );
   const [user] = await dbConn("users")
     .insert({ email, password_hash, name: displayNameFromEmail(email) })
-    .returning(["id", "email", "name"]);
+    .returning(["id", "email", "username", "name"]);
 
   return { user, created: true };
 }

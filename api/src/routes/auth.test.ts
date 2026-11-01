@@ -10,7 +10,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-secret";
 const { authCookie, signUser } = await import("../auth/jwt.js");
 const { errorHandler } = await import("../middleware/error-handler.js");
 const authRouter = (await import("./auth.js")).default;
-const { updateUserName } = await import("./auth.js");
+const { findUserByIdentifier, updateUserName } = await import("./auth.js");
 
 async function withServer(run: (baseUrl: string) => Promise<void>) {
   const app = express();
@@ -42,7 +42,7 @@ function patchName(baseUrl: string, name: unknown, session?: string) {
 }
 
 function sessionFor(id = "user-1") {
-  return signUser({ id, email: "alexa@example.com" });
+  return signUser({ id });
 }
 
 test("renaming without a session is refused", async () => {
@@ -116,11 +116,76 @@ test("renaming updates the caller's own row and returns it", async () => {
   });
   assert.deepEqual(recorded.where, [{ id: "user-1" }]);
   assert.deepEqual(recorded.updated, [{ name: "Alexa Martin" }]);
-  assert.deepEqual(recorded.returned, [["id", "email", "name"]]);
+  assert.deepEqual(recorded.returned, [["id", "email", "username", "name"]]);
 });
 
 test("renaming an account that no longer exists yields nothing", async () => {
   const { db } = createFakeDb([]);
 
   assert.equal(await updateUserName(db, "gone", "Alexa"), null);
+});
+
+function createLookupDb(row: unknown) {
+  const criteria: Array<Record<string, unknown>> = [];
+
+  const db = (table: string) => {
+    if (table !== "users") throw new Error(`Unexpected table ${table}`);
+
+    return {
+      where(values: Record<string, unknown>) {
+        criteria.push(values);
+        return this;
+      },
+      async first() {
+        return row;
+      },
+    };
+  };
+
+  return { db: db as never, criteria };
+}
+
+test("an identifier with an @ is looked up as an email, as typed", async () => {
+  const { db, criteria } = createLookupDb({ id: "user-1" });
+
+  const user = await findUserByIdentifier(db, "Alexa@example.com");
+
+  assert.deepEqual(user, { id: "user-1" });
+  assert.deepEqual(criteria, [{ email: "Alexa@example.com" }]);
+});
+
+test("an identifier without an @ is looked up as a lower-cased username", async () => {
+  const { db, criteria } = createLookupDb({ id: "user-2" });
+
+  const user = await findUserByIdentifier(db, "Mamie.Jo");
+
+  assert.deepEqual(user, { id: "user-2" });
+  assert.deepEqual(criteria, [{ username: "mamie.jo" }]);
+});
+
+function postLogin(baseUrl: string, body: unknown) {
+  return fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+test("signing in needs an identifier", async () => {
+  await withServer(async (baseUrl) => {
+    const res = await postLogin(baseUrl, { password: "password123" });
+
+    assert.equal(res.status, 400);
+  });
+});
+
+test("a blank identifier is refused before any lookup", async () => {
+  await withServer(async (baseUrl) => {
+    const res = await postLogin(baseUrl, {
+      identifier: "   ",
+      password: "password123",
+    });
+
+    assert.equal(res.status, 400);
+  });
 });

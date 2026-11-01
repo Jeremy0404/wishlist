@@ -65,6 +65,7 @@ const fr = {
     registerSuccess: "Compte créé 🎉",
     email: "Ton adresse e-mail",
     emailPlaceholder: "prenom{'@'}exemple.fr",
+    identifier: "Ton adresse e-mail ou ton identifiant",
     password: "Mot de passe",
     name: "Nom",
     create: "Créer le compte",

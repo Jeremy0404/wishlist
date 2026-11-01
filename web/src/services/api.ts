@@ -77,7 +77,12 @@ export async function request<T>(
   return handleResponse<T>(res);
 }
 
-export type User = { id: string; name: string; email: string };
+export type User = {
+  id: string;
+  name: string;
+  email: string | null;
+  username: string | null;
+};
 
 /** `created` tells a brand-new account from one that just signed back in. */
 export type MagicLinkSession = User & { created: boolean };
@@ -90,10 +95,10 @@ export const api = {
       return (data.user as User) ?? null;
     return (data as User) ?? null;
   },
-  login: (email: string, password: string) =>
+  login: (identifier: string, password: string) =>
     request<User | { user: User }>("/auth/login", {
       method: "POST",
-      body: { email, password },
+      body: { identifier, password },
     }),
   register: (name: string, email: string, password: string) =>
     request<User | { user: User }>("/auth/register", {

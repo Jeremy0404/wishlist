@@ -43,7 +43,7 @@ test("signing in never sends an existing account to the welcome screen", async (
 
   await page.goto("/");
   await page.click('button[data-test="use-password"]');
-  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="identifier"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
 

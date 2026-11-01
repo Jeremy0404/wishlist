@@ -32,6 +32,29 @@ const router = Router();
 const ipRateLimit = authIpRateLimit();
 const addressRateLimit = magicLinkAddressRateLimit();
 
+const PUBLIC_USER_COLUMNS = ["id", "email", "username", "name"];
+
+type PublicUser = {
+  id: string;
+  email: string | null;
+  username: string | null;
+  name: string;
+};
+
+function publicUser({ id, email, username, name }: PublicUser): PublicUser {
+  return { id, email, username, name };
+}
+
+/** Usernames are stored lower-case and can never contain "@", so the
+ *  identifier alone says which column to look in. */
+export function findUserByIdentifier(dbConn: Knex, identifier: string) {
+  const criteria = identifier.includes("@")
+    ? { email: identifier }
+    : { username: identifier.toLowerCase() };
+
+  return dbConn("users").where(criteria).first();
+}
+
 const Register = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -53,19 +76,19 @@ router.post(
     const password_hash = await bcrypt.hash(password, 10);
     const [user] = await db("users")
       .insert({ email, password_hash, name })
-      .returning(["id", "email", "name"]);
+      .returning(PUBLIC_USER_COLUMNS);
 
     log.info({ userId: user.id, email: user.email }, "User registered");
 
-    const token = signUser({ id: user.id, email: user.email });
+    const token = signUser({ id: user.id });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email, name: user.name });
+      .json(publicUser(user));
   }),
 );
 
 const Login = z.object({
-  email: z.string().email(),
+  identifier: z.string().trim().min(1),
   password: z.string().min(6),
 });
 
@@ -76,11 +99,11 @@ router.post(
     const log = getRequestLogger(req, { module: "auth", action: "login" });
     const parse = Login.safeParse(req.body);
     if (!parse.success) throw ValidationError.fromZod(parse.error);
-    const { email, password } = parse.data;
+    const { identifier, password } = parse.data;
 
-    const user = await db("users").where({ email }).first();
+    const user = await findUserByIdentifier(db, identifier);
     if (!user) {
-      log.warn({ email }, "Login attempt for unknown user");
+      log.warn({ identifier }, "Login attempt for unknown user");
       throw new UnauthorizedError("invalid credentials");
     }
 
@@ -92,10 +115,10 @@ router.post(
 
     log.info({ userId: user.id }, "User logged in");
 
-    const token = signUser({ id: user.id, email: user.email });
+    const token = signUser({ id: user.id });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email, name: user.name });
+      .json(publicUser(user));
   }),
 );
 
@@ -152,10 +175,10 @@ router.post(
     const { user, created } = await findOrCreateUserByEmail(db, email);
     log.info({ userId: user.id, created }, "User signed in with a magic link");
 
-    const token = signUser({ id: user.id, email: user.email });
+    const token = signUser({ id: user.id });
     res
       .cookie(authCookie.name, token, authCookie.options)
-      .json({ id: user.id, email: user.email, name: user.name, created });
+      .json({ ...publicUser(user), created });
   }),
 );
 
@@ -174,7 +197,7 @@ router.get(
   authRequired,
   asyncHandler(async (req, res) => {
     const u = await db("users")
-      .select("id", "email", "name")
+      .select(PUBLIC_USER_COLUMNS)
       .where({ id: req.user!.id })
       .first();
     if (!u) throw new NotFoundError("user not found");
@@ -196,7 +219,7 @@ export async function updateUserName(
   const [user] = await dbConn("users")
     .where({ id: userId })
     .update({ name })
-    .returning(["id", "email", "name"]);
+    .returning(PUBLIC_USER_COLUMNS);
 
   return user ?? null;
 }

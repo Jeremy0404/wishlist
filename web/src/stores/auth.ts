@@ -51,8 +51,8 @@ export const useAuth = defineStore("auth", {
         this.myFamily = null;
       }
     },
-    async login(email: string, password: string) {
-      const res = await api.login(email, password);
+    async login(identifier: string, password: string) {
+      const res = await api.login(identifier, password);
       const user = (
         res && typeof res === "object" && "user" in res
           ? (res as any).user

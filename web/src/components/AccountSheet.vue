@@ -82,7 +82,7 @@ async function onLogout() {
           {{ auth.user?.name }}
         </p>
         <p class="mb-0 truncate text-caption text-muted">
-          {{ auth.user?.email }}
+          {{ auth.user?.email ?? auth.user?.username }}
         </p>
       </div>
     </div>

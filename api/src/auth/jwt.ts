@@ -40,7 +40,6 @@ function isJwtUser(payload: JwtPayload | string): payload is JwtUser {
     return (
         typeof payload === 'object' &&
         payload !== null &&
-        typeof payload.id === 'string' &&
-        typeof payload.email === 'string'
+        typeof payload.id === 'string'
     );
 }
