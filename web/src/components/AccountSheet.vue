@@ -165,6 +165,6 @@ async function onLogout() {
 @reference "../index.css";
 
 .account-row {
-  @apply flex min-h-14 w-full items-center gap-3 px-1 text-left text-body text-ink transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-45;
+  @apply flex min-h-14 w-full items-center gap-3 rounded-md px-2 text-left text-body text-ink transition-colors enabled:hover:bg-neutral-200 enabled:active:bg-neutral-300 disabled:cursor-not-allowed disabled:opacity-45;
 }
 </style>

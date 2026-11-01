@@ -22,7 +22,7 @@
     >
       <RouterLink
         :to="`/wishlists/${row.user_id}`"
-        class="flex items-center gap-3.5 px-1 py-3.5 text-ink no-underline transition-colors hover:bg-neutral-200"
+        class="flex items-center gap-3.5 px-1 py-3.5 text-ink no-underline transition-colors hover:bg-neutral-200 active:bg-neutral-300"
         data-test="wishlist-open"
       >
         <Avatar

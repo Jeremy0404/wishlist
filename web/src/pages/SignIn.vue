@@ -10,16 +10,16 @@
     <PasswordForm v-if="withPassword" :redirect="redirect" @done="go" />
     <MagicLinkForm v-else :redirect="redirect" />
 
-    <Button
-      variant="ghost"
-      class="mx-auto min-h-11 text-caption font-normal text-muted underline underline-offset-4"
+    <button
+      type="button"
+      class="pressable mx-auto min-h-11 rounded-md px-3 text-caption text-muted underline underline-offset-4 hover:bg-ink/7 hover:text-ink active:bg-ink/14"
       :data-test="withPassword ? 'use-magic-link' : 'use-password'"
       @click="withPassword = !withPassword"
     >
       {{
         withPassword ? t("auth.magic.linkInstead") : t("auth.magic.passwordInstead")
       }}
-    </Button>
+    </button>
   </div>
 </template>
 
@@ -29,7 +29,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import MagicLinkForm from "../components/auth/MagicLinkForm.vue";
 import PasswordForm from "../components/auth/PasswordForm.vue";
-import Button from "../components/ui/Button.vue";
 import { inAppRedirect } from "../utils/redirect.ts";
 
 const { t } = useI18n();

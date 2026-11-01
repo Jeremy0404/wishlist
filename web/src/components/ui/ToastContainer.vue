@@ -41,9 +41,11 @@ const visible = computed<Toast[]>(() =>
           {{ toast.text }}
         </div>
         <button
+          type="button"
           data-test="toast-dismiss"
-          class="opacity-70 transition-opacity hover:opacity-100"
+          class="pressable -m-1 grid h-7 w-7 flex-none place-items-center rounded-full opacity-70 hover:bg-on-fill/15 hover:opacity-100 active:bg-on-fill/25"
           :title="t('common.close')"
+          :aria-label="t('common.close')"
           @click="clear(toast.id)"
         >
           <Icon name="close" :size="14" />

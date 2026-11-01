@@ -1,7 +1,7 @@
 <template>
   <RouterLink
     to="/wishlists"
-    class="-ml-1 mb-2 inline-flex min-h-11 items-center gap-1 font-semibold text-muted no-underline hover:text-ink"
+    class="pressable -ml-2 mb-2 inline-flex min-h-11 items-center gap-1 rounded-md pl-1 pr-3 font-semibold text-muted no-underline hover:bg-ink/7 hover:text-ink active:bg-ink/14"
     data-test="view-back"
   >
     <Icon name="chevronLeft" :size="20" />

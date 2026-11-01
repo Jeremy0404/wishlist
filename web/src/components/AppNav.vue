@@ -33,7 +33,7 @@ function isActive(tab: Tab) {
       :aria-label="t('nav.main')"
       class="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3"
     >
-      <RouterLink to="/me" class="text-ink">
+      <RouterLink to="/me" class="text-ink transition-opacity hover:opacity-75">
         <BrandLockup />
       </RouterLink>
       <div class="flex flex-1 items-center gap-6">
@@ -43,7 +43,7 @@ function isActive(tab: Tab) {
           :to="tab.to"
           :data-test="tab.test"
           :aria-current="isActive(tab) ? 'page' : undefined"
-          class="flex items-center gap-2 py-2 font-semibold no-underline transition-colors"
+          class="pressable -mx-3 flex items-center gap-2 rounded-md px-3 py-2 font-semibold no-underline hover:bg-ink/7 active:bg-ink/14"
           :class="isActive(tab) ? 'text-accent' : 'text-muted hover:text-ink'"
         >
           <Icon :name="tab.icon" :size="20" />
@@ -64,8 +64,8 @@ function isActive(tab: Tab) {
       :to="tab.to"
       :data-test="tab.test"
       :aria-current="isActive(tab) ? 'page' : undefined"
-      class="flex flex-col items-center justify-center gap-1 text-meta font-semibold no-underline"
-      :class="isActive(tab) ? 'text-accent' : 'text-muted'"
+      class="flex flex-col items-center justify-center gap-1 text-meta font-semibold no-underline transition-colors active:bg-ink/7"
+      :class="isActive(tab) ? 'text-accent' : 'text-muted active:text-ink'"
     >
       <Icon :name="tab.icon" :size="26" />
       {{ tab.label }}

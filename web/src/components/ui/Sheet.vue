@@ -64,7 +64,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
             <h2 class="mb-0 text-h2">{{ title }}</h2>
             <button
               type="button"
-              class="grid h-11 w-11 flex-none place-items-center rounded-full bg-neutral-200 text-ink transition-colors hover:bg-neutral-300"
+              class="pressable grid h-11 w-11 flex-none place-items-center rounded-full bg-neutral-200 text-ink hover:bg-neutral-300 active:bg-neutral-400"
               data-test="sheet-close"
               :aria-label="t('common.close')"
               @click="emit('close')"

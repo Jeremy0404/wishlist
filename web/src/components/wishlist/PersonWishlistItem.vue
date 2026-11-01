@@ -19,7 +19,7 @@
           :href="item.url"
           target="_blank"
           rel="noreferrer"
-          class="inline-flex items-center gap-1 self-start text-caption font-semibold"
+          class="inline-flex items-center gap-1 self-start text-caption font-semibold hover:text-accent-800 hover:underline active:text-accent-900"
         >
           {{ t("view.link") }}
           <Icon name="externalLink" :size="14" />
@@ -48,7 +48,7 @@
         </span>
         <button
           type="button"
-          class="min-h-11 px-2 text-caption text-muted underline underline-offset-4"
+          class="pressable min-h-11 rounded-md px-2 text-caption text-muted underline underline-offset-4 hover:bg-ink/7 hover:text-ink active:bg-ink/14"
           data-test="wishlist-unreserve"
           @click="emit('unreserve')"
         >
