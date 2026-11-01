@@ -10,6 +10,8 @@ const PNG = Buffer.from(
 
 const thumbnail = '[data-test="item-thumbnail"]';
 
+const PHONE_PHOTO_BYTES = 1.9 * 1024 * 1024;
+
 async function addItem(
   page: Page,
   title: string,
@@ -123,6 +125,23 @@ test("removing a photo deletes the stored file", async ({ page }) => {
 
   const gone = await page.request.get(src!);
   expect(gone.status()).toBe(404);
+});
+
+test("a photo just under the size limit goes through the proxy", async ({
+  page,
+}) => {
+  await registerUser(page);
+
+  const item = await addItem(page, "Guitare rouge", {
+    name: "phone.png",
+    mimeType: "image/png",
+    buffer: Buffer.concat([
+      PNG,
+      Buffer.alloc(PHONE_PHOTO_BYTES - PNG.length),
+    ]),
+  });
+
+  await expect(item.locator(thumbnail)).toBeVisible();
 });
 
 test("a file that is not an image is refused", async ({ page }) => {
