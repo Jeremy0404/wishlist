@@ -22,7 +22,7 @@ test("a deletion raises a success toast on the delivered pattern", async ({
 
   const toast = page.locator('[data-test="toast"]');
   await expect(toast).toHaveAttribute("data-kind", "success");
-  await expect(toast).toHaveText("Article supprimé");
+  await expect(toast).toHaveText("Retiré de ta liste");
 
   const style = await toast.evaluate((el) => {
     const s = getComputedStyle(el);
