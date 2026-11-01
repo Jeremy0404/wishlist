@@ -25,7 +25,7 @@ const meta = computed(() =>
 <template>
   <button
     type="button"
-    class="flex w-full items-center gap-3.5 px-1 py-3.5 text-left transition-colors hover:bg-neutral-200"
+    class="flex w-full items-center gap-3.5 px-1 py-3.5 text-left transition-colors hover:bg-neutral-200 active:bg-neutral-300"
     data-test="wishlist-edit"
     @click="emit('open')"
   >

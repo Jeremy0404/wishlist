@@ -16,25 +16,35 @@ const props = withDefaults(
   { variant: "ghost", type: "button" },
 );
 
+const VARIANT_CLASSES = {
+  primary: "bg-accent text-on-fill",
+  secondary: "border-neutral-400",
+  danger: "bg-danger text-danger-on",
+  ghost: "text-accent",
+  "ghost-danger": "text-ink/70",
+};
+
+const VARIANT_FEEDBACK = {
+  primary: "hover:bg-accent-700 active:bg-accent-800",
+  secondary: "hover:bg-ink/7 active:bg-ink/14",
+  danger: "hover:bg-danger-dark active:bg-danger-dark",
+  ghost: "hover:bg-accent/10 active:bg-accent/18",
+  "ghost-danger":
+    "hover:bg-danger-tint hover:text-danger active:bg-danger-tint active:text-danger-dark",
+};
+
+const inert = computed(() => props.disabled || props.loading);
+
 const classes = computed(() => [
-  "inline-flex items-center justify-center gap-2 rounded-md border border-transparent font-semibold text-control text-ink no-underline transition-colors",
+  "pressable inline-flex items-center justify-center gap-2 rounded-md border border-transparent font-semibold text-control text-ink no-underline",
   props.icon
     ? "h-9 w-9 p-0"
     : props.variant === "ghost"
-      ? "px-1 py-2"
+      ? "px-3 py-2"
       : "px-4 py-2",
   props.block && "w-full",
-  props.variant === "primary" &&
-    "bg-accent text-on-fill hover:bg-accent-700 active:bg-accent-800",
-  props.variant === "secondary" &&
-    "border-divider hover:bg-ink/7 active:bg-ink/14",
-  props.variant === "danger" &&
-    "bg-danger text-danger-on hover:bg-danger-dark active:bg-danger-dark",
-  props.variant === "ghost" &&
-    "text-accent hover:bg-accent/10 active:bg-accent/18",
-  props.variant === "ghost-danger" &&
-    "text-ink/70 hover:bg-danger-tint hover:text-danger active:bg-danger-tint active:text-danger-dark",
-  (props.disabled || props.loading) && "cursor-not-allowed opacity-45",
+  VARIANT_CLASSES[props.variant],
+  inert.value ? "cursor-not-allowed opacity-45" : VARIANT_FEEDBACK[props.variant],
 ]);
 </script>
 

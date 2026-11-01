@@ -205,11 +205,11 @@ async function remove() {
 
       <button
         type="button"
-        class="flex min-h-12 items-center gap-2 justify-self-start rounded-md border px-4 font-semibold transition-colors"
+        class="pressable flex min-h-12 items-center gap-2 justify-self-start rounded-md border px-4 font-semibold"
         :class="
           form.favorite
-            ? 'border-accent bg-accent-100 text-accent-700'
-            : 'border-neutral-400 text-ink hover:bg-neutral-200'
+            ? 'border-accent bg-accent-100 text-accent-700 hover:bg-accent-200 active:bg-accent-200'
+            : 'border-neutral-400 text-ink hover:bg-neutral-200 active:bg-neutral-300'
         "
         data-test="item-favorite"
         :aria-pressed="form.favorite"
@@ -226,7 +226,7 @@ async function remove() {
       <button
         v-if="!showDetails"
         type="button"
-        class="flex min-h-11 items-center gap-1.5 justify-self-start text-left font-semibold text-accent-700"
+        class="pressable -ml-3 flex min-h-11 items-center gap-1.5 justify-self-start rounded-md px-3 text-left font-semibold text-accent-700 hover:bg-accent/10 active:bg-accent/18"
         data-test="quick-add-toggle"
         @click="showDetails = true"
       >

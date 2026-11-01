@@ -10,7 +10,7 @@
     <template v-else>
       <AppNav v-if="auth.isLogged" />
       <header v-else class="mx-auto max-w-3xl px-4 pt-6 md:px-6">
-        <RouterLink to="/" class="text-ink">
+        <RouterLink to="/" class="text-ink transition-opacity hover:opacity-75">
           <BrandLockup />
         </RouterLink>
       </header>

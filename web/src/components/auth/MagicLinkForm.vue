@@ -18,7 +18,7 @@
     <p class="mb-0 text-caption text-muted">{{ t("auth.magic.sentHint") }}</p>
     <button
       type="button"
-      class="min-h-11 text-caption text-muted underline underline-offset-4"
+      class="pressable min-h-11 rounded-md px-2 text-caption text-muted underline underline-offset-4 hover:bg-ink/7 hover:text-ink active:bg-ink/14"
       data-test="magic-change"
       @click="sentTo = ''"
     >

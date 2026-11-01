@@ -14,7 +14,7 @@ const open = ref(false);
   <div class="contents">
     <button
       type="button"
-      class="flex-none rounded-full transition-transform active:scale-95"
+      class="pressable flex-none rounded-full ring-neutral-400 hover:ring-2 active:ring-2"
       data-test="account-open"
       :aria-label="t('account.open')"
       @click="open = true"
