@@ -28,6 +28,7 @@ import Card from "../components/ui/Card.vue";
 import Spinner from "../components/ui/Spinner.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth";
+import { inAppRedirect } from "../utils/redirect.ts";
 
 const { t } = useI18n();
 const { push } = useToasts();
@@ -47,7 +48,10 @@ onMounted(async () => {
   try {
     const { created } = await auth.signInWithMagicLink(token);
     push(t("auth.loginSuccess"), "success");
-    await router.replace(created ? "/welcome" : "/me");
+    const next = inAppRedirect(route.query.redirect);
+    await router.replace(
+      created ? { path: "/welcome", query: { redirect: next } } : next,
+    );
   } catch {
     expired.value = true;
   }

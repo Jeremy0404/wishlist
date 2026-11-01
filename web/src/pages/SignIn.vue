@@ -8,7 +8,7 @@
     </div>
 
     <PasswordForm v-if="withPassword" :redirect="redirect" @done="go" />
-    <MagicLinkForm v-else />
+    <MagicLinkForm v-else :redirect="redirect" />
 
     <Button
       variant="ghost"
@@ -30,6 +30,7 @@ import { useI18n } from "vue-i18n";
 import MagicLinkForm from "../components/auth/MagicLinkForm.vue";
 import PasswordForm from "../components/auth/PasswordForm.vue";
 import Button from "../components/ui/Button.vue";
+import { inAppRedirect } from "../utils/redirect.ts";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -37,10 +38,7 @@ const router = useRouter();
 
 const withPassword = ref(false);
 
-const redirect = computed(() => {
-  const r = route.query.redirect;
-  return typeof r === "string" && r ? r : "/me";
-});
+const redirect = computed(() => inAppRedirect(route.query.redirect));
 
 function go(to: string) {
   router.replace(to);
