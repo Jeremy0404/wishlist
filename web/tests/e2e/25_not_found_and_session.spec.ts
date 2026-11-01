@@ -16,7 +16,7 @@ test("an unknown URL lands on the 404 screen, not on an empty frame", async ({
   );
 
   // The nav bar stays, and the block is an 880px centred column.
-  await expect(page.locator("nav")).toBeVisible();
+  await expect(page.locator("nav").first()).toBeVisible();
   expect((await screen.boundingBox())!.width).toBe(880);
 
   const icon = screen.locator("svg");

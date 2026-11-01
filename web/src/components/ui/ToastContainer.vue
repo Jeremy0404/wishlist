@@ -14,7 +14,7 @@ const visible = computed<Toast[]>(() =>
 </script>
 
 <template>
-  <div class="fixed bottom-4 right-4 z-50">
+  <div class="fixed inset-x-4 bottom-24 z-50 flex justify-center md:inset-x-auto md:bottom-6 md:right-6">
     <TransitionGroup name="toast" tag="div" class="flex flex-col gap-2">
       <div
         v-for="toast in visible"

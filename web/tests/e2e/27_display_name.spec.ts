@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { addWishlistItem, registerUser } from "./helpers";
+import { addWishlistItem, logout, openAccount, registerUser } from "./helpers";
 
 async function shareOwnList(page: Page): Promise<string> {
   const published = page.waitForResponse(
@@ -30,9 +30,11 @@ test("the name chosen on the welcome screen is the one the share page shows", as
   await page.click('[data-test="welcome-name-submit"]');
   await expect(page).toHaveURL(/\/me/);
 
+  await openAccount(page);
   await expect(page.locator('[data-test="display-name-value"]')).toHaveText(
     "Marie Dupont",
   );
+  await page.click('[data-test="sheet-close"]');
 
   await addWishlistItem(page, { title: "Plaid tout doux" });
   const slug = await shareOwnList(page);
@@ -53,6 +55,7 @@ test("the welcome screen is a nudge, not a gate", async ({ page }) => {
   await page.click('[data-test="welcome-name-skip"]');
 
   await expect(page).toHaveURL(/\/me/);
+  await openAccount(page);
   await expect(page.locator('[data-test="display-name-value"]')).toHaveText(
     "Derived Name",
   );
@@ -62,7 +65,7 @@ test("signing in never sends an existing account to the welcome screen", async (
   page,
 }) => {
   const { email, password } = await registerUser(page, "Alexa Chen");
-  await page.click('button[data-test="logout"]');
+  await logout(page);
 
   await page.goto("/");
   await page.click('button[data-test="use-password"]');
@@ -74,11 +77,12 @@ test("signing in never sends an existing account to the welcome screen", async (
   await expect(page.locator('[data-test="welcome-name"]')).toHaveCount(0);
 });
 
-test("the name can be changed later, straight from the list", async ({
+test("the name can be changed later, from the account menu", async ({
   page,
 }) => {
   await registerUser(page, "Alexa Chen");
 
+  await openAccount(page);
   await page.click('[data-test="display-name-edit"]');
   const field = page.locator('[data-test="display-name-input"]');
   await expect(field).toHaveValue("Alexa Chen");
@@ -91,6 +95,7 @@ test("the name can be changed later, straight from the list", async ({
   );
 
   await page.reload();
+  await openAccount(page);
   await expect(page.locator('[data-test="display-name-value"]')).toHaveText(
     "Alexa Martin",
   );
@@ -99,6 +104,7 @@ test("the name can be changed later, straight from the list", async ({
 test("a blank name is refused and changes nothing", async ({ page }) => {
   await registerUser(page, "Alexa Chen");
 
+  await openAccount(page);
   await page.click('[data-test="display-name-edit"]');
   await page.locator('[data-test="display-name-input"]').fill("   ");
   await page.click('[data-test="display-name-save"]');
@@ -106,6 +112,7 @@ test("a blank name is refused and changes nothing", async ({ page }) => {
   await expect(page.locator('[data-test="display-name-editor"]')).toBeVisible();
 
   await page.reload();
+  await openAccount(page);
   await expect(page.locator('[data-test="display-name-value"]')).toHaveText(
     "Alexa Chen",
   );

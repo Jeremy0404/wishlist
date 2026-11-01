@@ -1,5 +1,5 @@
 <template>
-  <h1 class="mb-1">{{ t("browse.title") }}</h1>
+  <PageHeader>{{ t("browse.title") }}</PageHeader>
   <p class="mb-6 text-muted">{{ t("browse.subtitle") }}</p>
 
   <p v-if="error" class="text-accent-700">{{ error }}</p>
@@ -82,6 +82,7 @@ import EmptyState from "../components/ui/EmptyState.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import InviteDialog from "../components/InviteDialog.vue";
+import PageHeader from "../components/PageHeader.vue";
 import { useAuth } from "../stores/auth.ts";
 import type { FamilyWishlist } from "../types.ts";
 

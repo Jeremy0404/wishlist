@@ -1,0 +1,108 @@
+<script setup lang="ts">
+import { nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import Icon from "./Icon.vue";
+
+const props = defineProps<{ open: boolean; title: string }>();
+const emit = defineEmits<{ close: [] }>();
+
+const { t } = useI18n();
+const panel = ref<HTMLElement | null>(null);
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === "Escape") emit("close");
+}
+
+watch(
+  () => props.open,
+  async (open) => {
+    if (!open) {
+      document.removeEventListener("keydown", onKeydown);
+      return;
+    }
+    document.addEventListener("keydown", onKeydown);
+    await nextTick();
+    const firstField = panel.value?.querySelector<HTMLElement>(
+      "input, textarea, select",
+    );
+    (firstField ?? panel.value)?.focus();
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
+</script>
+
+<template>
+  <Teleport to="body">
+    <Transition name="sheet">
+      <div
+        v-if="open"
+        class="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6"
+      >
+        <button
+          type="button"
+          class="absolute inset-0 cursor-default bg-ink/40"
+          :aria-label="t('common.close')"
+          tabindex="-1"
+          @click="emit('close')"
+        ></button>
+        <div
+          ref="panel"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="title"
+          tabindex="-1"
+          data-test="sheet"
+          class="sheet-panel relative flex max-h-[88dvh] w-full flex-col gap-4 overflow-y-auto rounded-t-[20px] bg-surface px-5 pb-8 pt-3 shadow-lg md:max-w-md md:rounded-[20px] md:pt-5"
+        >
+          <span
+            aria-hidden="true"
+            class="h-1.5 w-10 self-center rounded-full bg-neutral-400 md:hidden"
+          ></span>
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="mb-0 text-h2">{{ title }}</h2>
+            <button
+              type="button"
+              class="grid h-11 w-11 flex-none place-items-center rounded-full bg-neutral-200 text-ink transition-colors hover:bg-neutral-300"
+              data-test="sheet-close"
+              :aria-label="t('common.close')"
+              @click="emit('close')"
+            >
+              <Icon name="close" :size="20" />
+            </button>
+          </div>
+          <slot />
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+</template>
+
+<style scoped>
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: opacity 200ms ease-out;
+}
+.sheet-enter-active .sheet-panel,
+.sheet-leave-active .sheet-panel {
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet-enter-from,
+.sheet-leave-to {
+  opacity: 0;
+}
+.sheet-enter-from .sheet-panel,
+.sheet-leave-to .sheet-panel {
+  transform: translateY(24px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-enter-active,
+  .sheet-leave-active,
+  .sheet-enter-active .sheet-panel,
+  .sheet-leave-active .sheet-panel {
+    transition: none;
+  }
+}
+</style>
