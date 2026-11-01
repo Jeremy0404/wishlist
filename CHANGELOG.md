@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0](https://github.com/Jeremy0404/wishlist/compare/v0.3.1...v0.4.0) (2026-11-01)
+
+
+### Features
+
+* invite through one link and sign in with a single field ([#122](https://github.com/Jeremy0404/wishlist/issues/122)) ([93880d8](https://github.com/Jeremy0404/wishlist/commit/93880d8b983931260e57f47ee24dc587a1666409))
+* list the family as rows and offer gifts with one action ([#121](https://github.com/Jeremy0404/wishlist/issues/121)) ([598d5c0](https://github.com/Jeremy0404/wishlist/commit/598d5c083c8bab9e295673b19bb098bc89602f84))
+* move to two tabs and an account sheet behind the avatar ([#119](https://github.com/Jeremy0404/wishlist/issues/119)) ([c9085be](https://github.com/Jeremy0404/wishlist/commit/c9085be3bd5add33fe838d1f0c8200a39f6d42be))
+* rebuild my list around one add button and an item sheet ([#120](https://github.com/Jeremy0404/wishlist/issues/120)) ([1bc1d4f](https://github.com/Jeremy0404/wishlist/commit/1bc1d4f19a5cd6c4ffbc8bc8628479a357dc03b6))
+* retune the palette and set titles in Newsreader ([#118](https://github.com/Jeremy0404/wishlist/issues/118)) ([4afaabe](https://github.com/Jeremy0404/wishlist/commit/4afaabe306f0df0a3c26448996b1a7f6242f420a))
+
+
+### Miscellaneous
+
+* cap the production containers memory ([#117](https://github.com/Jeremy0404/wishlist/issues/117)) ([3d54333](https://github.com/Jeremy0404/wishlist/commit/3d5433359df47774d5f16dadf3a4ad3aade3a94a))
+* check dependencies monthly with Dependabot ([#99](https://github.com/Jeremy0404/wishlist/issues/99)) ([fd94fbd](https://github.com/Jeremy0404/wishlist/commit/fd94fbda32427ae8a4a5f4ec836b79861407768f))
+* **deps:** consolidate the November dependency updates ([#124](https://github.com/Jeremy0404/wishlist/issues/124)) ([d79c9a0](https://github.com/Jeremy0404/wishlist/commit/d79c9a04b427ba4ca88c08094315b38d9b4896aa))
+* remove the public share link, the markdown export and the old priorities ([#123](https://github.com/Jeremy0404/wishlist/issues/123)) ([0653abc](https://github.com/Jeremy0404/wishlist/commit/0653abcec6748838a4e7059493931fc7bfb3a68e))
+
 ## [0.3.1](https://github.com/Jeremy0404/wishlist/compare/v0.3.0...v0.3.1) (2026-10-24)
 
 
