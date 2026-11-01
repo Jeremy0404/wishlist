@@ -101,10 +101,10 @@ export const api = {
       body: { name, email, password },
     }),
   logout: () => request("/auth/logout", { method: "POST" }),
-  requestMagicLink: (email: string) =>
+  requestMagicLink: (email: string, redirect: string) =>
     request<{ ok: true }>("/auth/magic-link", {
       method: "POST",
-      body: { email },
+      body: { email, redirect },
     }),
   consumeMagicLink: (token: string) =>
     request<MagicLinkSession>("/auth/magic-link/consume", {

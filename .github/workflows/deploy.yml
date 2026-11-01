@@ -45,13 +45,13 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           driver: docker-container
           install: true
 
       - name: Login to GHCR (with GITHUB_TOKEN)
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -86,7 +86,7 @@ jobs:
       - name: Save tag
         run: echo "${{ steps.meta.outputs.TAG }}" > tag.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: deploy-tag
           path: tag.txt
@@ -105,7 +105,7 @@ jobs:
         run: echo "TAG=$(cat tag.txt)" >> $GITHUB_OUTPUT
 
       - name: SSH deploy
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}

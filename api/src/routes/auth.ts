@@ -101,6 +101,7 @@ router.post(
 
 const MagicLinkRequest = z.object({
   email: z.string().email(),
+  redirect: z.string().max(2048).optional(),
 });
 
 /** The answer never depends on whether the address has an account: signing in
@@ -119,7 +120,9 @@ router.post(
 
     const email = normalizeEmail(parse.data.email);
     const token = await issueMagicLink(db, email);
-    await sendMail(magicLinkEmail(email, buildMagicLinkUrl(token)));
+    await sendMail(
+      magicLinkEmail(email, buildMagicLinkUrl(token, parse.data.redirect)),
+    );
 
     log.info({ email }, "Magic link issued");
     res.json({ ok: true });
