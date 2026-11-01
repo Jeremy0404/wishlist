@@ -1,88 +1,92 @@
 <template>
-  <Card data-test="wishlist-item" :data-id="item.id">
-    <div class="flex flex-wrap items-start gap-3">
-      <ItemThumbnail :image-url="item.image_url" :size="56" />
-      <div class="min-w-[200px] flex-1">
-        <div class="flex items-center gap-2 font-semibold">
-          {{ item.title }}
-          <a
-            v-if="item.url"
-            :href="item.url"
-            target="_blank"
-            rel="noreferrer"
-            :aria-label="t('view.link')"
-          >
-            <Icon name="externalLink" :size="14" />
-          </a>
-        </div>
-        <p v-if="item.notes" class="mb-0 mt-0.5 text-caption opacity-80">
-          {{ item.notes }}
-        </p>
-        <span v-if="item.price_eur != null" class="text-caption text-muted">
-          {{ fmtEUR.format(item.price_eur) }}
-        </span>
-      </div>
-
-      <div class="flex flex-none flex-col items-end gap-2">
-        <Button
-          v-if="state === 'open'"
-          variant="primary"
-          data-test="wishlist-reserve"
-          @click="emit('reserve')"
+  <div class="flex flex-col gap-3 px-1 py-4">
+    <div class="flex items-center gap-3.5">
+      <ItemTile :image-url="item.image_url" :tone="state === 'other' ? QUIET_TONE : tone" />
+      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span
+          class="flex items-center gap-1.5 font-semibold"
+          :class="state === 'other' && 'text-muted'"
         >
-          <Icon name="gift" :size="14" />
-          {{ t("view.reserve") }}
-        </Button>
-
-        <template v-else-if="state === 'mine'">
-          <Tag variant="accent-2" data-test="wishlist-status">
-            {{ statusLabel }}
-          </Tag>
-          <div class="flex gap-1">
-            <Button
-              v-if="item.reservation_status !== 'purchased'"
-              variant="secondary"
-              data-test="wishlist-purchase"
-              @click="emit('purchase')"
-            >
-              <Icon name="check" :size="14" />
-              {{ t("view.purchase") }}
-            </Button>
-            <Button
-              variant="ghost"
-              data-test="wishlist-unreserve"
-              @click="emit('unreserve')"
-            >
-              <Icon name="undo" :size="14" />
-              {{ t("view.unreserve") }}
-            </Button>
-          </div>
-        </template>
-
-        <Tag v-else variant="neutral" data-test="wishlist-status">
-          {{ statusLabel }}
-        </Tag>
+          <span class="min-w-0">{{ item.title }}</span>
+          <template v-if="isFavorite(item.priority)">
+            <Icon name="heart" :size="16" class="fill-current text-accent" />
+            <span class="sr-only">{{ t("item.favorite") }}</span>
+          </template>
+        </span>
+        <span v-if="meta" class="text-caption text-muted">{{ meta }}</span>
+        <a
+          v-if="item.url"
+          :href="item.url"
+          target="_blank"
+          rel="noreferrer"
+          class="inline-flex items-center gap-1 self-start text-caption font-semibold"
+        >
+          {{ t("view.link") }}
+          <Icon name="externalLink" :size="14" />
+        </a>
       </div>
     </div>
-  </Card>
+
+    <div class="pl-[66px]">
+      <Button
+        v-if="state === 'open'"
+        variant="primary"
+        class="min-h-11 px-5"
+        data-test="wishlist-reserve"
+        @click="emit('reserve')"
+      >
+        {{ t("view.give") }}
+      </Button>
+
+      <div v-else-if="state === 'mine'" class="flex flex-wrap items-center gap-2">
+        <span
+          class="inline-flex h-9 items-center gap-1.5 rounded-pill bg-tone-green px-3.5 text-caption font-semibold text-tone-green-ink"
+          data-test="wishlist-status"
+        >
+          <Icon name="check" :size="18" />
+          {{ t("view.giving") }}
+        </span>
+        <button
+          type="button"
+          class="min-h-11 px-2 text-caption text-muted underline underline-offset-4"
+          data-test="wishlist-unreserve"
+          @click="emit('unreserve')"
+        >
+          {{ t("view.cancel") }}
+        </button>
+      </div>
+
+      <span
+        v-else
+        class="flex items-center gap-1.5 text-caption text-muted"
+        data-test="wishlist-status"
+      >
+        <Icon name="check" :size="18" />
+        {{ t("view.takenByOther") }}
+      </span>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
-import Card from "../ui/Card.vue";
 import Icon from "../ui/Icon.vue";
-import Tag from "../ui/Tag.vue";
-import ItemThumbnail from "./ItemThumbnail.vue";
+import ItemTile from "./ItemTile.vue";
 import { fmtEUR } from "../../utils/money";
+import { isFavorite } from "../../utils/favorite";
+import { QUIET_TONE } from "../../utils/tones";
 import type { WishlistItem } from "../../types.ts";
 
-const props = defineProps<{ item: WishlistItem; viewerId?: string }>();
+const props = defineProps<{
+  item: WishlistItem;
+  viewerId?: string;
+  tone: string;
+}>();
 
 const emit = defineEmits<{
   reserve: [];
-  purchase: [];
   unreserve: [];
 }>();
 
@@ -93,11 +97,12 @@ const state = computed(() => {
   return props.item.reserver_user_id === props.viewerId ? "mine" : "other";
 });
 
-const statusLabel = computed(() => {
-  if (state.value === "other")
-    return t("view.reservedByOther", { name: props.item.reserver_name });
-  return props.item.reservation_status === "purchased"
-    ? t("view.purchasedByYou")
-    : t("view.reservedByYou");
-});
+const meta = computed(() =>
+  [
+    props.item.price_eur != null ? fmtEUR.format(props.item.price_eur) : "",
+    props.item.notes ?? "",
+  ]
+    .filter(Boolean)
+    .join(" · "),
+);
 </script>

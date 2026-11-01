@@ -34,10 +34,10 @@ test("browse with nobody around invites instead of apologising", async ({
 
   await page.goto("/wishlists");
 
-  const empty = page.locator('[data-test="empty-state"]');
-  await expect(empty).toContainText(
-    "Invite des proches pour commencer à parcourir.",
+  await expect(page.locator("main header")).toContainText(
+    "Personne d’autre pour l’instant.",
   );
+  const empty = page.locator('[data-test="empty-state"]');
   await expect(page.locator('[data-test="browse-card"]')).toHaveCount(0);
 
   await empty.locator('[data-test="browse-invite"]').click();

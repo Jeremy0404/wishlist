@@ -44,10 +44,10 @@ test("browse shows a card per member with counts, and invites inline", async ({
 
   // Counts come from the aggregates endpoint
   await expect(alexaCard.locator('[data-test="browse-summary"]')).toHaveText(
-    "4 articles · 2 réservés par toi",
+    "4 envies · tu en offres 2",
   );
   await expect(carolCard.locator('[data-test="browse-summary"]')).toHaveText(
-    "3 articles · rien de réservé",
+    "3 envies",
   );
 
   // Bob's own list is not a card here
@@ -57,7 +57,7 @@ test("browse shows a card per member with counts, and invites inline", async ({
   await expect(alexaCard.getByText("AC", { exact: true })).toBeVisible();
   await expect(carolCard.getByText("CO", { exact: true })).toBeVisible();
 
-  // The invite card opens the flow inline, without leaving the page
+  // The invite button opens the flow inline, without leaving the page
   await expect(bob.locator('[data-test="invite-code"]')).toHaveCount(0);
   await bob.locator('[data-test="browse-invite"]').click();
   await expect(bob.locator('[data-test="invite-code"]')).toHaveText(inviteCode);

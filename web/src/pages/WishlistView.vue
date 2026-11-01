@@ -1,50 +1,60 @@
 <template>
-  <Button variant="ghost" to="/wishlists" class="-ml-1 mb-3">
-    <Icon name="arrowLeft" :size="14" />
+  <RouterLink
+    to="/wishlists"
+    class="-ml-1 mb-2 inline-flex min-h-11 items-center gap-1 font-semibold text-muted no-underline hover:text-ink"
+    data-test="view-back"
+  >
+    <Icon name="chevronLeft" :size="20" />
     {{ t("view.back") }}
-  </Button>
+  </RouterLink>
 
-  <div v-if="ownerName" class="mb-6 flex items-center gap-3">
-    <Avatar :name="ownerName" size="lg" />
-    <div>
-      <h1 class="mb-0">{{ t("view.title", { name: ownerName }) }}</h1>
-      <p class="mb-0 text-caption text-muted">
-        {{ t("view.counter", { remaining, total: items.length }) }}
-      </p>
-    </div>
-  </div>
+  <PageHeader v-if="ownerName">
+    {{ t("view.title", { name: ownerName }) }}
+    <template #lead>{{ t("view.lead", { name: ownerName }) }}</template>
+  </PageHeader>
 
-  <p v-if="error" class="text-accent-700">{{ error }}</p>
+  <p v-if="error" class="text-danger">{{ error }}</p>
 
   <ListSkeleton v-else-if="loading" />
 
-  <ul v-else-if="items.length" class="grid gap-3">
-    <li v-for="it in items" :key="it.id">
+  <ul
+    v-else-if="items.length"
+    class="m-0 list-none border-t border-divider p-0"
+  >
+    <li
+      v-for="(it, index) in items"
+      :key="it.id"
+      class="border-b border-divider"
+      data-test="wishlist-item"
+      :data-id="it.id"
+    >
       <PersonWishlistItem
         :item="it"
         :viewer-id="auth.user?.id"
-        @reserve="reserve(it.id)"
-        @purchase="purchase(it.id)"
+        :tone="toneAt(index)"
+        @reserve="reserve(it)"
         @unreserve="unreserve(it.id)"
       />
     </li>
   </ul>
 
-  <EmptyState v-else icon="circle" :message="t('view.empty')" />
+  <p v-else class="py-8 text-center text-muted" data-test="empty-state">
+    {{ t("view.empty", { name: ownerName }) }}
+  </p>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
+import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
-import Avatar from "../components/ui/Avatar.vue";
-import Button from "../components/ui/Button.vue";
-import EmptyState from "../components/ui/EmptyState.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import PageHeader from "../components/PageHeader.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth.ts";
+import { toneAt } from "../utils/tones";
 import type { WishlistItem } from "../types.ts";
 
 const { t } = useI18n();
@@ -58,34 +68,27 @@ const error = ref("");
 
 const props = defineProps<{ userId: string }>();
 
-const remaining = computed(
-  () => items.value.filter((it) => !it.reserved).length,
-);
-
 async function load() {
   try {
     const list = await api.viewWishlist(props.userId);
     ownerName.value = list.owner?.name ?? "";
     items.value = list.items ?? [];
   } catch (e: any) {
-    error.value = e.message ?? "Erreur";
+    error.value = e.message ?? t("toast.error");
   } finally {
     loading.value = false;
   }
 }
-async function reserve(id: string) {
-  await api.reserve(id);
-  push(t("toast.reserved"), "success");
+
+async function reserve(item: WishlistItem) {
+  await api.reserve(item.id);
+  push(t("toast.giving", { title: item.title }), "success");
   await load();
 }
+
 async function unreserve(id: string) {
   await api.unreserve(id);
-  push(t("toast.unreserved"), "info");
-  await load();
-}
-async function purchase(id: string) {
-  await api.purchase(id);
-  push(t("toast.purchased"), "success");
+  push(t("toast.notGiving"), "info");
   await load();
 }
 

@@ -46,31 +46,32 @@ test("person view renders every reservation state and the counter", async ({
   await expect(card(openItem.id)).toContainText("pastel serait sympa");
   await expect(card(openItem.id)).toContainText("79");
 
-  // Reserved by someone else: a neutral tag naming the reserver, no controls
-  await expect(card(otherItem.id).locator('[data-test="wishlist-status"]')).toContainText(
-    "Réservé par Test User",
+  // Taken by someone else: said plainly, without naming them, and no controls
+  await expect(card(otherItem.id).locator('[data-test="wishlist-status"]')).toHaveText(
+    "Quelqu’un s’en occupe déjà",
   );
   await expect(card(otherItem.id).locator("button")).toHaveCount(0);
 
-  // The counter only counts items with no reservation
-  await expect(viewer.locator("text=2 sur 3 encore à prendre")).toBeVisible();
-
-  // Open -> reserved by the viewer
+  // Open -> "Je l'offre" -> the viewer is giving it
+  await expect(card(mineItem.id).locator('[data-test="wishlist-reserve"]')).toHaveText(
+    "Je l’offre",
+  );
   await card(mineItem.id).locator('[data-test="wishlist-reserve"]').click();
   await expect(card(mineItem.id).locator('[data-test="wishlist-status"]')).toHaveText(
-    "Réservé par toi",
+    "Tu l’offres",
   );
-  await expect(viewer.locator("text=1 sur 3 encore à prendre")).toBeVisible();
 
-  // Reserved -> purchased: the tag changes and "Marquer acheté" disappears
-  await card(mineItem.id).locator('[data-test="wishlist-purchase"]').click();
+  // An older "purchased" reservation reads the same way: there is one state
+  const purchased = await viewer.request.post(
+    `/api/wishlists/items/${mineItem.id}/purchase`,
+  );
+  expect(purchased.ok()).toBe(true);
+  await viewer.reload();
   await expect(card(mineItem.id).locator('[data-test="wishlist-status"]')).toHaveText(
-    "Acheté — bien joué",
+    "Tu l’offres",
   );
-  await expect(card(mineItem.id).locator('[data-test="wishlist-purchase"]')).toHaveCount(0);
 
-  // "Annuler" is still offered on a purchased item, and releases it
+  // "Annuler" releases it
   await card(mineItem.id).locator('[data-test="wishlist-unreserve"]').click();
   await expect(card(mineItem.id).locator('[data-test="wishlist-reserve"]')).toBeVisible();
-  await expect(viewer.locator("text=2 sur 3 encore à prendre")).toBeVisible();
 });

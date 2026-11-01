@@ -5,9 +5,13 @@
       <Tag variant="outline">{{ t("sample.badge") }}</Tag>
     </div>
 
-    <ul class="grid gap-3">
-      <li v-for="item in SAMPLE_ITEMS" :key="item.id">
-        <PersonWishlistItem :item="item" />
+    <ul class="m-0 list-none border-t border-divider p-0">
+      <li
+        v-for="(item, index) in SAMPLE_ITEMS"
+        :key="item.id"
+        class="border-b border-divider"
+      >
+        <PersonWishlistItem :item="item" :tone="toneAt(index)" />
       </li>
     </ul>
 
@@ -21,6 +25,7 @@ import PersonWishlistItem from "./wishlist/PersonWishlistItem.vue";
 import Card from "./ui/Card.vue";
 import Tag from "./ui/Tag.vue";
 import { SAMPLE_ITEMS } from "../data/sampleWishlist";
+import { toneAt } from "../utils/tones";
 
 const { t } = useI18n();
 </script>
