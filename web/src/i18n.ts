@@ -167,6 +167,7 @@ const fr = {
     leadAlone:
       "Personne d’autre pour l’instant. Invite un proche : il pourra faire sa liste, et voir la tienne.",
     wishCount: "{count} envie | {count} envies",
+    noWish: "Pas encore d’envie",
     givingCount: "tu en offres {count}",
   },
   view: {
