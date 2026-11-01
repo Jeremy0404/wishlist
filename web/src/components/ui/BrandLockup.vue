@@ -7,7 +7,7 @@ const { t } = useI18n();
 
 <template>
   <span
-    class="inline-flex items-center gap-2 font-heading text-wordmark text-ink"
+    class="inline-flex items-center gap-2 font-heading text-wordmark font-medium text-ink"
     data-test="brand-lockup"
   >
     <svg

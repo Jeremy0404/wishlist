@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { addWishlistItem, registerUser } from "./helpers";
 
-const ACCENT_2_200 = "rgb(225, 238, 204)";
-const ACCENT_2_800 = "rgb(61, 71, 43)";
+const ACCENT_2_200 = "rgb(237, 243, 236)";
+const ACCENT_2_800 = "rgb(52, 101, 56)";
 
 async function shareOwnList(page: Page): Promise<string> {
   const published = page.waitForResponse(

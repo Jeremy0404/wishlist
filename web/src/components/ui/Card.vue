@@ -19,7 +19,7 @@ withDefaults(defineProps<{ elevation?: "sm" | "md" | "lg" | "none" }>(), {
     <p v-if="$slots.kicker" class="mb-0 text-kicker uppercase text-accent">
       <slot name="kicker" />
     </p>
-    <div v-if="$slots.title" class="font-heading text-card-title">
+    <div v-if="$slots.title" class="font-heading text-card-title font-medium">
       <slot name="title" />
     </div>
     <p v-if="$slots.body" class="mb-0 flex-1 text-caption opacity-80">

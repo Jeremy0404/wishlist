@@ -17,7 +17,7 @@ const props = withDefaults(
 );
 
 const classes = computed(() => [
-  "inline-flex items-center justify-center gap-2 rounded-pill border border-transparent font-heading text-control text-ink no-underline transition-colors",
+  "inline-flex items-center justify-center gap-2 rounded-md border border-transparent font-semibold text-control text-ink no-underline transition-colors",
   props.icon
     ? "h-9 w-9 p-0"
     : props.variant === "ghost"
@@ -25,7 +25,7 @@ const classes = computed(() => [
       : "px-4 py-2",
   props.block && "w-full",
   props.variant === "primary" &&
-    "bg-accent text-bg hover:bg-accent-600 active:bg-accent-700",
+    "bg-accent text-on-fill hover:bg-accent-700 active:bg-accent-800",
   props.variant === "secondary" &&
     "border-divider hover:bg-ink/7 active:bg-ink/14",
   props.variant === "danger" &&
