@@ -66,7 +66,7 @@ test("someone else's empty list says so and offers nothing", async ({
   await alexa.goto(`/wishlists/${bobId}`);
 
   const empty = alexa.locator('[data-test="empty-state"]');
-  await expect(empty).toContainText("Rien sur cette liste pour l’instant.");
+  await expect(empty).toContainText("Bob Marley n’a encore rien noté.");
   await expect(empty.locator("button")).toHaveCount(0);
   await expect(empty.locator("a")).toHaveCount(0);
 });
