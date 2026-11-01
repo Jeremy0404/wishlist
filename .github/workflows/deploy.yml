@@ -86,7 +86,7 @@ jobs:
       - name: Save tag
         run: echo "${{ steps.meta.outputs.TAG }}" > tag.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: deploy-tag
           path: tag.txt
