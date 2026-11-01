@@ -1,7 +1,27 @@
+import crypto from "crypto";
 import type { Knex } from "knex";
-import { buildShareSlug } from "../src/share-slug.js";
 
 const SLUG_ATTEMPTS = 5;
+const TOKEN_ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789";
+const TOKEN_LENGTH = 4;
+const MAX_NAME_LENGTH = 24;
+const UNNAMED_OWNER = "liste";
+
+function buildShareSlug(ownerName: string): string {
+  const name =
+    ownerName
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .slice(0, MAX_NAME_LENGTH)
+      .replace(/^-+|-+$/g, "") || UNNAMED_OWNER;
+  const token = Array.from(
+    crypto.randomBytes(TOKEN_LENGTH),
+    (byte) => TOKEN_ALPHABET[byte % TOKEN_ALPHABET.length],
+  ).join("");
+  return `${name}-${token}`;
+}
 
 export async function up(knex: Knex): Promise<void> {
   const taken = new Set<string>(
