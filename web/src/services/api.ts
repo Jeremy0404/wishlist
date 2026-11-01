@@ -151,21 +151,6 @@ export const api = {
   deleteMyItem: (id: string) =>
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
-  publishMyWishlist: () =>
-    request<{ wishlist: Wishlist }>("/wishlists/me/publish", {
-      method: "POST",
-    }),
-  unpublishMyWishlist: () =>
-    request<{ wishlist: Wishlist }>("/wishlists/me/publish", {
-      method: "DELETE",
-    }),
-  viewPublicWishlist: (slug: string) =>
-    request<{
-      owner?: { name?: string };
-      wishlist?: Wishlist;
-      items: WishlistItem[];
-    }>(`/wishlists/public/${slug}`),
-
   // --- Others / viewing ---
   others: () => request<FamilyWishlist[]>("/wishlists"),
   viewWishlist: (userId: string) =>

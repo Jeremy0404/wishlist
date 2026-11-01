@@ -143,28 +143,3 @@ test("a file that is not an image is refused", async ({ page }) => {
   ).toHaveText("Formats acceptés : PNG, JPEG, WebP ou GIF.");
   await expect(page.locator('[data-test="item-image-preview"]')).toHaveCount(0);
 });
-
-test("the shared page shows the photo at 56px", async ({ page }) => {
-  await registerUser(page, "Élodie Martin");
-  await addItem(page, "Cadeau illustré", {
-    name: "photo.png",
-    mimeType: "image/png",
-    buffer: PNG,
-  });
-
-  const published = page.waitForResponse(
-    (res) => res.url().includes("/api/wishlists/me/publish") && res.ok(),
-  );
-  await page.click('[data-test="share-visibility-shared"]');
-  await published;
-
-  const { wishlist } = await (
-    await page.request.get("/api/wishlists/me")
-  ).json();
-  await page.goto(`/share/${wishlist.public_slug}`);
-
-  const image = page.locator(thumbnail);
-  await expect(image).toBeVisible();
-  await expect(image).toHaveCSS("width", "56px");
-  await expect(image).toHaveCSS("height", "56px");
-});

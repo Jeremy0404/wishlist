@@ -10,18 +10,12 @@ import Others from "./pages/Others.vue";
 import WishlistView from "./pages/WishlistView.vue";
 import SignIn from "./pages/SignIn.vue";
 import Welcome from "./pages/Welcome.vue";
-import PublicWishlist from "./pages/PublicWishlist.vue";
 import NotFound from "./pages/NotFound.vue";
 import SessionExpired from "./pages/SessionExpired.vue";
 
 const routes = [
   // Signing in and signing up are the same act, on the same screen as the pitch.
   { path: "/", component: SignIn, meta: { public: true, onlyGuest: true } },
-  {
-    path: "/share/:slug",
-    component: PublicWishlist,
-    meta: { public: true, minimal: true },
-  },
 
   // Auth
   { path: "/auth/login", redirect: keepRedirect },
