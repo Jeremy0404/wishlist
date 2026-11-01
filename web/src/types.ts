@@ -15,8 +15,6 @@ export type ReservationStatus = "reserved" | "purchased";
 
 export interface Wishlist {
   id: string;
-  public_slug?: string | null;
-  published_at?: string | null;
   created_at?: string | null;
 }
 

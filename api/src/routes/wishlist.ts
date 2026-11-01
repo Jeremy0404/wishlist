@@ -15,7 +15,6 @@ import {
   ValidationError,
 } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
-import { buildShareSlug } from "../share-slug.js";
 import { fetchLinkPreview } from "../link-preview.js";
 import { IMAGE_UNSUPPORTED, imageUpload } from "../middleware/image-upload.js";
 import {
@@ -56,29 +55,12 @@ function findOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
   return scopeToOwner(trx("wishlists"), userId, familyId).first();
 }
 
-const SLUG_ATTEMPTS = 5;
-
-async function mintShareSlug(userId: string, trx = db) {
-  const owner = await trx("users").select("name").where({ id: userId }).first();
-
-  for (let i = 0; i < SLUG_ATTEMPTS; i += 1) {
-    const slug = buildShareSlug(owner?.name ?? "");
-    const taken = await trx("wishlists").where({ public_slug: slug }).first();
-    if (!taken) return slug;
-  }
-  throw new Error("unable to generate share link");
-}
-
 async function ensureOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
   const existing = await findOwnWishlist(userId, familyId, trx);
   if (existing) return existing;
 
   const [created] = await trx("wishlists")
-    .insert({
-      user_id: userId,
-      family_id: familyId ?? null,
-      public_slug: await mintShareSlug(userId, trx),
-    })
+    .insert({ user_id: userId, family_id: familyId ?? null })
     .returning("*");
   return created;
 }
@@ -320,97 +302,6 @@ router.get(
       "Listed family wishlists",
     );
     res.json(rows);
-  }),
-);
-
-router.post(
-  "/me/publish",
-  authRequired,
-  familyContext,
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "wishlist", action: "share" });
-    const { id: user_id } = req.user!;
-    const family_id = req.familyId;
-
-    const trx = await db.transaction();
-    try {
-      const wishlist = await ensureOwnWishlist(user_id, family_id, trx);
-
-      if (!wishlist) throw new BadRequestError("missing wishlist");
-
-      const [updated] = await trx("wishlists")
-        .where({ id: wishlist.id })
-        .update({ published_at: trx.fn.now() })
-        .returning("*");
-
-      await trx.commit();
-      log.info(
-        { wishlistId: wishlist.id, slug: updated.public_slug },
-        "Shared wishlist",
-      );
-      res.json({ wishlist: updated });
-    } catch (e) {
-      await trx.rollback();
-      throw e;
-    }
-  }),
-);
-
-router.delete(
-  "/me/publish",
-  authRequired,
-  familyContext,
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, {
-      module: "wishlist",
-      action: "unshare",
-    });
-    const wishlist = await findOwnWishlist(req.user!.id, req.familyId);
-    if (!wishlist) throw new NotFoundError("wishlist not found");
-
-    const [updated] = await db("wishlists")
-      .where({ id: wishlist.id })
-      .update({ published_at: null })
-      .returning("*");
-
-    log.info({ wishlistId: wishlist.id }, "Stopped sharing wishlist");
-    res.json({ wishlist: updated });
-  }),
-);
-
-router.get(
-  "/public/:slug",
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, {
-      module: "wishlist",
-      action: "public-view",
-    });
-    const { slug } = req.params;
-
-    const wl = await db("wishlists as w")
-      .leftJoin("users as u", "u.id", "w.user_id")
-      .select("w.*", "u.name as owner_name")
-      .where({ "w.public_slug": slug })
-      .whereNotNull("w.published_at")
-      .first();
-
-    if (!wl) throw new NotFoundError("wishlist not published");
-
-    const items = await db("wishlist_items")
-      .where({ wishlist_id: wl.id })
-      .orderBy("priority", "asc")
-      .orderBy("created_at", "desc");
-
-    log.info({ wishlistId: wl.id, slug }, "Fetched public wishlist");
-    res.json({
-      owner: wl.owner_name ? { name: wl.owner_name } : undefined,
-      wishlist: {
-        id: wl.id,
-        published_at: wl.published_at,
-        created_at: wl.created_at,
-      },
-      items,
-    });
   }),
 );
 
