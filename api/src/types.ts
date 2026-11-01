@@ -1,4 +1,4 @@
-export type JwtUser = { id: string; email: string };
+export type JwtUser = { id: string };
 
 declare global {
     namespace Express {

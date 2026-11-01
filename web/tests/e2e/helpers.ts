@@ -174,7 +174,7 @@ export async function loginUser(
 ): Promise<void> {
   await page.goto("/");
   await usePasswordForm(page);
-  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="identifier"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/me/);

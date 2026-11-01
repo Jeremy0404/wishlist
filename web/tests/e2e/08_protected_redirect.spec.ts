@@ -16,7 +16,7 @@ test("protected route redirect returns to target after login", async ({ page }) 
   await expect(page).toHaveURL(/\/\?redirect=/);
 
   await usePasswordForm(page);
-  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="identifier"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
 

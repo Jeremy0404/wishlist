@@ -10,11 +10,21 @@
       required
     />
     <Input
+      v-if="creating"
       v-model="email"
       type="email"
       name="email"
       autocomplete="email"
       :label="t('auth.email')"
+      required
+    />
+    <Input
+      v-else
+      v-model="identifier"
+      type="text"
+      name="identifier"
+      autocomplete="username"
+      :label="t('auth.identifier')"
       required
     />
     <Input
@@ -59,6 +69,7 @@ const emit = defineEmits<{ done: [redirect: string] }>();
 const creating = ref(false);
 const name = ref("");
 const email = ref("");
+const identifier = ref("");
 const password = ref("");
 const submitting = ref(false);
 
@@ -70,7 +81,7 @@ async function submit() {
       await auth.register(name.value.trim(), email.value.trim(), password.value);
       push(t("auth.registerSuccess"), "success");
     } else {
-      await auth.login(email.value.trim(), password.value);
+      await auth.login(identifier.value.trim(), password.value);
       push(t("auth.loginSuccess"), "success");
     }
     emit("done", props.redirect);
