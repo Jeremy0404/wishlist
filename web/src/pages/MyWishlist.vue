@@ -41,8 +41,6 @@
 
   <ShareCard :wishlist="wishlist" @change="(updated) => (wishlist = updated)" />
 
-  <InviteNudge />
-
   <ItemSheet
     :open="sheetOpen"
     :item="editing"
@@ -63,7 +61,6 @@ import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import WishlistRow from "../components/wishlist/WishlistRow.vue";
 import ShareCard from "../components/wishlist/ShareCard.vue";
-import InviteNudge from "../components/InviteNudge.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { toneAt } from "../utils/tones";
 import type { Wishlist, WishlistItem } from "../types.ts";

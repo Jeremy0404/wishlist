@@ -44,30 +44,19 @@
 
   <div v-if="!loading && !error" data-test="empty-state">
     <Button
-      v-if="auth.inFamily"
-      variant="secondary"
+      :variant="rows.length ? 'secondary' : 'primary'"
       block
-      class="min-h-14 border-[1.5px] border-dashed border-neutral-400 text-body"
+      class="min-h-14 text-body"
+      :class="rows.length && 'border-[1.5px] border-dashed border-neutral-400'"
       data-test="browse-invite"
       @click="inviteOpen = true"
     >
-      <Icon name="userPlus" :size="22" class="text-accent" />
-      {{ t("browse.invite.action") }}
-    </Button>
-    <Button
-      v-else
-      variant="primary"
-      block
-      class="min-h-14 text-body"
-      to="/family/create"
-      data-test="browse-create"
-    >
-      <Icon name="userPlus" :size="22" />
-      {{ t("browse.invite.action") }}
+      <Icon name="userPlus" :size="22" :class="rows.length && 'text-accent'" />
+      {{ t("invite.action") }}
     </Button>
   </div>
 
-  <InviteDialog :open="inviteOpen" @close="inviteOpen = false" />
+  <InviteSheet :open="inviteOpen" @close="inviteOpen = false" />
 </template>
 
 <script setup lang="ts">
@@ -79,7 +68,7 @@ import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
-import InviteDialog from "../components/InviteDialog.vue";
+import InviteSheet from "../components/InviteSheet.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { useAuth } from "../stores/auth.ts";
 import { toneAt } from "../utils/tones";

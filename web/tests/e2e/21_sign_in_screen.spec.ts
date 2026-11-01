@@ -1,24 +1,16 @@
 import { test, expect } from "@playwright/test";
 import { registerUser, uniqueEmail, usePasswordForm } from "./helpers";
 
-test("the landing page is the auth screen, pitch and card in one", async ({
-  page,
-}) => {
+test("the landing page says hello and asks for one thing", async ({ page }) => {
   await page.goto("/");
 
-  await expect(
-    page.getByRole("heading", { name: /Qu’est-ce qui vous ferait plaisir/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bonjour" })).toBeVisible();
+  await expect(page.getByText("Pour entrer, indique ton adresse e-mail.")).toBeVisible();
   await expect(page.locator('[data-test="magic-email"]')).toBeVisible();
-  await expect(page.locator('[data-test="sample-wishlist"]')).toBeVisible();
-});
-
-test("the three value props are on the screen", async ({ page }) => {
-  await page.goto("/");
-
-  await expect(page.getByText("Une ligne suffit")).toBeVisible();
-  await expect(page.getByText("La famille est optionnelle")).toBeVisible();
-  await expect(page.getByText("Jamais deux fois le même cadeau")).toBeVisible();
+  await expect(page.locator('[data-test="magic-send"]')).toHaveText(
+    "Recevoir le lien",
+  );
+  await expect(page.locator('[data-test="nav-sample"]')).toHaveCount(0);
 });
 
 test("signing up and signing in are the same act on the primary path", async ({
@@ -27,7 +19,6 @@ test("signing up and signing in are the same act on the primary path", async ({
   await page.goto("/");
 
   // One field, one button — nothing asks which of the two the visitor wants.
-  await expect(page.locator('[data-test="magic-email"]')).toBeVisible();
   await expect(page.locator('input[name="name"]')).toHaveCount(0);
   await expect(page.locator('input[name="password"]')).toHaveCount(0);
 
@@ -35,17 +26,26 @@ test("signing up and signing in are the same act on the primary path", async ({
     (res) =>
       res.url().includes("/api/auth/magic-link") && res.status() === 200,
   );
-  await page.fill('[data-test="magic-email"]', uniqueEmail());
+  const email = uniqueEmail();
+  await page.fill('[data-test="magic-email"]', email);
   await page.click('[data-test="magic-send"]');
   await requested;
 
-  await expect(page.locator('[data-test="magic-sent"]')).toBeVisible();
+  const sent = page.locator('[data-test="magic-sent"]');
+  await expect(sent).toContainText("C’est envoyé");
+  await expect(sent).toContainText("Jette un œil dans les spams.");
+
+  await sent.locator('[data-test="magic-change"]').click();
+  await expect(page.locator('[data-test="magic-email"]')).toBeVisible();
 });
 
 test("the password fallback carries both branches, one click away", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page.locator('[data-test="use-password"]')).toHaveText(
+    "Me connecter avec un mot de passe",
+  );
   await usePasswordForm(page);
 
   await expect(page.locator('input[name="password"]')).toBeVisible();
@@ -54,20 +54,9 @@ test("the password fallback carries both branches, one click away", async ({
   await page.click('button[data-test="want-register"]');
   await expect(page.locator('input[name="name"]')).toBeVisible();
   await expect(page.locator('input[name="new-password"]')).toBeVisible();
-});
 
-test("the sample list opens with no account and stays read-only", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.click('[data-test="nav-sample"]');
-
-  await expect(page).toHaveURL(/\/sample/);
-  await expect(page.locator('[data-test="sample-wishlist"]')).toBeVisible();
-  await expect(
-    page.getByText("Appareil photo instantané Instax"),
-  ).toBeVisible();
-  await expect(page.getByText("Liste fictive")).toBeVisible();
+  await page.click('[data-test="use-magic-link"]');
+  await expect(page.locator('[data-test="magic-email"]')).toBeVisible();
 });
 
 test("the guards still send an authenticated visitor to their own list", async ({

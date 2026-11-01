@@ -1,23 +1,39 @@
 <template>
-  <div v-if="sentTo" class="grid gap-3 text-center" data-test="magic-sent">
-    <Icon name="mail" class="mx-auto h-8 w-8 text-accent" />
-    <h2 class="font-heading text-h4 text-ink">{{ t("auth.magic.sentTitle") }}</h2>
-    <p class="text-meta text-muted">
+  <div
+    v-if="sentTo"
+    role="status"
+    class="grid justify-items-center gap-2.5 rounded-lg border border-divider bg-surface px-5 py-6 text-center"
+    data-test="magic-sent"
+  >
+    <span
+      aria-hidden="true"
+      class="grid h-14 w-14 place-items-center rounded-full bg-tone-green text-tone-green-ink"
+    >
+      <Icon name="mail" :size="28" />
+    </span>
+    <h2 class="mb-0 text-h2">{{ t("auth.magic.sentTitle") }}</h2>
+    <p class="mb-0">
       {{ t("auth.magic.sentTo", { email: sentTo }) }}
-      {{ t("auth.magic.sentHint") }}
     </p>
-    <Button variant="secondary" :loading="submitting" @click="submit">
-      {{ t("auth.magic.resend") }}
-    </Button>
+    <p class="mb-0 text-caption text-muted">{{ t("auth.magic.sentHint") }}</p>
+    <button
+      type="button"
+      class="min-h-11 text-caption text-muted underline underline-offset-4"
+      data-test="magic-change"
+      @click="sentTo = ''"
+    >
+      {{ t("auth.magic.changeAddress") }}
+    </button>
   </div>
 
-  <form v-else class="grid gap-3" @submit.prevent="submit">
+  <form v-else class="grid gap-4" @submit.prevent="submit">
     <Input
       v-model="email"
       type="email"
       name="email"
       autocomplete="email"
       :label="t('auth.email')"
+      :placeholder="t('auth.emailPlaceholder')"
       data-test="magic-email"
       required
     />
@@ -25,13 +41,13 @@
       variant="primary"
       block
       type="submit"
+      class="min-h-14 text-body"
       :loading="submitting"
       :disabled="!email.trim()"
       data-test="magic-send"
     >
       {{ t("auth.magic.send") }}
     </Button>
-    <p class="text-meta text-muted">{{ t("auth.magic.fineprint") }}</p>
   </form>
 </template>
 

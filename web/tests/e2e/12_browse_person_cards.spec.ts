@@ -58,13 +58,15 @@ test("browse shows a card per member with counts, and invites inline", async ({
   await expect(carolCard.getByText("CO", { exact: true })).toBeVisible();
 
   // The invite button opens the flow inline, without leaving the page
-  await expect(bob.locator('[data-test="invite-code"]')).toHaveCount(0);
+  await expect(bob.locator('[data-test="invite-link"]')).toHaveCount(0);
   await bob.locator('[data-test="browse-invite"]').click();
-  await expect(bob.locator('[data-test="invite-code"]')).toHaveText(inviteCode);
+  await expect(bob.locator('[data-test="invite-link"]')).toContainText(
+    `/family/join?code=${inviteCode}`,
+  );
   await expect(bob).toHaveURL(/\/wishlists$/);
 
   await bob.keyboard.press("Escape");
-  await expect(bob.locator('[data-test="invite-code"]')).toHaveCount(0);
+  await expect(bob.locator('[data-test="invite-link"]')).toHaveCount(0);
 
   // The grid reflows without pushing the page sideways
   for (const width of [360, 768, 1280]) {

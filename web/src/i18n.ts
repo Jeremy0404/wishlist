@@ -27,14 +27,11 @@ const fr = {
     maybeLater: "Plus tard",
     code: "Code",
     copied: "Code copié",
+    noFamilyShort: "Pas encore de famille",
     shareTitle: "Invitation à rejoindre {name}",
-    shareSubject: "Rejoins la famille {name} sur Wishlist",
-    shareCatchPhrase: "🧞‍♂️ Fais un vœu, on s'en charge !",
+    shareSubject: "Rejoins « {name} » sur Wishlist",
     shareBody:
-      "Famille : {name}\n" +
-      "Code d'invitation : {code}\n" +
-      "Lien direct : {url}\n\n" +
-      "{catchPhrase}",
+      "Je t’invite dans « {name} » sur Wishlist, pour partager nos listes d’envies. Clique ici pour nous rejoindre : {url}",
   },
 
   // --- PAGES ---
@@ -67,82 +64,36 @@ const fr = {
     joined: "Tu as rejoint {name}.",
     error: "Échec de la jonction",
   },
-  familyInvite: {
-    title: "Inviter dans ta famille",
-    body: "Partage le code, ou le lien — les deux mènent au même endroit.",
-    codeLabel: "Code d’invitation",
-    linkLabel: "Lien d’invitation",
-    rotate: "Générer un nouveau code",
-    rotateConfirm:
-      "L’ancien code sera retiré — les personnes qui ne s’en sont pas encore " +
-      "servies auront besoin du nouveau.",
-    rotateConfirmBtn: "Générer",
-    codeRotated: "Nouveau code d’invitation généré.",
-    rotateError: "Impossible de régénérer le code.",
-    membersTitle: "Membres",
-    refresh: "Actualiser",
-    noMembers: "Aucun membre pour l’instant.",
-    membersError: "Impossible de charger les membres de la famille.",
-    noFamily: "Crée ou rejoins d’abord une famille.",
-    noFamilyAction: "Créer une famille",
-  },
   signIn: {
-    kicker: "Sans mot de passe",
-    title: "Qu’est-ce qui vous ferait plaisir ? Dites-le, tout simplement.",
+    title: "Bonjour",
     subtitle:
-      "Ajoutez ce dont vous avez envie. Partagez votre liste quand vous le sentez.",
-    getStarted: "On commence",
-    sampleLink: "Voir une liste d’exemple",
-    props: {
-      quick: {
-        title: "Une ligne suffit",
-        body: "Collez un lien, le titre et le prix se remplissent tout seuls.",
-      },
-      familyOptional: {
-        title: "La famille est optionnelle",
-        body: "Votre liste vous attend dès maintenant, même sans personne autour.",
-      },
-      noDuplicates: {
-        title: "Jamais deux fois le même cadeau",
-        body: "Les autres voient ce qui est déjà réservé. Vous, non.",
-      },
-    },
-  },
-  sample: {
-    title: "Une liste, en aperçu",
-    badge: "Exemple",
-    disclaimer: "Liste fictive, montrée à titre d’illustration.",
-    pageTitle: "La liste d’{name}",
-    pageSubtitle:
-      "Voilà à quoi ressemble une liste partagée. Celle-ci est inventée.",
-    start: "Créer la mienne",
+      "Pour entrer, indique ton adresse e-mail. On t’envoie un lien, il suffit de cliquer dessus.",
   },
   auth: {
     login: "Connexion",
     loginSuccess: "Bienvenue 👋",
     register: "Inscription",
     registerSuccess: "Compte créé 🎉",
-    email: "E-mail",
+    email: "Ton adresse e-mail",
+    emailPlaceholder: "prenom{'@'}exemple.fr",
     password: "Mot de passe",
     name: "Nom",
     create: "Créer le compte",
     haveAccount: "J’ai déjà un compte",
     noAccount: "Je n’ai pas encore de compte",
     magic: {
-      title: "Continuer avec l’e-mail",
-      send: "Envoyez-moi un lien",
-      fineprint:
-        "Lien à usage unique, valable 15 minutes. Aucun mot de passe à inventer ni à retenir.",
-      passwordInstead: "Utiliser un mot de passe",
-      sentTitle: "Regardez votre boîte mail",
-      sentTo: "Nous avons envoyé un lien à {email}.",
-      sentHint: "Il expire dans 15 minutes.",
-      resend: "Renvoyer le lien",
+      send: "Recevoir le lien",
+      passwordInstead: "Me connecter avec un mot de passe",
+      linkInstead: "Recevoir un lien par e-mail à la place",
+      sentTitle: "C’est envoyé",
+      sentTo: "Un message t’attend à {email}. Clique sur le lien qu’il contient pour entrer.",
+      sentHint: "Le lien marche 15 minutes. Rien reçu ? Jette un œil dans les spams.",
+      changeAddress: "Changer d’adresse",
       signingIn: "Connexion en cours…",
-      expiredTitle: "Lien expiré",
+      expiredTitle: "Ce lien ne marche plus",
       expiredHint:
-        "Les liens ne fonctionnent qu’une fois, et seulement pendant 15 minutes.",
-      requestNew: "En demander un nouveau",
+        "Un lien ne sert qu’une fois, pendant 15 minutes. Demandes-en un autre, c’est rapide.",
+      requestNew: "Recevoir un nouveau lien",
     },
   },
   account: {
@@ -155,6 +106,20 @@ const fr = {
     cancel: "Annuler",
     print: "Imprimer ma liste",
     logout: "Se déconnecter",
+  },
+  invite: {
+    action: "Inviter un proche",
+    title: "Inviter un proche",
+    body: "Envoie ce lien à qui tu veux. En cliquant dessus, la personne rejoint « {name} » et peut faire sa liste à son tour.",
+    send: "Envoyer le lien",
+    copy: "Copier le lien",
+    copied: "Lien copié, tu peux le coller où tu veux",
+    nameBody:
+      "D’abord, donne un nom à ta famille. C’est le titre que tout le monde verra.",
+    nameLabel: "Nom de la famille",
+    namePrefill: "Famille ",
+    nameRequired: "Complète le nom, par exemple « Famille Martin ».",
+    nameSubmit: "Continuer",
   },
   item: {
     add: "Ajouter une envie",
