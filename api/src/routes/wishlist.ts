@@ -70,10 +70,13 @@ export async function listFamilyWishlists(
   familyId: string,
   userId: string,
 ) {
-  return dbConn("wishlists as w")
-    .join("users as u", "u.id", "w.user_id")
-    .where("w.family_id", familyId)
-    .andWhereNot("w.user_id", userId)
+  return dbConn("family_memberships as fm")
+    .join("users as u", "u.id", "fm.user_id")
+    .leftJoin("wishlists as w", function () {
+      this.on("w.user_id", "fm.user_id").andOn("w.family_id", "fm.family_id");
+    })
+    .where("fm.family_id", familyId)
+    .andWhereNot("fm.user_id", userId)
     .select(
       "w.id as wishlist_id",
       "u.id as user_id",

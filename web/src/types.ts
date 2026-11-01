@@ -19,7 +19,7 @@ export interface Wishlist {
 }
 
 export interface FamilyWishlist {
-  wishlist_id: string;
+  wishlist_id: string | null;
   user_id: string;
   name: string;
   created_at?: string | null;
