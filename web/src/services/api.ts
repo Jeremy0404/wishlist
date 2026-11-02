@@ -1,7 +1,10 @@
 // web/src/services/api.ts
 import type {
+  AdminAccountForm,
   AdminOverview,
+  AdminProfile,
   AdminUserDetail,
+  DeletionImpact,
   Family,
   FamilyMember,
   FamilyWishlist,
@@ -13,7 +16,18 @@ import type {
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
-type Method = "GET" | "POST" | "PATCH" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly details?: { field?: string };
+
+  constructor(message: string, status: number, details?: { field?: string }) {
+    super(message);
+    this.status = status;
+    this.details = details;
+  }
+}
 type UnauthorizedHandler = () => void;
 const unauthorizedHandlers: UnauthorizedHandler[] = [];
 
@@ -66,7 +80,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     const data = await res.json();
     const msg = (data && (data.error || data.message)) || (await res.text());
 
-    throw new Error(msg || res.statusText);
+    throw new ApiError(msg || res.statusText, res.status, data?.details);
   }
   return await res.json();
 }
@@ -176,6 +190,19 @@ export const api = {
   adminOverview: () => request<AdminOverview>("/admin/families"),
   adminUser: (userId: string) =>
     request<AdminUserDetail>(`/admin/users/${userId}`),
+  adminCreateUser: (body: AdminAccountForm) =>
+    request<AdminProfile>("/admin/users", { method: "POST", body }),
+  adminUpdateUser: (userId: string, body: AdminAccountForm) =>
+    request<AdminProfile>(`/admin/users/${userId}`, { method: "PATCH", body }),
+  adminSetPassword: (userId: string, password: string) =>
+    request(`/admin/users/${userId}/password`, {
+      method: "PUT",
+      body: { password },
+    }),
+  adminDeletionImpact: (userId: string) =>
+    request<DeletionImpact>(`/admin/users/${userId}/deletion-impact`),
+  adminDeleteUser: (userId: string) =>
+    request(`/admin/users/${userId}`, { method: "DELETE" }),
 };
 
 export function onUnauthorized(handler: UnauthorizedHandler) {

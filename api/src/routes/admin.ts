@@ -1,16 +1,15 @@
 import { Router } from "express";
 import type { Knex } from "knex";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { db } from "../db/knex.js";
 import { adminRequired } from "../middleware/admin.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
-import { NotFoundError } from "../errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
+import { removeImage } from "../uploads.js";
 import { listItemsWithReservations } from "./wishlist.js";
-
-const router = Router();
-
-router.use(authRequired, adminRequired());
 
 const WISH_COUNT = `(
   select count(*)
@@ -18,6 +17,14 @@ const WISH_COUNT = `(
   join wishlists w on w.id = i.wishlist_id
   where w.user_id = u.id and w.family_id is not distinct from fm.family_id
 )::int as wish_count`;
+
+const PROFILE_COLUMNS = ["id", "name", "email", "username"];
+
+/** Mirrors the users_username_format check of the username migration. */
+const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
+const NAME_MAX_LENGTH = 80;
+const PASSWORD_MIN_LENGTH = 6;
+const BCRYPT_ROUNDS = 10;
 
 export type AdminMember = {
   id: string;
@@ -29,6 +36,85 @@ export type AdminMember = {
 };
 
 type Family = { id: string; name: string };
+
+type Identifiers = { email?: string | null; username?: string | null };
+
+function blankToNull(value: unknown) {
+  return typeof value === "string" && value.trim() === "" ? null : value;
+}
+
+const Name = z.string().trim().min(1).max(NAME_MAX_LENGTH);
+const Email = z.preprocess(
+  blankToNull,
+  z.string().trim().toLowerCase().email().nullable(),
+);
+const Username = z.preprocess(
+  blankToNull,
+  z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(USERNAME_PATTERN, "3 à 32 caractères : lettres, chiffres, . _ -")
+    .nullable(),
+);
+const Password = z.string().min(PASSWORD_MIN_LENGTH);
+
+const IDENTIFIER_REQUIRED = {
+  message: "email or username required",
+  path: ["identifier"],
+};
+
+export const AccountCreate = z
+  .object({
+    name: Name,
+    email: Email.optional(),
+    username: Username.optional(),
+    password: Password,
+    familyId: z.string().uuid().nullable().optional(),
+  })
+  .refine((a) => a.email || a.username, IDENTIFIER_REQUIRED);
+
+export const AccountUpdate = z.object({
+  name: Name.optional(),
+  email: Email.optional(),
+  username: Username.optional(),
+});
+
+export const PasswordReset = z.object({ password: Password });
+
+export function keepsAnIdentifier(current: Identifiers, changes: Identifiers) {
+  const merged = { ...current, ...changes };
+  return Boolean(merged.email || merged.username);
+}
+
+export async function findTakenIdentifier(
+  dbConn: Knex,
+  { email, username }: Identifiers,
+  exceptUserId?: string,
+): Promise<"email" | "username" | null> {
+  const candidates = [
+    ["email", email],
+    ["username", username],
+  ] as const;
+
+  for (const [field, value] of candidates) {
+    if (!value) continue;
+    const query = dbConn("users").where({ [field]: value });
+    if (exceptUserId) query.whereNot({ id: exceptUserId });
+    if (await query.first()) return field;
+  }
+  return null;
+}
+
+async function refuseTakenIdentifier(
+  dbConn: Knex,
+  identifiers: Identifiers,
+  exceptUserId?: string,
+) {
+  const taken = await findTakenIdentifier(dbConn, identifiers, exceptUserId);
+  if (taken)
+    throw new ConflictError(`${taken} already used`, { field: taken });
+}
 
 export function groupMembersByFamily(
   families: Family[],
@@ -57,57 +143,244 @@ export function listMembers(dbConn: Knex): Promise<AdminMember[]> {
     .orderBy("u.name", "asc");
 }
 
-router.get(
-  "/families",
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "admin", action: "list-families" });
-    const [families, members] = await Promise.all([
-      db("families").select("id", "name").orderBy("name", "asc"),
-      listMembers(db),
-    ]);
+/** Everything the cascade removes, counted across every list the user owns,
+ *  family-less and left-behind ones included. */
+export async function deletionImpact(dbConn: Knex, userId: string) {
+  const counts = await dbConn
+    .select(
+      dbConn.raw(
+        `(select count(*) from wishlist_items i
+           join wishlists w on w.id = i.wishlist_id
+          where w.user_id = ?)::int as wishes`,
+        [userId],
+      ),
+      dbConn.raw(
+        `(select count(*) from reservations r
+          where r.reserver_user_id = ?)::int as reservations_made`,
+        [userId],
+      ),
+      dbConn.raw(
+        `(select count(*) from reservations r
+           join wishlist_items i on i.id = r.item_id
+           join wishlists w on w.id = i.wishlist_id
+          where w.user_id = ?)::int as reservations_received`,
+        [userId],
+      ),
+    )
+    .first();
 
-    log.info(
-      { adminId: req.user!.id, familyCount: families.length },
-      "Admin listed families",
-    );
-    res.json(groupMembersByFamily(families, members));
-  }),
-);
+  return counts as {
+    wishes: number;
+    reservations_made: number;
+    reservations_received: number;
+  };
+}
 
-/** The wishlist shown is the one of the user's current family, or their
- *  family-less one: the list they see themselves on Ma liste. */
-router.get(
-  "/users/:id",
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "admin", action: "view-user" });
-    const { id } = req.params;
+export function createAdminRouter(dbConn: Knex = db, admins?: Set<string>) {
+  const router = Router();
 
-    const user = await db("users")
-      .select("id", "name", "email", "username")
+  router.use(authRequired, adminRequired(dbConn, admins));
+
+  async function findProfile(id: string) {
+    const user = await dbConn("users")
+      .select(PROFILE_COLUMNS)
       .where({ id })
       .first();
     if (!user) throw new NotFoundError("user not found");
+    return user;
+  }
 
-    const family = await db("family_memberships as fm")
-      .join("families as f", "f.id", "fm.family_id")
-      .select("f.id", "f.name")
-      .where("fm.user_id", id)
-      .first();
+  router.get(
+    "/families",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "list-families",
+      });
+      const [families, members] = await Promise.all([
+        dbConn("families").select("id", "name").orderBy("name", "asc"),
+        listMembers(dbConn),
+      ]);
 
-    const wishlist = await db("wishlists")
-      .where({ user_id: id })
-      .modify((q) =>
-        family ? q.where({ family_id: family.id }) : q.whereNull("family_id"),
-      )
-      .first();
+      log.info(
+        { adminId: req.user!.id, familyCount: families.length },
+        "Admin listed families",
+      );
+      res.json(groupMembersByFamily(families, members));
+    }),
+  );
 
-    const items = wishlist
-      ? await listItemsWithReservations(db, wishlist.id)
-      : [];
+  router.post(
+    "/users",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "create-user",
+      });
+      const parse = AccountCreate.safeParse(req.body);
+      if (!parse.success) throw ValidationError.fromZod(parse.error);
+      const { name, email, username, password, familyId } = parse.data;
 
-    log.info({ adminId: req.user!.id, targetId: id }, "Admin viewed a user");
-    res.json({ user, family: family ?? null, items });
-  }),
-);
+      await refuseTakenIdentifier(dbConn, { email, username });
 
-export default router;
+      if (familyId) {
+        const family = await dbConn("families").where({ id: familyId }).first();
+        if (!family) throw new NotFoundError("family not found");
+      }
+
+      const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      const user = await dbConn.transaction(async (trx) => {
+        const [created] = await trx("users")
+          .insert({
+            name,
+            email: email ?? null,
+            username: username ?? null,
+            password_hash,
+          })
+          .returning(PROFILE_COLUMNS);
+
+        if (familyId)
+          await trx("family_memberships").insert({
+            user_id: created.id,
+            family_id: familyId,
+          });
+        return created;
+      });
+
+      log.info(
+        { adminId: req.user!.id, targetId: user.id },
+        "Admin created a user",
+      );
+      res.status(201).json(user);
+    }),
+  );
+
+  /** The wishlist shown is the one of the user's current family, or their
+   *  family-less one: the list they see themselves on Ma liste. */
+  router.get(
+    "/users/:id",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "view-user",
+      });
+      const { id } = req.params as { id: string };
+      const user = await findProfile(id);
+
+      const family = await dbConn("family_memberships as fm")
+        .join("families as f", "f.id", "fm.family_id")
+        .select("f.id", "f.name")
+        .where("fm.user_id", id)
+        .first();
+
+      const wishlist = await dbConn("wishlists")
+        .where({ user_id: id })
+        .modify((q) =>
+          family ? q.where({ family_id: family.id }) : q.whereNull("family_id"),
+        )
+        .first();
+
+      const items = wishlist
+        ? await listItemsWithReservations(dbConn, wishlist.id)
+        : [];
+
+      log.info({ adminId: req.user!.id, targetId: id }, "Admin viewed a user");
+      res.json({ user, family: family ?? null, items });
+    }),
+  );
+
+  router.patch(
+    "/users/:id",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "update-user",
+      });
+      const { id } = req.params as { id: string };
+      const parse = AccountUpdate.safeParse(req.body);
+      if (!parse.success) throw ValidationError.fromZod(parse.error);
+      const changes = parse.data;
+
+      const current = await findProfile(id);
+      if (!keepsAnIdentifier(current, changes))
+        throw new ValidationError("Données invalides", [
+          { field: "identifier", reason: IDENTIFIER_REQUIRED.message },
+        ]);
+
+      await refuseTakenIdentifier(dbConn, changes, id);
+
+      const [user] = await dbConn("users")
+        .where({ id })
+        .update(changes)
+        .returning(PROFILE_COLUMNS);
+
+      log.info({ adminId: req.user!.id, targetId: id }, "Admin edited a user");
+      res.json(user);
+    }),
+  );
+
+  router.put(
+    "/users/:id/password",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "reset-password",
+      });
+      const { id } = req.params as { id: string };
+      const parse = PasswordReset.safeParse(req.body);
+      if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+      await findProfile(id);
+      const password_hash = await bcrypt.hash(
+        parse.data.password,
+        BCRYPT_ROUNDS,
+      );
+      await dbConn("users").where({ id }).update({ password_hash });
+
+      log.info(
+        { adminId: req.user!.id, targetId: id },
+        "Admin set a new password",
+      );
+      res.json({ ok: true });
+    }),
+  );
+
+  router.get(
+    "/users/:id/deletion-impact",
+    asyncHandler(async (req, res) => {
+      const { id } = req.params as { id: string };
+      await findProfile(id);
+      res.json(await deletionImpact(dbConn, id));
+    }),
+  );
+
+  router.delete(
+    "/users/:id",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "delete-user",
+      });
+      const { id } = req.params as { id: string };
+      if (id === req.user!.id)
+        throw new ConflictError("cannot delete your own account");
+
+      await findProfile(id);
+      const images = await dbConn("wishlist_items as i")
+        .join("wishlists as w", "w.id", "i.wishlist_id")
+        .where("w.user_id", id)
+        .whereNotNull("i.image_url")
+        .pluck("i.image_url");
+
+      await dbConn("users").where({ id }).del();
+      await Promise.all(images.map(removeImage));
+
+      log.info({ adminId: req.user!.id, targetId: id }, "Admin deleted a user");
+      res.json({ ok: true });
+    }),
+  );
+
+  return router;
+}
+
+export default createAdminRouter();

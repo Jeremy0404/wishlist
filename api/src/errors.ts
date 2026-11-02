@@ -70,8 +70,8 @@ export class NotFoundError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message = "conflict") {
-    super({ message, statusCode: 409, code: "CONFLICT" });
+  constructor(message = "conflict", details?: unknown) {
+    super({ message, statusCode: 409, code: "CONFLICT", details });
   }
 }
 

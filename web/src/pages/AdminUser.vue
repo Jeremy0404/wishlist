@@ -66,23 +66,85 @@
     <p v-else class="py-8 text-center text-muted" data-test="empty-state">
       {{ t("admin.empty", { name: detail.user.name }) }}
     </p>
+
+    <div class="flex flex-col gap-2">
+      <Button variant="secondary" block data-test="admin-edit" @click="editing = true">
+        <Icon name="pencil" :size="20" />
+        {{ t("admin.edit") }}
+      </Button>
+      <Button
+        variant="secondary"
+        block
+        data-test="admin-password"
+        @click="settingPassword = true"
+      >
+        <Icon name="user" :size="20" />
+        {{ t("admin.password") }}
+      </Button>
+      <Button
+        v-if="!isOwnList && !impact"
+        variant="ghost-danger"
+        block
+        data-test="admin-delete"
+        @click="askDeletion"
+      >
+        <Icon name="trash" :size="20" />
+        {{ t("admin.delete") }}
+      </Button>
+    </div>
+
+    <div v-if="impact" class="flex flex-col gap-2">
+      <ul class="m-0 pl-5 text-caption text-muted" data-test="admin-delete-impact">
+        <li>{{ t("admin.impactWishes", impact.wishes) }}</li>
+        <li>{{ t("admin.impactMade", impact.reservations_made) }}</li>
+        <li>{{ t("admin.impactReceived", impact.reservations_received) }}</li>
+      </ul>
+      <InlineConfirm
+        :question="t('admin.deleteConfirm', { name: detail.user.name })"
+        :confirm-label="t('admin.deleteYes')"
+        :loading="deleting"
+        @confirm="deleteAccount"
+        @cancel="impact = null"
+      />
+    </div>
+
+    <AccountEditSheet
+      :open="editing"
+      :user="detail.user"
+      @close="editing = false"
+      @saved="onSaved"
+    />
+    <PasswordSheet
+      :open="settingPassword"
+      :user-id="userId"
+      @close="settingPassword = false"
+    />
   </template>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
+import AccountEditSheet from "../components/admin/AccountEditSheet.vue";
+import PasswordSheet from "../components/admin/PasswordSheet.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
+import InlineConfirm from "../components/ui/InlineConfirm.vue";
+import { useToasts } from "../components/ui/useToasts";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PageHeader from "../components/PageHeader.vue";
 import ItemTile from "../components/wishlist/ItemTile.vue";
 import { useAuth } from "../stores/auth.ts";
 import { fmtEUR } from "../utils/money";
 import { toneAt } from "../utils/tones";
-import type { AdminUserDetail, WishlistItem } from "../types.ts";
+import type {
+  AdminProfile,
+  AdminUserDetail,
+  DeletionImpact,
+  WishlistItem,
+} from "../types.ts";
 
 const props = defineProps<{ userId: string }>();
 
@@ -92,6 +154,38 @@ const loading = ref(true);
 const error = ref("");
 const detail = ref<AdminUserDetail | null>(null);
 const revealed = ref(false);
+const editing = ref(false);
+const settingPassword = ref(false);
+const impact = ref<DeletionImpact | null>(null);
+const deleting = ref(false);
+const { push } = useToasts();
+const router = useRouter();
+
+function onSaved(user: AdminProfile) {
+  if (detail.value) detail.value.user = user;
+  editing.value = false;
+}
+
+async function askDeletion() {
+  try {
+    impact.value = await api.adminDeletionImpact(props.userId);
+  } catch (e: any) {
+    push(e?.message || t("toast.error"), "error");
+  }
+}
+
+async function deleteAccount() {
+  deleting.value = true;
+  try {
+    await api.adminDeleteUser(props.userId);
+    push(t("admin.deleted"), "success");
+    await router.push("/admin");
+  } catch (e: any) {
+    push(e?.message || t("toast.error"), "error");
+  } finally {
+    deleting.value = false;
+  }
+}
 
 const isOwnList = computed(() => props.userId === auth.user?.id);
 const showReservations = computed(() => !isOwnList.value || revealed.value);
