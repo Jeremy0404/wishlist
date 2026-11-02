@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.5.0](https://github.com/Jeremy0404/wishlist/compare/v0.4.0...v0.5.0) (2026-11-02)
+
+
+### Features
+
+* admin account management ([#145](https://github.com/Jeremy0404/wishlist/issues/145)) ([1786695](https://github.com/Jeremy0404/wishlist/commit/1786695d84c2bcb8939c1ff2f9033a75f2148259))
+* admin list and family edits ([#146](https://github.com/Jeremy0404/wishlist/issues/146)) ([f30feeb](https://github.com/Jeremy0404/wishlist/commit/f30feebe30f312705fe0fa4e5fdb3346cb59813c))
+* list every family member on Famille, wishes or not ([#140](https://github.com/Jeremy0404/wishlist/issues/140)) ([2632e5e](https://github.com/Jeremy0404/wishlist/commit/2632e5e9d4c0ad328be4af6085ed8965b2825503))
+* read-only admin screen ([#144](https://github.com/Jeremy0404/wishlist/issues/144)) ([31c35fd](https://github.com/Jeremy0404/wishlist/commit/31c35fda6dcf259346705ff6725a5860935dc7bb))
+* sign in with a username ([#143](https://github.com/Jeremy0404/wishlist/issues/143)) ([7a46ad8](https://github.com/Jeremy0404/wishlist/commit/7a46ad84cce439531910c140909ef0838183c288))
+
+
+### Bug Fixes
+
+* give every clickable element a pointer, hover and press state ([#137](https://github.com/Jeremy0404/wishlist/issues/137)) ([0346142](https://github.com/Jeremy0404/wishlist/commit/03461423530556a4049730a5cc2e1d3d32d5917d))
+* keep the family invite through a magic-link sign-in ([#126](https://github.com/Jeremy0404/wishlist/issues/126)) ([caafbca](https://github.com/Jeremy0404/wishlist/commit/caafbcac89b81e82959496974e617ddad543bd49))
+* let photos up to 2 MB through the web proxy ([#125](https://github.com/Jeremy0404/wishlist/issues/125)) ([c48412b](https://github.com/Jeremy0404/wishlist/commit/c48412b209e3e772e19cd56a67272c44e4aa81bb))
+* read link preview image and price from more page formats ([#138](https://github.com/Jeremy0404/wishlist/issues/138)) ([d749a35](https://github.com/Jeremy0404/wishlist/commit/d749a35d26c12ac8d06e72aa7ba29398b8356c70))
+
+
+### Miscellaneous
+
+* **deps-dev:** bump vite from 7.3.7 to 8.3.5 in /web ([#134](https://github.com/Jeremy0404/wishlist/issues/134)) ([2b96623](https://github.com/Jeremy0404/wishlist/commit/2b966231338389453a61d5b8ded5f86c836149ac))
+* **deps:** bump actions/setup-node from 4 to 7 ([#133](https://github.com/Jeremy0404/wishlist/issues/133)) ([38ba2c5](https://github.com/Jeremy0404/wishlist/commit/38ba2c59cd7c7e05fd5a8e2094a40f5454989af0))
+* **deps:** bump actions/upload-artifact from 4 to 7 ([#131](https://github.com/Jeremy0404/wishlist/issues/131)) ([57b5991](https://github.com/Jeremy0404/wishlist/commit/57b599128d834b30db469039bd71a28693c1dedd))
+* **deps:** bump appleboy/ssh-action ([#127](https://github.com/Jeremy0404/wishlist/issues/127)) ([ce2c46d](https://github.com/Jeremy0404/wishlist/commit/ce2c46df9c49fc9802f5561edb5a9d97128aad34))
+* **deps:** bump docker/login-action from 3 to 4 ([#128](https://github.com/Jeremy0404/wishlist/issues/128)) ([e77835b](https://github.com/Jeremy0404/wishlist/commit/e77835b59aa9f037ca7aeb524e93f784761adb19))
+* **deps:** bump docker/setup-buildx-action from 3 to 4 ([#130](https://github.com/Jeremy0404/wishlist/issues/130)) ([4c0fd78](https://github.com/Jeremy0404/wishlist/commit/4c0fd78ec0aad6030fdbb812bfc3afb2ae82eb41))
+* **deps:** bump dotenv from 16.6.1 to 18.0.9 in /api ([#129](https://github.com/Jeremy0404/wishlist/issues/129)) ([77c4eef](https://github.com/Jeremy0404/wishlist/commit/77c4eef395226b61b2c589f01d4d8379177ec3a9))
+* **deps:** bump pinia from 3.0.4 to 4.1.0 in /web ([#132](https://github.com/Jeremy0404/wishlist/issues/132)) ([973375e](https://github.com/Jeremy0404/wishlist/commit/973375ee3c5428cd134613aa6ede0d1f96c6ff77))
+* **deps:** bump vue-router from 4.5.1 to 5.4.0 in /web ([#136](https://github.com/Jeremy0404/wishlist/issues/136)) ([058d114](https://github.com/Jeremy0404/wishlist/commit/058d114a5db998cbc523505cf589e2acc646d61d))
+* drop the issue forms ([#142](https://github.com/Jeremy0404/wishlist/issues/142)) ([5314634](https://github.com/Jeremy0404/wishlist/commit/5314634233a34403c5a4475d0948ba6ebde323ad))
+* remove the public share API and its slug columns ([#141](https://github.com/Jeremy0404/wishlist/issues/141)) ([6268a00](https://github.com/Jeremy0404/wishlist/commit/6268a0065c91bfbb8b9077a54da06a6fc8c89396))
+* remove the superseded deploy workflow ([#139](https://github.com/Jeremy0404/wishlist/issues/139)) ([e230c71](https://github.com/Jeremy0404/wishlist/commit/e230c711e36563570eccd203ddffd75ffa4f6924))
+
 ## [0.4.0](https://github.com/Jeremy0404/wishlist/compare/v0.3.1...v0.4.0) (2026-11-01)
 
 
