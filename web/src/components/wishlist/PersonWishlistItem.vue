@@ -32,6 +32,7 @@
         v-if="state === 'open'"
         variant="primary"
         class="min-h-11 px-5"
+        :loading="busy"
         data-test="wishlist-reserve"
         @click="emit('reserve')"
       >
@@ -48,7 +49,8 @@
         </span>
         <button
           type="button"
-          class="pressable min-h-11 rounded-md px-2 text-caption text-muted underline underline-offset-4 hover:bg-ink/7 hover:text-ink active:bg-ink/14"
+          class="pressable min-h-11 rounded-md px-2 text-caption text-muted underline underline-offset-4 hover:bg-ink/7 hover:text-ink active:bg-ink/14 disabled:opacity-50"
+          :disabled="busy"
           data-test="wishlist-unreserve"
           @click="emit('unreserve')"
         >
@@ -83,6 +85,7 @@ const props = defineProps<{
   item: WishlistItem;
   viewerId?: string;
   tone: string;
+  busy?: boolean;
 }>();
 
 const emit = defineEmits<{

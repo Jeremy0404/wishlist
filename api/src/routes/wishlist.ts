@@ -279,16 +279,16 @@ router.post(
       throw new BadRequestError("cannot reserve your own item");
     await refuseWhileListsLocked(db, req.user!.id, req.familyId!);
 
-    const existing = await db("reservations").where({ item_id: id }).first();
-    if (existing) throw new ConflictError("already reserved");
-
     const [r] = await db("reservations")
       .insert({
         item_id: id,
         reserver_user_id: req.user!.id,
         status: "reserved",
       })
+      .onConflict("item_id")
+      .ignore()
       .returning("*");
+    if (!r) throw new ConflictError("already reserved");
 
     log.info({ itemId: id, reservationId: r.id }, "Reserved wishlist item");
     res.json(r);

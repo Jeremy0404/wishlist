@@ -301,6 +301,7 @@ const fr = {
     removed: "Retiré de ta liste",
     giving: "C’est noté, tu t’occupes de « {title} »",
     notGiving: "C’est annulé",
+    justTaken: "Quelqu’un vient de réserver cette envie",
     updated: "C’est enregistré",
     error: "Une erreur est survenue.",
     bye: "À bientôt !",
