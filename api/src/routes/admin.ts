@@ -6,7 +6,12 @@ import { db } from "../db/knex.js";
 import { adminRequired } from "../middleware/admin.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
-import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
 import { imageUpload } from "../middleware/image-upload.js";
 import { removeImage } from "../uploads.js";
@@ -92,6 +97,87 @@ export const AccountUpdate = z.object({
 export const PasswordReset = z.object({ password: Password });
 
 const FamilyRename = z.object({ name: z.string().trim().min(1).max(120) });
+
+export const FamilyMove = z.object({
+  familyId: z.preprocess(blankToNull, z.string().uuid().nullable()),
+});
+
+type MovePlan = {
+  userId: string;
+  from: string | null;
+  to: string | null;
+  source?: { id: string };
+  target?: { id: string };
+};
+
+function reservationsMadeIn(dbConn: Knex, userId: string, familyId: string) {
+  return dbConn("reservations")
+    .where("reserver_user_id", userId)
+    .whereIn(
+      "item_id",
+      dbConn("wishlist_items as i")
+        .join("wishlists as w", "w.id", "i.wishlist_id")
+        .where("w.family_id", familyId)
+        .select("i.id"),
+    );
+}
+
+function reservationsOn(dbConn: Knex, wishlistId: string) {
+  return dbConn("reservations").whereIn(
+    "item_id",
+    dbConn("wishlist_items").where({ wishlist_id: wishlistId }).select("id"),
+  );
+}
+
+async function countRows(query: Knex.QueryBuilder) {
+  const row = await query.count({ count: "*" }).first();
+  return Number(row?.count ?? 0);
+}
+
+/** The list follows its owner; reservations made across the old family, both
+ *  ways, are what the move drops. */
+export async function moveImpact(
+  dbConn: Knex,
+  { userId, from, source, target }: MovePlan,
+) {
+  return {
+    wishes: source
+      ? await countRows(dbConn("wishlist_items").where({ wishlist_id: source.id }))
+      : 0,
+    reservations_made: from
+      ? await countRows(reservationsMadeIn(dbConn, userId, from))
+      : 0,
+    reservations_received: source
+      ? await countRows(reservationsOn(dbConn, source.id))
+      : 0,
+    merges: Boolean(source && target),
+  };
+}
+
+/** A list the user left behind in the target family takes the moving wishes,
+ *  so the user ends up with a single list there. */
+export function moveMember(
+  dbConn: Knex,
+  { userId, from, to, source, target }: MovePlan,
+) {
+  return dbConn.transaction(async (trx) => {
+    if (from) await reservationsMadeIn(trx, userId, from).del();
+    if (source) {
+      await reservationsOn(trx, source.id).del();
+      if (target) {
+        await trx("wishlist_items")
+          .where({ wishlist_id: source.id })
+          .update({ wishlist_id: target.id });
+        await trx("wishlists").where({ id: source.id }).del();
+      } else {
+        await trx("wishlists").where({ id: source.id }).update({ family_id: to });
+      }
+    }
+    await trx("family_memberships").where({ user_id: userId }).del();
+    if (to)
+      await trx("family_memberships").insert({ user_id: userId, family_id: to });
+  });
+}
 
 export function keepsAnIdentifier(current: Identifiers, changes: Identifiers) {
   const merged = { ...current, ...changes };
@@ -274,6 +360,56 @@ export function createAdminRouter(dbConn: Knex = db, admins?: Set<string>) {
       .first();
     return { userId, familyId: membership?.family_id ?? null };
   }
+
+  async function planMove(userId: string, input: unknown): Promise<MovePlan> {
+    const parse = FamilyMove.safeParse(input);
+    if (!parse.success) throw ValidationError.fromZod(parse.error);
+    const to = parse.data.familyId;
+
+    const owner = await ownerOf(userId);
+    const from = owner.familyId ?? null;
+    if (from === to) throw new BadRequestError("already in this family");
+    if (to) {
+      const family = await dbConn("families").where({ id: to }).first();
+      if (!family) throw new NotFoundError("family not found");
+    }
+
+    const [source, target] = await Promise.all([
+      findOwnWishlist(dbConn, owner),
+      findOwnWishlist(dbConn, { userId, familyId: to }),
+    ]);
+    return { userId, from, to, source, target };
+  }
+
+  router.get(
+    "/users/:id/move-impact",
+    asyncHandler(async (req, res) => {
+      const { id } = req.params as { id: string };
+      res.json(await moveImpact(dbConn, await planMove(id, req.query)));
+    }),
+  );
+
+  router.put(
+    "/users/:id/family",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "move-user",
+      });
+      const { id } = req.params as { id: string };
+      if (id === req.user!.id)
+        throw new ConflictError("cannot move your own account");
+
+      const plan = await planMove(id, req.body);
+      await moveMember(dbConn, plan);
+
+      log.info(
+        { adminId: req.user!.id, targetId: id, familyId: plan.to },
+        "Admin moved a user to another family",
+      );
+      res.json({ ok: true });
+    }),
+  );
 
   router.patch(
     "/families/:id",

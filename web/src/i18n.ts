@@ -246,6 +246,21 @@ const fr = {
       added: "Ajouté à sa liste",
       removed: "Retiré de sa liste",
     },
+    move: {
+      open: "Changer de famille",
+      familyLabel: "Nouvelle famille",
+      none: "Il n’y a pas d’autre famille.",
+      next: "Continuer",
+      impactWishes:
+        "{count} envie part avec sa liste | {count} envies partent avec sa liste",
+      impactMerge:
+        "Une ancienne liste de {name} dans cette famille est réunie avec celle-ci.",
+      impactMade:
+        "{count} réservation faite dans l’ancienne famille redevient libre | {count} réservations faites dans l’ancienne famille redeviennent libres",
+      confirm: "Déplacer {name} vers « {family} » ?",
+      yes: "Oui, déplacer",
+      moved: "{name} a changé de famille",
+    },
     familySheet: {
       open: "Gérer la famille",
       nameLabel: "Nom de la famille",

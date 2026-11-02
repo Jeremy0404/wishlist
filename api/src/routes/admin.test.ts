@@ -14,6 +14,7 @@ const {
   AccountCreate,
   AccountUpdate,
   createAdminRouter,
+  FamilyMove,
   findTakenIdentifier,
   groupMembersByFamily,
   keepsAnIdentifier,
@@ -240,6 +241,41 @@ test("a wish cannot be added for an unknown account", async () => {
 test("a family cannot be renamed to nothing", async () => {
   await withAdminServer(async (baseUrl) => {
     const res = await asAdmin(baseUrl, "/families/fam-1", "PATCH", { name: "  " });
+
+    assert.equal(res.status, 400);
+  });
+});
+
+test("moving to no family is written as a blank or a null family id", () => {
+  assert.equal(FamilyMove.parse({ familyId: "" }).familyId, null);
+  assert.equal(FamilyMove.parse({ familyId: null }).familyId, null);
+  assert.equal(FamilyMove.safeParse({}).success, false);
+  assert.equal(FamilyMove.safeParse({ familyId: "fam-1" }).success, false);
+});
+
+test("the admin cannot move their own account", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, `/users/${ADMIN_ID}/family`, "PUT", {
+      familyId: null,
+    });
+
+    assert.equal(res.status, 409);
+  });
+});
+
+test("a move without a destination is refused", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/users/relative-1/family", "PUT", {});
+
+    assert.equal(res.status, 400);
+  });
+});
+
+test("a move to the family the user is already in is refused", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/users/relative-1/family", "PUT", {
+      familyId: null,
+    });
 
     assert.equal(res.status, 400);
   });

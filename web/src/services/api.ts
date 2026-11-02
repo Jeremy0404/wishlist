@@ -9,6 +9,7 @@ import type {
   FamilyMember,
   FamilyWishlist,
   LinkPreview,
+  MoveImpact,
   Wishlist,
   WishlistItem,
   WishlistItemForm,
@@ -201,6 +202,15 @@ export const api = {
     request<DeletionImpact>(`/admin/users/${userId}/deletion-impact`),
   adminDeleteUser: (userId: string) =>
     request(`/admin/users/${userId}`, { method: "DELETE" }),
+  adminMoveImpact: (userId: string, familyId: string | null) =>
+    request<MoveImpact>(
+      `/admin/users/${userId}/move-impact?${new URLSearchParams({ familyId: familyId ?? "" })}`,
+    ),
+  adminMoveUser: (userId: string, familyId: string | null) =>
+    request(`/admin/users/${userId}/family`, {
+      method: "PUT",
+      body: { familyId },
+    }),
   adminAddItem: (userId: string, body: WishlistItemForm, image?: File | null) =>
     request<WishlistItem>(`/admin/users/${userId}/items`, {
       method: "POST",

@@ -99,6 +99,10 @@ export interface DeletionImpact {
   reservations_received: number;
 }
 
+export interface MoveImpact extends DeletionImpact {
+  merges: boolean;
+}
+
 export interface LinkPreview {
   title: string | null;
   price_eur: number | null;
