@@ -23,6 +23,7 @@ watch(src, () => (failed.value = false));
   <span
     v-else
     aria-hidden="true"
+    data-test="item-placeholder"
     class="grid h-[52px] w-[52px] flex-none place-items-center rounded-md"
     :class="tone"
   >

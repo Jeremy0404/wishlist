@@ -7,6 +7,14 @@ export const TONES = [
 
 export const QUIET_TONE = "bg-neutral-200 text-neutral-500";
 
-export function toneAt(index: number): string {
-  return TONES[index % TONES.length] ?? QUIET_TONE;
+function hash(text: string): number {
+  let h = 0;
+  for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return Math.abs(h);
+}
+
+/** Keyed on the id rather than the position, so a tone never shifts when
+ *  something is added to or removed from a list. */
+export function toneFor(id: string): string {
+  return TONES[hash(id) % TONES.length] ?? QUIET_TONE;
 }

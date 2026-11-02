@@ -30,14 +30,14 @@
 
   <ul v-else class="m-0 list-none border-t border-divider p-0">
     <li
-      v-for="(it, index) in items"
+      v-for="it in items"
       :key="it.id"
       class="border-b border-divider"
       data-test="wishlist-item"
       :data-title="it.original_title || it.title"
       :data-id="it.id"
     >
-      <WishlistRow :item="it" :tone="toneAt(index)" @open="openEdit(it)" />
+      <WishlistRow :item="it" :tone="toneFor(it.id)" @open="openEdit(it)" />
     </li>
   </ul>
 
@@ -62,7 +62,7 @@ import LoadError from "../components/ui/LoadError.vue";
 import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import WishlistRow from "../components/wishlist/WishlistRow.vue";
 import PageHeader from "../components/PageHeader.vue";
-import { toneAt } from "../utils/tones";
+import { toneFor } from "../utils/tones";
 import type { WishlistItem } from "../types.ts";
 
 const { t } = useI18n();
