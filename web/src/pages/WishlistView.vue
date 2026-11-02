@@ -41,6 +41,7 @@
         :item="it"
         :viewer-id="auth.user?.id"
         :tone="toneAt(index)"
+        :busy="busy.has(it.id)"
         @reserve="reserve(it)"
         @unreserve="unreserve(it.id)"
       />
@@ -79,6 +80,9 @@ const locked = ref(false);
 
 const props = defineProps<{ userId: string }>();
 const HTTP_FORBIDDEN = 403;
+const HTTP_CONFLICT = 409;
+
+const busy = ref(new Set<string>());
 
 async function load() {
   try {
@@ -93,16 +97,37 @@ async function load() {
   }
 }
 
-async function reserve(item: WishlistItem) {
-  await api.reserve(item.id);
-  push(t("toast.giving", { title: item.title }), "success");
-  await load();
+function failureMessage(e: unknown) {
+  return e instanceof ApiError && e.status === HTTP_CONFLICT
+    ? t("toast.justTaken")
+    : t("toast.error");
 }
 
-async function unreserve(id: string) {
-  await api.unreserve(id);
-  push(t("toast.notGiving"), "info");
-  await load();
+async function act(id: string, request: () => Promise<void>) {
+  if (busy.value.has(id)) return;
+  busy.value.add(id);
+  try {
+    await request();
+  } catch (e) {
+    push(failureMessage(e), "error");
+  } finally {
+    await load();
+    busy.value.delete(id);
+  }
+}
+
+function reserve(item: WishlistItem) {
+  return act(item.id, async () => {
+    await api.reserve(item.id);
+    push(t("toast.giving", { title: item.title }), "success");
+  });
+}
+
+function unreserve(id: string) {
+  return act(id, async () => {
+    await api.unreserve(id);
+    push(t("toast.notGiving"), "info");
+  });
 }
 
 onMounted(load);
