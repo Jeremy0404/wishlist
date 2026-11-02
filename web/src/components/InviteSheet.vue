@@ -102,6 +102,13 @@ async function copy() {
 
     <div v-else class="grid gap-3" data-test="invite-link-step">
       <p class="mb-1">{{ t("invite.body", { name: family.name }) }}</p>
+      <p
+        class="mb-1 flex items-start gap-2 text-caption text-muted"
+        data-test="invite-privacy"
+      >
+        <Icon name="lock" :size="18" class="mt-0.5 flex-none" />
+        {{ t("invite.privacy") }}
+      </p>
       <Button
         variant="primary"
         block
