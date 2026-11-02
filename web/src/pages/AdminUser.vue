@@ -33,6 +33,17 @@
       </Button>
     </div>
 
+    <Button
+      variant="primary"
+      block
+      class="min-h-14 text-body"
+      data-test="admin-item-add"
+      @click="openItem(null)"
+    >
+      <Icon name="plus" :size="22" />
+      {{ t("item.add") }}
+    </Button>
+
     <ul
       v-if="detail.items.length"
       class="m-0 list-none border-t border-divider p-0"
@@ -60,6 +71,15 @@
             {{ reservation(item) }}
           </span>
         </div>
+        <Button
+          icon
+          variant="ghost"
+          :aria-label="t('admin.item.editTitle')"
+          data-test="admin-item-edit"
+          @click="openItem(item)"
+        >
+          <Icon name="pencil" :size="20" />
+        </Button>
       </li>
     </ul>
 
@@ -119,6 +139,15 @@
       :user-id="userId"
       @close="settingPassword = false"
     />
+    <ItemSheet
+      :open="itemOpen"
+      :item="editedItem"
+      :owner-id="userId"
+      @close="itemOpen = false"
+      @added="load"
+      @updated="load"
+      @removed="load"
+    />
   </template>
 </template>
 
@@ -135,6 +164,7 @@ import InlineConfirm from "../components/ui/InlineConfirm.vue";
 import { useToasts } from "../components/ui/useToasts";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PageHeader from "../components/PageHeader.vue";
+import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import ItemTile from "../components/wishlist/ItemTile.vue";
 import { useAuth } from "../stores/auth.ts";
 import { fmtEUR } from "../utils/money";
@@ -158,6 +188,8 @@ const editing = ref(false);
 const settingPassword = ref(false);
 const impact = ref<DeletionImpact | null>(null);
 const deleting = ref(false);
+const itemOpen = ref(false);
+const editedItem = ref<WishlistItem | null>(null);
 const { push } = useToasts();
 const router = useRouter();
 
@@ -215,7 +247,7 @@ function reservation(item: WishlistItem) {
     : t("admin.reservedBy", { name });
 }
 
-onMounted(async () => {
+async function load() {
   try {
     detail.value = await api.adminUser(props.userId);
   } catch (e: any) {
@@ -223,5 +255,12 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+
+function openItem(item: WishlistItem | null) {
+  editedItem.value = item;
+  itemOpen.value = true;
+}
+
+onMounted(load);
 </script>

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { AddressInfo } from "node:net";
 
-import { generateInviteCode, listFamilyMembers } from "./family.js";
+import express from "express";
+
+import familyRouter, { generateInviteCode, listFamilyMembers } from "./family.js";
 
 type FakeDbDeps = {
   hasMembershipCreatedAt: boolean;
@@ -156,4 +159,21 @@ test("falls back to user created_at when membership timestamp is missing", async
   );
 
   assert.deepEqual(orderByFields, ["u.created_at"]);
+});
+
+test("members can no longer rotate the invite code themselves", async () => {
+  const app = express();
+  app.use("/families", familyRouter);
+  const server = app.listen(0);
+  await new Promise((resolve) => server.once("listening", resolve));
+  const { port } = server.address() as AddressInfo;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/families/rotate-invite`, {
+      method: "POST",
+    });
+    assert.equal(res.status, 404);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });

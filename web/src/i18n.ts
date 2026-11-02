@@ -238,6 +238,24 @@ const fr = {
     takenEmail: "Cette adresse e-mail est déjà utilisée.",
     takenUsername: "Cet identifiant est déjà pris.",
     identifierRequired: "Il faut une adresse e-mail ou un identifiant.",
+    item: {
+      editTitle: "Modifier l’envie",
+      submitAdd: "Ajouter à sa liste",
+      remove: "Retirer de sa liste",
+      removeConfirm: "Retirer « {title} » de sa liste ?",
+      added: "Ajouté à sa liste",
+      removed: "Retiré de sa liste",
+    },
+    familySheet: {
+      open: "Gérer la famille",
+      nameLabel: "Nom de la famille",
+      renamed: "C’est enregistré",
+      rotate: "Nouveau lien d’invitation",
+      rotateConfirm:
+        "L’ancien lien ne marchera plus pour personne. Créer un nouveau lien ?",
+      rotateYes: "Oui, nouveau lien",
+      rotated: "Nouveau lien créé. Les membres le trouvent dans « Inviter un proche ».",
+    },
   },
   notFound: {
     title: "Cette page n’existe pas",

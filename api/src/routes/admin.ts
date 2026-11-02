@@ -8,7 +8,16 @@ import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
+import { imageUpload } from "../middleware/image-upload.js";
 import { removeImage } from "../uploads.js";
+import {
+  addItem,
+  deleteItem,
+  findOwnWishlist,
+  updateItem,
+  type ItemOwner,
+} from "../wishlist-items.js";
+import { rotateInviteCode } from "./family.js";
 import { listItemsWithReservations } from "./wishlist.js";
 
 const WISH_COUNT = `(
@@ -81,6 +90,8 @@ export const AccountUpdate = z.object({
 });
 
 export const PasswordReset = z.object({ password: Password });
+
+const FamilyRename = z.object({ name: z.string().trim().min(1).max(120) });
 
 export function keepsAnIdentifier(current: Identifiers, changes: Identifiers) {
   const merged = { ...current, ...changes };
@@ -255,8 +266,117 @@ export function createAdminRouter(dbConn: Knex = db, admins?: Set<string>) {
     }),
   );
 
-  /** The wishlist shown is the one of the user's current family, or their
-   *  family-less one: the list they see themselves on Ma liste. */
+  async function ownerOf(userId: string): Promise<ItemOwner> {
+    await findProfile(userId);
+    const membership = await dbConn("family_memberships")
+      .select("family_id")
+      .where({ user_id: userId })
+      .first();
+    return { userId, familyId: membership?.family_id ?? null };
+  }
+
+  router.patch(
+    "/families/:id",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "rename-family",
+      });
+      const { id } = req.params as { id: string };
+      const parse = FamilyRename.safeParse(req.body);
+      if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+      const [family] = await dbConn("families")
+        .where({ id })
+        .update({ name: parse.data.name })
+        .returning(["id", "name"]);
+      if (!family) throw new NotFoundError("family not found");
+
+      log.info({ adminId: req.user!.id, familyId: id }, "Admin renamed a family");
+      res.json(family);
+    }),
+  );
+
+  router.post(
+    "/families/:id/rotate-invite",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "rotate-invite",
+      });
+      const { id } = req.params as { id: string };
+      const family = await rotateInviteCode(dbConn, id);
+
+      log.info(
+        { adminId: req.user!.id, familyId: id },
+        "Admin rotated an invite code",
+      );
+      res.json(family);
+    }),
+  );
+
+  router.post(
+    "/users/:id/items",
+    imageUpload,
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "add-item",
+      });
+      const { id } = req.params as { id: string };
+      const item = await addItem(dbConn, await ownerOf(id), req.body, req.file);
+
+      log.info(
+        { adminId: req.user!.id, targetId: id, itemId: item.id },
+        "Admin added a wish",
+      );
+      res.status(201).json(item);
+    }),
+  );
+
+  router.patch(
+    "/users/:id/items/:itemId",
+    imageUpload,
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "update-item",
+      });
+      const { id, itemId } = req.params as { id: string; itemId: string };
+      const item = await updateItem(
+        dbConn,
+        await ownerOf(id),
+        itemId,
+        req.body,
+        req.file,
+      );
+
+      log.info(
+        { adminId: req.user!.id, targetId: id, itemId },
+        "Admin edited a wish",
+      );
+      res.json(item);
+    }),
+  );
+
+  router.delete(
+    "/users/:id/items/:itemId",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "delete-item",
+      });
+      const { id, itemId } = req.params as { id: string; itemId: string };
+      await deleteItem(dbConn, await ownerOf(id), itemId);
+
+      log.info(
+        { adminId: req.user!.id, targetId: id, itemId },
+        "Admin removed a wish",
+      );
+      res.json({ ok: true });
+    }),
+  );
+
   router.get(
     "/users/:id",
     asyncHandler(async (req, res) => {
@@ -266,19 +386,16 @@ export function createAdminRouter(dbConn: Knex = db, admins?: Set<string>) {
       });
       const { id } = req.params as { id: string };
       const user = await findProfile(id);
+      const owner = await ownerOf(id);
 
-      const family = await dbConn("family_memberships as fm")
-        .join("families as f", "f.id", "fm.family_id")
-        .select("f.id", "f.name")
-        .where("fm.user_id", id)
-        .first();
+      const family = owner.familyId
+        ? await dbConn("families")
+            .select("id", "name")
+            .where({ id: owner.familyId })
+            .first()
+        : null;
 
-      const wishlist = await dbConn("wishlists")
-        .where({ user_id: id })
-        .modify((q) =>
-          family ? q.where({ family_id: family.id }) : q.whereNull("family_id"),
-        )
-        .first();
+      const wishlist = await findOwnWishlist(dbConn, owner);
 
       const items = wishlist
         ? await listItemsWithReservations(dbConn, wishlist.id)

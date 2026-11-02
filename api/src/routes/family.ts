@@ -153,49 +153,30 @@ router.get(
   }),
 );
 
-router.post(
-  "/rotate-invite",
-  authRequired,
-  familyContext,
-  familyRequired,
-  asyncHandler(async (req, res) => {
-    const log = getRequestLogger(req, { module: "family", action: "rotate-invite" });
+const INVITE_CODE_ATTEMPTS = 5;
 
-    const family = await db("families")
-      .select("id", "name")
-      .where({ id: req.familyId })
-      .first();
+/** The old code stops working at once: a link already sent no longer joins. */
+export async function rotateInviteCode(dbConn: Knex, familyId: string) {
+  const family = await dbConn("families")
+    .select("id", "name")
+    .where({ id: familyId })
+    .first();
+  if (!family) throw new NotFoundError("Famille introuvable");
 
-    if (!family) throw new NotFoundError("Famille introuvable");
+  for (let attempt = 0; attempt < INVITE_CODE_ATTEMPTS; attempt += 1) {
+    const invite_code = generateInviteCode(family.name);
+    const taken = await dbConn("families").where({ invite_code }).first();
+    if (taken) continue;
 
-    let invite_code: string;
-    let attempts = 0;
-
-    let foundUnique = false;
-
-    do {
-      invite_code = generateInviteCode(family.name);
-      const existing = await db("families").where({ invite_code }).first();
-      if (!existing) {
-        foundUnique = true;
-        break;
-      }
-      attempts += 1;
-    } while (attempts < 5);
-
-    if (!invite_code || !foundUnique)
-      throw new Error("Impossible de générer un code unique");
-
-    const [updatedFamily] = await db("families")
+    const [updated] = await dbConn("families")
       .where({ id: family.id })
       .update({ invite_code })
       .returning(["id", "name", "invite_code"]);
+    return updated;
+  }
 
-    log.info({ familyId: family.id }, "Rotated invite code");
-
-    return res.json(updatedFamily);
-  }),
-);
+  throw new Error("Impossible de générer un code unique");
+}
 
 export default router;
 

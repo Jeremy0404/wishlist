@@ -16,13 +16,14 @@ import {
 } from "../errors.js";
 import { getRequestLogger } from "../logging/logger.js";
 import { fetchLinkPreview } from "../link-preview.js";
-import { IMAGE_UNSUPPORTED, imageUpload } from "../middleware/image-upload.js";
+import { imageUpload } from "../middleware/image-upload.js";
 import {
-  isLinkedImage,
-  isStoredImage,
-  removeImage,
-  storeImage,
-} from "../uploads.js";
+  addItem,
+  deleteItem,
+  findOwnWishlist,
+  updateItem,
+  type ItemOwner,
+} from "../wishlist-items.js";
 
 const router = Router();
 
@@ -37,32 +38,8 @@ const RESERVED_BY_ME_COUNT = `(
   where i.wishlist_id = w.id and r.reserver_user_id = ?
 )::int as reserved_by_me_count`;
 
-type FamilyId = string | null | undefined;
-
-function scopeToOwner<T extends Knex.QueryBuilder>(
-  query: T,
-  userId: string,
-  familyId: FamilyId,
-  prefix = "",
-): T {
-  query.where(`${prefix}user_id`, userId);
-  return familyId
-    ? (query.where(`${prefix}family_id`, familyId) as T)
-    : (query.whereNull(`${prefix}family_id`) as T);
-}
-
-function findOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
-  return scopeToOwner(trx("wishlists"), userId, familyId).first();
-}
-
-async function ensureOwnWishlist(userId: string, familyId: FamilyId, trx = db) {
-  const existing = await findOwnWishlist(userId, familyId, trx);
-  if (existing) return existing;
-
-  const [created] = await trx("wishlists")
-    .insert({ user_id: userId, family_id: familyId ?? null })
-    .returning("*");
-  return created;
+function callerAsOwner(req: Express.Request): ItemOwner {
+  return { userId: req.user!.id, familyId: req.familyId };
 }
 
 export async function listFamilyWishlists(
@@ -114,7 +91,7 @@ router.get(
       module: "wishlist",
       action: "get-own",
     });
-    const wl = await findOwnWishlist(req.user!.id, req.familyId);
+    const wl = await findOwnWishlist(db, callerAsOwner(req));
 
     if (!wl) {
       log.info("No wishlist yet for user");
@@ -132,41 +109,6 @@ router.get(
     res.json({ wishlist: wl, items });
   }),
 );
-
-/** Matches the link preview's own cap, so an image it resolved can always be
- *  stored. */
-const MAX_IMAGE_URL_LENGTH = 2048;
-
-const ItemImage = z
-  .string()
-  .max(MAX_IMAGE_URL_LENGTH)
-  .refine((v) => v === "" || isStoredImage(v) || isLinkedImage(v), {
-    message: "Lien d’image invalide",
-  });
-
-const Item = z.object({
-  title: z.string().min(1),
-  url: z.string().url().optional().or(z.literal("")),
-  price_eur: z.coerce.number().min(0).max(99_999_999.99).optional(),
-  notes: z.string().max(1000).optional(),
-  priority: z.coerce.number().int().min(1).max(5).optional(),
-  image_url: ItemImage.optional(),
-});
-
-/** An uploaded file always wins over a pasted link; an empty link clears the
- *  image, and an absent one leaves it untouched. */
-async function resolveImage(
-  file: Express.Multer.File | undefined,
-  link: string | undefined,
-) {
-  if (file) {
-    const stored = await storeImage(file.buffer);
-    if (!stored) throw new BadRequestError(IMAGE_UNSUPPORTED);
-    return stored;
-  }
-  if (link === undefined) return undefined;
-  return link === "" ? null : link;
-}
 
 const PreviewRequest = z.object({
   url: z.string().url(),
@@ -201,37 +143,13 @@ router.post(
       module: "wishlist",
       action: "add-item",
     });
-    const { id: user_id } = req.user!;
-    const family_id = req.familyId;
+    const item = await addItem(db, callerAsOwner(req), req.body, req.file);
 
-    const parse = Item.safeParse(req.body);
-    if (!parse.success) throw ValidationError.fromZod(parse.error);
-
-    const { image_url: link, ...fields } = parse.data;
-    const image_url = await resolveImage(req.file, link);
-
-    const trx = await db.transaction();
-    try {
-      const wishlist = await ensureOwnWishlist(user_id, family_id, trx);
-
-      if (!wishlist) {
-        throw new BadRequestError("Unable to ensure wishlist");
-      }
-
-      const [item] = await trx("wishlist_items")
-        .insert({ wishlist_id: wishlist.id, ...fields, image_url })
-        .returning("*");
-
-      log.info(
-        { wishlistId: wishlist.id, itemId: item.id },
-        "Added wishlist item",
-      );
-      await trx.commit();
-      return res.status(201).json(item);
-    } catch (e) {
-      await trx.rollback();
-      throw e;
-    }
+    log.info(
+      { wishlistId: item.wishlist_id, itemId: item.id },
+      "Added wishlist item",
+    );
+    res.status(201).json(item);
   }),
 );
 
@@ -245,33 +163,14 @@ router.patch(
       module: "wishlist",
       action: "update-item",
     });
-    const { id } = req.params;
-    const row = await scopeToOwner(
-      db("wishlist_items as i")
-        .join("wishlists as w", "w.id", "i.wishlist_id")
-        .where("i.id", id),
-      req.user!.id,
-      req.familyId,
-      "w.",
-    )
-      .select("i.image_url")
-      .first();
-    if (!row) throw new NotFoundError("item not found");
-
-    const parse = Item.partial().safeParse(req.body);
-    if (!parse.success) throw ValidationError.fromZod(parse.error);
-
-    const { image_url: link, ...fields } = parse.data;
-    const image_url = await resolveImage(req.file, link);
-    const changes = image_url === undefined ? fields : { ...fields, image_url };
-
-    const [updated] = await db("wishlist_items")
-      .where({ id })
-      .update(changes)
-      .returning("*");
-
-    if (image_url !== undefined && image_url !== row.image_url)
-      await removeImage(row.image_url);
+    const { id } = req.params as { id: string };
+    const updated = await updateItem(
+      db,
+      callerAsOwner(req),
+      id,
+      req.body,
+      req.file,
+    );
 
     log.info({ itemId: id }, "Updated wishlist item");
     res.json(updated);
@@ -287,20 +186,8 @@ router.delete(
       module: "wishlist",
       action: "delete-item",
     });
-    const { id } = req.params;
-    const owned = await scopeToOwner(
-      db("wishlist_items as i")
-        .join("wishlists as w", "w.id", "i.wishlist_id")
-        .where("i.id", id),
-      req.user!.id,
-      req.familyId,
-      "w.",
-    )
-      .select("i.image_url")
-      .first();
-    if (!owned) throw new NotFoundError("item not found");
-    await db("wishlist_items").where({ id }).del();
-    await removeImage(owned.image_url);
+    const { id } = req.params as { id: string };
+    await deleteItem(db, callerAsOwner(req), id);
     log.info({ itemId: id }, "Deleted wishlist item");
     res.json({ ok: true });
   }),
