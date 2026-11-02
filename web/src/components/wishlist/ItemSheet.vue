@@ -122,8 +122,8 @@ function isEmpty(value: number | string | undefined) {
   return value === undefined || value === null || value === "";
 }
 
-function toNumber(value: number | string | undefined) {
-  return isEmpty(value) ? undefined : Number(value);
+function toPrice(value: number | string | undefined): number | "" {
+  return isEmpty(value) ? "" : Number(value);
 }
 
 /** Fills what the page says about itself into the fields left empty.
@@ -167,9 +167,9 @@ async function submit() {
 
   const body = {
     title: form.title.trim(),
-    url: form.url || typedUrl || undefined,
-    price_eur: toNumber(form.price_eur),
-    notes: form.notes || undefined,
+    url: form.url || typedUrl || "",
+    price_eur: toPrice(form.price_eur),
+    notes: form.notes,
     priority: priorityFor(form.favorite),
     image_url: form.image_url,
   };

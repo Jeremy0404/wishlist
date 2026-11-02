@@ -49,11 +49,15 @@ const ItemImage = z
     message: "Lien d’image invalide",
   });
 
+/** Multipart carries only strings: an empty one clears, an absent one keeps. */
+const clearable = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => (v === "" ? null : v), schema.nullable()).optional();
+
 const Item = z.object({
   title: z.string().min(1),
-  url: z.string().url().optional().or(z.literal("")),
-  price_eur: z.coerce.number().min(0).max(99_999_999.99).optional(),
-  notes: z.string().max(1000).optional(),
+  url: clearable(z.string().url()),
+  price_eur: clearable(z.coerce.number().min(0).max(99_999_999.99)),
+  notes: clearable(z.string().max(1000)),
   priority: z.coerce.number().int().min(1).max(5).optional(),
   image_url: ItemImage.optional(),
 });

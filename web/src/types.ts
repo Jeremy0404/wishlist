@@ -37,13 +37,13 @@ export interface FamilyWishlist {
   reserved_by_me_count: number;
 }
 
+/** An empty string clears a field; leaving it out keeps the current value. */
 export interface WishlistItemForm {
   title: string;
   url?: string;
-  price_eur?: number;
+  price_eur?: number | "";
   notes?: string;
   priority?: number;
-  /** An empty string clears the image; leaving it out keeps the current one. */
   image_url?: string;
 }
 
