@@ -43,7 +43,7 @@
         class="m-0 list-none border-t border-divider p-0"
       >
         <li
-          v-for="(member, index) in group.members"
+          v-for="member in group.members"
           :key="member.id"
           class="border-b border-divider"
         >
@@ -56,7 +56,7 @@
             <Avatar
               :name="member.name"
               size="lg"
-              :tone="toneAt(index)"
+              :tone="toneFor(member.id)"
               aria-hidden="true"
             />
             <span class="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -102,7 +102,7 @@ import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PageHeader from "../components/PageHeader.vue";
-import { toneAt } from "../utils/tones";
+import { toneFor } from "../utils/tones";
 import type { AdminFamily, AdminMember, AdminOverview } from "../types.ts";
 
 const FAMILYLESS_GROUP_ID = "familyless";

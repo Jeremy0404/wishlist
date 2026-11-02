@@ -1,7 +1,17 @@
 <template>
   <div class="flex flex-col gap-3 px-1 py-4">
-    <div class="flex items-center gap-3.5">
-      <ItemTile :image-url="item.image_url" :tone="state === 'other' ? QUIET_TONE : tone" />
+    <div class="flex items-start gap-3.5">
+      <button
+        v-if="photoSrc"
+        type="button"
+        class="pressable flex-none rounded-md"
+        :aria-label="t('view.photo', { title: item.title })"
+        data-test="item-photo-open"
+        @click="photoOpen = true"
+      >
+        <ItemTile :image-url="item.image_url" :tone="tileTone" />
+      </button>
+      <ItemTile v-else :image-url="item.image_url" :tone="tileTone" />
       <div class="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           class="flex items-center gap-1.5 font-semibold"
@@ -13,7 +23,16 @@
             <span class="sr-only">{{ t("item.favorite") }}</span>
           </template>
         </span>
-        <span v-if="meta" class="text-caption text-muted">{{ meta }}</span>
+        <span v-if="price" class="text-caption font-semibold" data-test="wishlist-price">
+          {{ price }}
+        </span>
+        <p
+          v-if="item.notes"
+          class="mb-0 whitespace-pre-line text-caption"
+          data-test="wishlist-notes"
+        >
+          {{ item.notes }}
+        </p>
         <a
           v-if="item.url"
           :href="item.url"
@@ -67,15 +86,26 @@
         {{ t("view.takenByOther") }}
       </span>
     </div>
+
+    <Sheet :open="photoOpen" :title="item.title" @close="photoOpen = false">
+      <img
+        :src="photoSrc ?? undefined"
+        :alt="item.title"
+        data-test="item-photo-large"
+        class="max-h-[60dvh] w-full rounded-md object-contain"
+      />
+    </Sheet>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import Button from "../ui/Button.vue";
 import Icon from "../ui/Icon.vue";
 import ItemTile from "./ItemTile.vue";
+import Sheet from "../ui/Sheet.vue";
+import { itemImageSrc } from "../../utils/image";
 import { fmtEUR } from "../../utils/money";
 import { isFavorite } from "../../utils/favorite";
 import { QUIET_TONE } from "../../utils/tones";
@@ -100,12 +130,11 @@ const state = computed(() => {
   return props.item.reserver_user_id === props.viewerId ? "mine" : "other";
 });
 
-const meta = computed(() =>
-  [
-    props.item.price_eur != null ? fmtEUR.format(props.item.price_eur) : "",
-    props.item.notes ?? "",
-  ]
-    .filter(Boolean)
-    .join(" · "),
+const price = computed(() =>
+  props.item.price_eur != null ? fmtEUR.format(props.item.price_eur) : "",
 );
+
+const tileTone = computed(() => (state.value === "other" ? QUIET_TONE : props.tone));
+const photoSrc = computed(() => itemImageSrc(props.item.image_url));
+const photoOpen = ref(false);
 </script>
