@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/Jeremy0404/wishlist/compare/v0.5.0...v0.6.0) (2026-11-02)
+
+
+### Features
+
+* move a member to another family from the admin screen ([#149](https://github.com/Jeremy0404/wishlist/issues/149)) ([552ae92](https://github.com/Jeremy0404/wishlist/commit/552ae92197f912caf0478d47f3132c505b1b5d58))
+* unlock family lists after an admin-set minimum of wishes ([#150](https://github.com/Jeremy0404/wishlist/issues/150)) ([d3d898f](https://github.com/Jeremy0404/wishlist/commit/d3d898f966bb9ddaa0778dac8efa83654afc7e7f))
+
+
+### Bug Fixes
+
+* sync deploy files to the server on release ([#147](https://github.com/Jeremy0404/wishlist/issues/147)) ([c20f802](https://github.com/Jeremy0404/wishlist/commit/c20f8021d646be9e38416a12664a640ab6018720))
+
 ## [0.5.0](https://github.com/Jeremy0404/wishlist/compare/v0.4.0...v0.5.0) (2026-11-02)
 
 
