@@ -16,7 +16,12 @@ const FAMILY_PATHS = ["/wishlists", "/family"];
 
 const tabs = computed<Tab[]>(() => [
   { to: "/me", label: t("nav.myList"), icon: "gift", test: "tab-my-list" },
-  { to: "/wishlists", label: t("nav.family"), icon: "users", test: "tab-family" },
+  {
+    to: "/wishlists",
+    label: t("nav.family"),
+    icon: "users",
+    test: "tab-family",
+  },
 ]);
 
 function isActive(tab: Tab) {
@@ -33,7 +38,10 @@ function isActive(tab: Tab) {
       :aria-label="t('nav.main')"
       class="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3"
     >
-      <RouterLink to="/me" class="text-ink transition-opacity hover:opacity-75">
+      <RouterLink
+        to="/me"
+        class="flex text-ink transition-opacity hover:opacity-75"
+      >
         <BrandLockup />
       </RouterLink>
       <div class="flex flex-1 items-center gap-6">
