@@ -2,13 +2,13 @@
   <PageHeader>
     {{ auth.myFamily?.name ?? t("nav.family") }}
     <template #lead>
-      {{ rows.length ? t("browse.lead") : t("browse.leadAlone") }}
+      {{ alone ? t("browse.leadAlone") : t("browse.lead") }}
     </template>
   </PageHeader>
 
-  <p v-if="error" class="text-danger">{{ error }}</p>
+  <ListSkeleton v-if="loading" />
 
-  <ListSkeleton v-else-if="loading" />
+  <LoadError v-else-if="loadFailed" @retry="load" />
 
   <div
     v-if="locked"
@@ -48,7 +48,7 @@
   </div>
 
   <ul
-    v-if="!error && !loading && rows.length"
+    v-if="!loadFailed && !loading && rows.length"
     class="m-0 list-none border-t border-divider p-0"
   >
     <li
@@ -95,7 +95,7 @@
     </li>
   </ul>
 
-  <div v-if="!loading && !error" data-test="empty-state">
+  <div v-if="!loading && !loadFailed" data-test="empty-state">
     <Button
       :variant="rows.length ? 'secondary' : 'primary'"
       block
@@ -121,6 +121,7 @@ import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import LoadError from "../components/ui/LoadError.vue";
 import { useToasts } from "../components/ui/useToasts";
 import InviteSheet from "../components/InviteSheet.vue";
 import PageHeader from "../components/PageHeader.vue";
@@ -136,11 +137,14 @@ const unlock = ref<Omit<FamilyWishlists, "wishlists">>({
   wishesRequired: 0,
   wishesMissing: 0,
 });
-const error = ref("");
+const loadFailed = ref(false);
 const inviteOpen = ref(false);
 const { push } = useToasts();
 
 const locked = computed(() => unlock.value.wishesMissing > 0);
+const alone = computed(
+  () => !loading.value && !loadFailed.value && rows.value.length === 0,
+);
 const wishesHeld = computed(
   () => unlock.value.wishesRequired - unlock.value.wishesMissing,
 );
@@ -174,17 +178,26 @@ function summary(row: FamilyWishlist) {
     : wishes;
 }
 
-onMounted(async () => {
+async function loadRows() {
+  if (auth.familyLoadFailed) await auth.refreshFamilies();
+  if (auth.familyLoadFailed) throw new Error("family unavailable");
+  if (!auth.inFamily) return;
+  const { wishlists, ...status } = await api.others();
+  rows.value = wishlists;
+  unlock.value = status;
+}
+
+async function load() {
+  loading.value = true;
+  loadFailed.value = false;
   try {
-    if (auth.inFamily) {
-      const { wishlists, ...status } = await api.others();
-      rows.value = wishlists;
-      unlock.value = status;
-    }
-  } catch (e: any) {
-    error.value = e.message ?? t("toast.error");
+    await loadRows();
+  } catch {
+    loadFailed.value = true;
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(load);
 </script>

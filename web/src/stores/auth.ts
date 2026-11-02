@@ -7,6 +7,7 @@ export const useAuth = defineStore("auth", {
   state: () => ({
     user: undefined as User | null | undefined,
     myFamily: null as Family | null,
+    familyLoadFailed: false,
     hydrated: false,
   }),
   getters: {
@@ -29,29 +30,24 @@ export const useAuth = defineStore("auth", {
       try {
         const me = await api.me();
         this.user = me ?? null;
-
-        if (this.user) {
-          try {
-            this.myFamily = await api.getMyFamily();
-          } catch {
-            this.myFamily = null;
-          }
-        } else {
-          this.myFamily = null;
-        }
+        await this.refreshFamilies();
       } finally {
         this.hydrated = true;
       }
     },
+    /** A failed load keeps the family last known, so an outage never reads as
+     *  having left it. */
     async refreshFamilies(): Promise<void> {
       if (!this.user) {
         this.myFamily = null;
+        this.familyLoadFailed = false;
         return;
       }
       try {
         this.myFamily = await api.getMyFamily();
+        this.familyLoadFailed = false;
       } catch {
-        this.myFamily = null;
+        this.familyLoadFailed = true;
       }
     },
     async login(identifier: string, password: string) {
@@ -86,6 +82,7 @@ export const useAuth = defineStore("auth", {
       // not a session that expired under the user.
       this.user = null;
       this.myFamily = null;
+      this.familyLoadFailed = false;
       this.hydrated = true;
       try {
         await api.logout();
@@ -109,6 +106,7 @@ export const useAuth = defineStore("auth", {
         const wasSignedIn = this.isLogged;
         this.user = null;
         this.myFamily = null;
+        this.familyLoadFailed = false;
         this.hydrated = true;
 
         if (wasSignedIn) void router.push("/oops");
