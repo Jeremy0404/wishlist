@@ -71,6 +71,8 @@
       </ul>
       <p v-else class="text-muted">{{ t("admin.noMember") }}</p>
     </section>
+
+    <UnlockSettingsForm />
   </template>
 
   <AccountCreateSheet
@@ -94,6 +96,7 @@ import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import AccountCreateSheet from "../components/admin/AccountCreateSheet.vue";
 import FamilySheet from "../components/admin/FamilySheet.vue";
+import UnlockSettingsForm from "../components/admin/UnlockSettingsForm.vue";
 import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";

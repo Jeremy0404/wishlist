@@ -7,9 +7,10 @@ import type {
   DeletionImpact,
   Family,
   FamilyMember,
-  FamilyWishlist,
+  FamilyWishlists,
   LinkPreview,
   MoveImpact,
+  UnlockSettings,
   Wishlist,
   WishlistItem,
   WishlistItemForm,
@@ -173,7 +174,7 @@ export const api = {
     request(`/wishlists/me/items/${id}`, { method: "DELETE" }),
 
   // --- Others / viewing ---
-  others: () => request<FamilyWishlist[]>("/wishlists"),
+  others: () => request<FamilyWishlists>("/wishlists"),
   viewWishlist: (userId: string) =>
     request<{ owner?: { name?: string }; items: WishlistItem[] }>(
       `/wishlists/${userId}`,
@@ -187,6 +188,9 @@ export const api = {
 
   // --- Admin ---
   adminOverview: () => request<AdminOverview>("/admin/families"),
+  adminSettings: () => request<UnlockSettings>("/admin/settings"),
+  adminSaveSettings: (body: UnlockSettings) =>
+    request<UnlockSettings>("/admin/settings", { method: "PUT", body }),
   adminUser: (userId: string) =>
     request<AdminUserDetail>(`/admin/users/${userId}`),
   adminCreateUser: (body: AdminAccountForm) =>

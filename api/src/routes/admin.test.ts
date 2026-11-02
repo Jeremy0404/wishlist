@@ -210,6 +210,14 @@ test("setting a too-short password is refused", async () => {
   });
 });
 
+test("a negative unlock threshold is refused before any write", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/settings", "PUT", { minItemsToView: -1 });
+
+    assert.equal(res.status, 400);
+  });
+});
+
 test("the admin cannot delete their own account", async () => {
   await withAdminServer(async (baseUrl) => {
     const res = await asAdmin(baseUrl, `/users/${ADMIN_ID}`, "DELETE");

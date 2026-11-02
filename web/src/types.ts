@@ -18,6 +18,16 @@ export interface Wishlist {
   created_at?: string | null;
 }
 
+export interface FamilyWishlists {
+  wishlists: FamilyWishlist[];
+  wishesRequired: number;
+  wishesMissing: number;
+}
+
+export interface UnlockSettings {
+  minItemsToView: number;
+}
+
 export interface FamilyWishlist {
   wishlist_id: string | null;
   user_id: string;

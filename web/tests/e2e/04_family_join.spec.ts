@@ -53,7 +53,7 @@ test("family join flow with multi-user interactions", async ({ browser }) => {
   // User B: Should see User A in the list (API then UI)
   await expect.poll(async () => {
     const othersResp = await pageB.request.get("/api/wishlists");
-    const others: any[] = await othersResp.json();
+    const { wishlists: others } = await othersResp.json();
     return others.length;
   }, { timeout: 20000 }).toBeGreaterThan(0);
 

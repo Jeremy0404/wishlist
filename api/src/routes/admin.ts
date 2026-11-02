@@ -16,6 +16,11 @@ import { getRequestLogger } from "../logging/logger.js";
 import { imageUpload } from "../middleware/image-upload.js";
 import { removeImage } from "../uploads.js";
 import {
+  getMinItemsToView,
+  setMinItemsToView,
+  UnlockSettings,
+} from "../unlock-threshold.js";
+import {
   addItem,
   deleteItem,
   findOwnWishlist,
@@ -286,6 +291,33 @@ export function createAdminRouter(dbConn: Knex = db, admins?: Set<string>) {
     if (!user) throw new NotFoundError("user not found");
     return user;
   }
+
+  router.get(
+    "/settings",
+    asyncHandler(async (_req, res) => {
+      res.json({ minItemsToView: await getMinItemsToView(dbConn) });
+    }),
+  );
+
+  router.put(
+    "/settings",
+    asyncHandler(async (req, res) => {
+      const log = getRequestLogger(req, {
+        module: "admin",
+        action: "update-settings",
+      });
+      const parse = UnlockSettings.safeParse(req.body);
+      if (!parse.success) throw ValidationError.fromZod(parse.error);
+
+      await setMinItemsToView(dbConn, parse.data.minItemsToView);
+
+      log.info(
+        { adminId: req.user!.id, minItemsToView: parse.data.minItemsToView },
+        "Admin updated the settings",
+      );
+      res.json(parse.data);
+    }),
+  );
 
   router.get(
     "/families",

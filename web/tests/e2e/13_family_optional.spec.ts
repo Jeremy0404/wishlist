@@ -46,8 +46,8 @@ test("a family-less user owns a usable list that nobody else can see", async ({
     await addWishlistItem(stranger, { title });
   }
 
-  const listing = await (await stranger.request.get("/api/wishlists")).json();
-  expect(listing.some((r: { user_id: string }) => r.user_id === lonerId)).toBe(false);
+  const { wishlists } = await (await stranger.request.get("/api/wishlists")).json();
+  expect(wishlists.some((r: { user_id: string }) => r.user_id === lonerId)).toBe(false);
 
   const direct = await stranger.request.get(`/api/wishlists/${lonerId}`);
   expect(direct.status()).toBe(404);

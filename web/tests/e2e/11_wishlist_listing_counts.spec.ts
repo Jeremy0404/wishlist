@@ -15,7 +15,7 @@ async function userId(page: Page): Promise<string> {
 async function listing(page: Page): Promise<ListingRow[]> {
   const res = await page.request.get("/api/wishlists");
   expect(res.status()).toBe(200);
-  return res.json();
+  return (await res.json()).wishlists;
 }
 
 test("the family listing counts items and the caller's own reservations", async ({
