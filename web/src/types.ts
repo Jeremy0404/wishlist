@@ -47,6 +47,8 @@ export interface WishlistItemForm {
   image_url?: string;
 }
 
+export type GiftFilter = "all" | "open" | "mine";
+
 /** A wish the caller reserves on another member's list. */
 export interface Gift {
   id: string;
