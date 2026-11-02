@@ -9,18 +9,61 @@ const emit = defineEmits<{ close: [] }>();
 const { t } = useI18n();
 const panel = ref<HTMLElement | null>(null);
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+let returnFocusTo: HTMLElement | null = null;
+
+function focusables() {
+  const all = panel.value?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [];
+  return Array.from(all).filter((el) => el.offsetParent !== null);
+}
+
+function keepTabInside(e: KeyboardEvent) {
+  const items = focusables();
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement;
+  if (!first || !last) {
+    e.preventDefault();
+  } else if (e.shiftKey && (active === first || active === panel.value)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 function onKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") emit("close");
+  else if (e.key === "Tab") keepTabInside(e);
+}
+
+/** The sheet is teleported out of #app, so the whole app behind it goes inert. */
+function holdBackground() {
+  returnFocusTo = document.activeElement as HTMLElement | null;
+  document.getElementById("app")?.setAttribute("inert", "");
+  document.body.style.overflow = "hidden";
+  document.addEventListener("keydown", onKeydown);
+}
+
+function releaseBackground() {
+  document.removeEventListener("keydown", onKeydown);
+  document.getElementById("app")?.removeAttribute("inert");
+  document.body.style.overflow = "";
+  returnFocusTo?.focus();
+  returnFocusTo = null;
 }
 
 watch(
   () => props.open,
-  async (open) => {
+  async (open, wasOpen) => {
     if (!open) {
-      document.removeEventListener("keydown", onKeydown);
+      if (wasOpen) releaseBackground();
       return;
     }
-    document.addEventListener("keydown", onKeydown);
+    holdBackground();
     await nextTick();
     const firstField = panel.value?.querySelector<HTMLElement>(
       "input, textarea, select",
@@ -30,7 +73,9 @@ watch(
   { immediate: true },
 );
 
-onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
+onBeforeUnmount(() => {
+  if (props.open) releaseBackground();
+});
 </script>
 
 <template>

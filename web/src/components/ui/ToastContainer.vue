@@ -14,45 +14,47 @@ const visible = computed<Toast[]>(() =>
 </script>
 
 <template>
-  <div class="fixed inset-x-4 bottom-24 z-50 flex justify-center md:inset-x-auto md:bottom-6 md:right-6">
-    <TransitionGroup name="toast" tag="div" class="flex flex-col gap-2">
-      <div
-        v-for="toast in visible"
-        :key="toast.id"
-        data-test="toast"
-        :data-kind="toast.kind || 'info'"
-        class="flex min-w-56 max-w-sm items-start gap-3 rounded-pill px-4 py-2 text-control text-on-fill shadow-md"
-        :class="{
-          'bg-accent-2-600': toast.kind === 'success',
-          'bg-danger': toast.kind === 'error',
-          'bg-neutral-800': !toast.kind || toast.kind === 'info',
-        }"
-      >
-        <Icon
-          :name="
-            toast.kind === 'success'
-              ? 'checkCircle'
-              : toast.kind === 'error'
-                ? 'alertCircle'
-                : 'bell'
-          "
-        />
-        <div class="flex-1 wrap-break-word">
-          {{ toast.text }}
-        </div>
-        <button
-          type="button"
-          data-test="toast-dismiss"
-          class="pressable -m-1 grid h-7 w-7 flex-none place-items-center rounded-full opacity-70 hover:bg-on-fill/15 hover:opacity-100 active:bg-on-fill/25"
-          :title="t('common.close')"
-          :aria-label="t('common.close')"
-          @click="clear(toast.id)"
+  <Teleport to="body">
+    <div class="fixed inset-x-4 bottom-24 z-50 flex justify-center md:inset-x-auto md:bottom-6 md:right-6">
+      <TransitionGroup name="toast" tag="div" class="flex flex-col gap-2">
+        <div
+          v-for="toast in visible"
+          :key="toast.id"
+          data-test="toast"
+          :data-kind="toast.kind || 'info'"
+          class="flex min-w-56 max-w-sm items-start gap-3 rounded-pill px-4 py-2 text-control text-on-fill shadow-md"
+          :class="{
+            'bg-accent-2-600': toast.kind === 'success',
+            'bg-danger': toast.kind === 'error',
+            'bg-neutral-800': !toast.kind || toast.kind === 'info',
+          }"
         >
-          <Icon name="close" :size="14" />
-        </button>
-      </div>
-    </TransitionGroup>
-  </div>
+          <Icon
+            :name="
+              toast.kind === 'success'
+                ? 'checkCircle'
+                : toast.kind === 'error'
+                  ? 'alertCircle'
+                  : 'bell'
+            "
+          />
+          <div class="flex-1 wrap-break-word">
+            {{ toast.text }}
+          </div>
+          <button
+            type="button"
+            data-test="toast-dismiss"
+            class="pressable -m-1 grid h-7 w-7 flex-none place-items-center rounded-full opacity-70 hover:bg-on-fill/15 hover:opacity-100 active:bg-on-fill/25"
+            :title="t('common.close')"
+            :aria-label="t('common.close')"
+            @click="clear(toast.id)"
+          >
+            <Icon name="close" :size="14" />
+          </button>
+        </div>
+      </TransitionGroup>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
