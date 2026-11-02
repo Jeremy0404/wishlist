@@ -227,6 +227,7 @@ router.get(
       action: "view-other",
     });
     const { userId } = req.params;
+    if (userId === req.user!.id) throw new NotFoundError("wishlist not found");
     await refuseWhileListsLocked(db, req.user!.id, req.familyId!);
 
     const wl = await db("wishlists")
