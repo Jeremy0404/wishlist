@@ -53,6 +53,8 @@ const showDetails = ref(false);
 const submitting = ref(false);
 const resolving = ref(false);
 const resolvedUrl = ref<string | null>(null);
+const previewMissed = ref(false);
+const pristine = ref("");
 const titleError = ref("");
 const confirmingRemoval = ref(false);
 const removing = ref(false);
@@ -109,6 +111,7 @@ watch(
     sheetSession++;
     pendingPreview = null;
     resolving.value = false;
+    previewMissed.value = false;
     form.title = item?.title ?? "";
     form.url = item?.url ?? "";
     form.price_eur = item?.price_eur ?? undefined;
@@ -120,7 +123,12 @@ watch(
     resolvedUrl.value = null;
     titleError.value = "";
     confirmingRemoval.value = false;
+    pristine.value = JSON.stringify(form);
   },
+);
+
+const dirty = computed(
+  () => photo.value !== null || JSON.stringify(form) !== pristine.value,
 );
 
 function isEmpty(value: number | string | undefined) {
@@ -144,9 +152,12 @@ function resolve(url: string) {
 }
 
 /** Fills what the page says about itself into the fields left empty.
- *  A value the user typed is never overwritten, and a failed fetch is silent. */
+ *  A value the user typed is never overwritten; a page that tells nothing only
+ *  earns a quiet hint. */
 async function fillFromPreview(url: string, session: number) {
   resolving.value = true;
+  previewMissed.value = false;
+  let found = false;
   try {
     const preview = await api.previewItemUrl(url);
     if (isStale(url, session)) return;
@@ -155,8 +166,8 @@ async function fillFromPreview(url: string, session: number) {
       form.price_eur = preview.price_eur;
     if (!form.image_url && !photo.value && preview.image_url)
       form.image_url = preview.image_url;
-    if (preview.title || preview.price_eur != null || preview.image_url)
-      showDetails.value = true;
+    found = !!(preview.title || preview.price_eur != null || preview.image_url);
+    if (found) showDetails.value = true;
   } catch {
     /* the fetch is a convenience, never a gate */
   } finally {
@@ -164,6 +175,7 @@ async function fillFromPreview(url: string, session: number) {
       if (!form.url) form.url = url;
       resolvedUrl.value = url;
       resolving.value = false;
+      previewMissed.value = !found;
       pendingPreview = null;
     }
   }
@@ -238,7 +250,12 @@ async function remove() {
 </script>
 
 <template>
-  <Sheet :open="open" :title="sheetTitle" @close="emit('close')">
+  <Sheet
+    :open="open"
+    :title="sheetTitle"
+    :hold-on-backdrop="dirty"
+    @close="emit('close')"
+  >
     <form class="grid gap-4" novalidate @submit.prevent="submit">
       <div v-if="!editing" class="grid gap-2">
         <Input
@@ -259,6 +276,13 @@ async function remove() {
         >
           <Spinner />
           {{ t("item.resolving") }}
+        </span>
+        <span
+          v-else-if="previewMissed"
+          class="text-caption text-muted"
+          data-test="quick-add-manual"
+        >
+          {{ t("item.previewMissed") }}
         </span>
       </div>
       <Input
@@ -338,28 +362,30 @@ async function remove() {
         <ImageField v-model:image-url="form.image_url" v-model:file="photo" />
       </div>
 
-      <Button
-        v-if="editing"
-        variant="primary"
-        type="submit"
-        block
-        class="min-h-14 text-body"
-        data-test="wishlist-edit-save"
-        :loading="submitting"
-      >
-        {{ t("item.save") }}
-      </Button>
-      <Button
-        v-else
-        variant="primary"
-        type="submit"
-        block
-        class="min-h-14 text-body"
-        data-test="wishlist-add-submit"
-        :loading="submitting"
-      >
-        {{ t(copy.submitAdd) }}
-      </Button>
+      <div class="sticky bottom-0 -mx-5 bg-surface px-5 py-2">
+        <Button
+          v-if="editing"
+          variant="primary"
+          type="submit"
+          block
+          class="min-h-14 text-body"
+          data-test="wishlist-edit-save"
+          :loading="submitting"
+        >
+          {{ t("item.save") }}
+        </Button>
+        <Button
+          v-else
+          variant="primary"
+          type="submit"
+          block
+          class="min-h-14 text-body"
+          data-test="wishlist-add-submit"
+          :loading="submitting"
+        >
+          {{ t(copy.submitAdd) }}
+        </Button>
+      </div>
     </form>
 
     <template v-if="item">
