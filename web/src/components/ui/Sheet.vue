@@ -3,7 +3,8 @@ import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import Icon from "./Icon.vue";
 
-const props = defineProps<{ open: boolean; title: string }>();
+/** holdOnBackdrop: a tap beside the sheet must not throw away unsaved edits. */
+const props = defineProps<{ open: boolean; title: string; holdOnBackdrop?: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 
 const { t } = useI18n();
@@ -90,7 +91,8 @@ onBeforeUnmount(() => {
           class="absolute inset-0 cursor-default bg-ink/40"
           :aria-label="t('common.close')"
           tabindex="-1"
-          @click="emit('close')"
+          data-test="sheet-backdrop"
+          @click="holdOnBackdrop || emit('close')"
         ></button>
         <div
           ref="panel"
