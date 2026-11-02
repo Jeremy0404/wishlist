@@ -49,13 +49,13 @@
       class="m-0 list-none border-t border-divider p-0"
     >
       <li
-        v-for="(item, index) in detail.items"
+        v-for="item in detail.items"
         :key="item.id"
         class="flex items-center gap-3.5 border-b border-divider px-1 py-4"
         data-test="admin-item"
         :data-title="item.title"
       >
-        <ItemTile :image-url="item.image_url" :tone="toneAt(index)" />
+        <ItemTile :image-url="item.image_url" :tone="toneFor(item.id)" />
         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="font-semibold">{{ item.title }}</span>
           <span v-if="meta(item)" class="text-caption text-muted">
@@ -186,7 +186,7 @@ import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import ItemTile from "../components/wishlist/ItemTile.vue";
 import { useAuth } from "../stores/auth.ts";
 import { fmtEUR } from "../utils/money";
-import { toneAt } from "../utils/tones";
+import { toneFor } from "../utils/tones";
 import type {
   AdminProfile,
   AdminUserDetail,
