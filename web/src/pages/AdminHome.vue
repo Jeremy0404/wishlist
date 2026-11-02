@@ -9,6 +9,17 @@
   <ListSkeleton v-else-if="loading" />
 
   <template v-else>
+    <Button
+      variant="primary"
+      block
+      class="min-h-14 text-body"
+      data-test="admin-add"
+      @click="adding = true"
+    >
+      <Icon name="userPlus" :size="22" />
+      {{ t("admin.add") }}
+    </Button>
+
     <section
       v-for="group in groups"
       :key="group.id"
@@ -50,14 +61,23 @@
       <p v-else class="text-muted">{{ t("admin.noMember") }}</p>
     </section>
   </template>
+
+  <AccountCreateSheet
+    :open="adding"
+    :families="overview.families"
+    @close="adding = false"
+    @created="openCreated"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
+import AccountCreateSheet from "../components/admin/AccountCreateSheet.vue";
 import Avatar from "../components/ui/Avatar.vue";
+import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PageHeader from "../components/PageHeader.vue";
@@ -70,6 +90,13 @@ const { t } = useI18n();
 const loading = ref(true);
 const error = ref("");
 const overview = ref<AdminOverview>({ families: [], familyless: [] });
+const adding = ref(false);
+const router = useRouter();
+
+async function openCreated(userId: string) {
+  adding.value = false;
+  await router.push(`/admin/users/${userId}`);
+}
 
 const groups = computed<AdminFamily[]>(() => {
   const { families, familyless } = overview.value;

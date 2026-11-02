@@ -72,10 +72,31 @@ export interface AdminOverview {
   familyless: AdminMember[];
 }
 
+export interface AdminProfile {
+  id: string;
+  name: string;
+  email: string | null;
+  username: string | null;
+}
+
 export interface AdminUserDetail {
-  user: { id: string; name: string; email: string | null; username: string | null };
+  user: AdminProfile;
   family: { id: string; name: string } | null;
   items: WishlistItem[];
+}
+
+export interface AdminAccountForm {
+  name: string;
+  email?: string;
+  username?: string;
+  password?: string;
+  familyId?: string | null;
+}
+
+export interface DeletionImpact {
+  wishes: number;
+  reservations_made: number;
+  reservations_received: number;
 }
 
 export interface LinkPreview {

@@ -1,27 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addWishlistItem, openAccount, registerUser } from "./helpers";
-
-const ADMIN = {
-  name: "Admin Test",
-  email: "admin@site.test",
-  password: "password123",
-};
-
-/** The admin address is fixed by the test stack's ADMIN_EMAILS, so the
- *  account outlives a run: register it once, sign back in afterwards. */
-async function signInAsAdmin(page: Page) {
-  const registered = await page.request.post("/api/auth/register", {
-    data: ADMIN,
-  });
-  if (registered.status() === 409) {
-    const loggedIn = await page.request.post("/api/auth/login", {
-      data: { identifier: ADMIN.email, password: ADMIN.password },
-    });
-    expect(loggedIn.ok()).toBeTruthy();
-  } else {
-    expect(registered.ok()).toBeTruthy();
-  }
-}
+import {
+  ADMIN,
+  addWishlistItem,
+  openAccount,
+  registerUser,
+  signInAsAdmin,
+} from "./helpers";
 
 async function reserve(page: Page, itemId: string) {
   const res = await page.request.post(`/api/wishlists/items/${itemId}/reserve`);
