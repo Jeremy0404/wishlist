@@ -23,11 +23,36 @@ type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export class ApiError extends Error {
   readonly status: number;
   readonly details?: { field?: string };
+  readonly code?: string;
 
-  constructor(message: string, status: number, details?: { field?: string }) {
+  constructor(
+    message: string,
+    status: number,
+    details?: { field?: string },
+    code?: string,
+  ) {
     super(message);
     this.status = status;
     this.details = details;
+    this.code = code;
+  }
+}
+
+type ErrorBody = {
+  code?: string;
+  error?: string;
+  message?: string;
+  details?: { field?: string };
+};
+
+/** A proxy in front of the API can answer with an HTML page instead of JSON. */
+async function readErrorBody(res: Response): Promise<ErrorBody | null> {
+  const text = await res.text();
+  try {
+    const data: unknown = JSON.parse(text);
+    return data && typeof data === "object" ? (data as ErrorBody) : null;
+  } catch {
+    return null;
   }
 }
 type UnauthorizedHandler = () => void;
@@ -79,10 +104,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
     }
   }
   if (!res.ok) {
-    const data = await res.json();
-    const msg = (data && (data.error || data.message)) || (await res.text());
-
-    throw new ApiError(msg || res.statusText, res.status, data?.details);
+    const data = await readErrorBody(res);
+    throw new ApiError(
+      data?.error || data?.message || res.statusText,
+      res.status,
+      data?.details,
+      data?.code,
+    );
   }
   return await res.json();
 }

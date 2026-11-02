@@ -8,6 +8,11 @@ const fr = {
     cancel: "Annuler",
     copied: "Copié !",
   },
+  load: {
+    title: "Impossible de charger pour l’instant",
+    body: "Rien n’est perdu. Vérifie ta connexion, puis réessaie.",
+    retry: "Réessayer",
+  },
   nav: {
     wishlist: "Wishlist",
     main: "Navigation principale",

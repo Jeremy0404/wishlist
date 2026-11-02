@@ -17,6 +17,8 @@
 
   <ListSkeleton v-if="loading" />
 
+  <LoadError v-else-if="loadFailed" @retry="load" />
+
   <div
     v-else-if="items.length === 0"
     class="px-2 py-8 text-center"
@@ -56,6 +58,7 @@ import { api } from "../services/api";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import LoadError from "../components/ui/LoadError.vue";
 import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import WishlistRow from "../components/wishlist/WishlistRow.vue";
 import PageHeader from "../components/PageHeader.vue";
@@ -65,6 +68,7 @@ import type { WishlistItem } from "../types.ts";
 const { t } = useI18n();
 
 const loading = ref(true);
+const loadFailed = ref(false);
 const items = ref<WishlistItem[]>([]);
 const sheetOpen = ref(false);
 const editing = ref<WishlistItem | null>(null);
@@ -74,9 +78,13 @@ function normalizeItem(item: WishlistItem): WishlistItem {
 }
 
 async function load() {
+  loading.value = true;
+  loadFailed.value = false;
   try {
     const data = await api.getMyWishlist();
     items.value = (data.items ?? []).map(normalizeItem);
+  } catch {
+    loadFailed.value = true;
   } finally {
     loading.value = false;
   }
