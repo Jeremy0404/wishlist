@@ -22,7 +22,7 @@
     action-to="/me"
   />
 
-  <p v-else-if="error" class="text-danger">{{ error }}</p>
+  <LoadError v-else-if="loadFailed" @retry="load" />
 
   <ListSkeleton v-else-if="loading" />
 
@@ -60,6 +60,7 @@ import { useI18n } from "vue-i18n";
 import { api, ApiError } from "../services/api";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import LoadError from "../components/ui/LoadError.vue";
 import PageMessage from "../components/ui/PageMessage.vue";
 import PageHeader from "../components/PageHeader.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
@@ -75,7 +76,8 @@ const auth = useAuth();
 const ownerName = ref("");
 const loading = ref(true);
 const items = ref<WishlistItem[]>([]);
-const error = ref("");
+const loaded = ref(false);
+const loadFailed = ref(false);
 const locked = ref(false);
 
 const props = defineProps<{ userId: string }>();
@@ -84,14 +86,19 @@ const HTTP_CONFLICT = 409;
 
 const busy = ref(new Set<string>());
 
+/** A failed refresh keeps the list on screen and says so in a toast. */
 async function load() {
+  if (!loaded.value) loading.value = true;
+  loadFailed.value = false;
   try {
     const list = await api.viewWishlist(props.userId);
     ownerName.value = list.owner?.name ?? "";
     items.value = list.items ?? [];
-  } catch (e: any) {
+    loaded.value = true;
+  } catch (e) {
     if (e instanceof ApiError && e.status === HTTP_FORBIDDEN) locked.value = true;
-    else error.value = e.message ?? t("toast.error");
+    else if (loaded.value) push(t("toast.error"), "error");
+    else loadFailed.value = true;
   } finally {
     loading.value = false;
   }
