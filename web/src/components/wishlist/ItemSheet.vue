@@ -12,9 +12,15 @@ import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
 import { toHttpUrl } from "../../utils/link";
 import { isFavorite, priorityFor } from "../../utils/favorite";
-import type { WishlistItem } from "../../types.ts";
+import type { WishlistItem, WishlistItemForm } from "../../types.ts";
 
-const props = defineProps<{ open: boolean; item: WishlistItem | null }>();
+/** Without an owner the sheet edits the caller's own list; with one, the admin
+ *  edits that user's list through the admin routes. */
+const props = defineProps<{
+  open: boolean;
+  item: WishlistItem | null;
+  ownerId?: string;
+}>();
 const emit = defineEmits<{
   close: [];
   added: [WishlistItem];
@@ -51,9 +57,46 @@ const titleError = ref("");
 const confirmingRemoval = ref(false);
 const removing = ref(false);
 
+const OWNER_COPY = {
+  editTitle: "item.editTitle",
+  submitAdd: "item.submitAdd",
+  remove: "item.remove",
+  removeConfirm: "item.removeConfirm",
+  added: "toast.added",
+  removed: "toast.removed",
+};
+
+const ADMIN_COPY: typeof OWNER_COPY = {
+  editTitle: "admin.item.editTitle",
+  submitAdd: "admin.item.submitAdd",
+  remove: "admin.item.remove",
+  removeConfirm: "admin.item.removeConfirm",
+  added: "admin.item.added",
+  removed: "admin.item.removed",
+};
+
+const copy = computed(() => (props.ownerId ? ADMIN_COPY : OWNER_COPY));
+
+const itemApi = computed(() => {
+  const ownerId = props.ownerId;
+  if (!ownerId)
+    return {
+      add: api.addMyItem,
+      update: api.updateMyItem,
+      remove: api.deleteMyItem,
+    };
+  return {
+    add: (body: WishlistItemForm, image?: File | null) =>
+      api.adminAddItem(ownerId, body, image),
+    update: (id: string, body: WishlistItemForm, image?: File | null) =>
+      api.adminUpdateItem(ownerId, id, body, image),
+    remove: (id: string) => api.adminDeleteItem(ownerId, id),
+  };
+});
+
 const editing = computed(() => props.item !== null);
 const sheetTitle = computed(() =>
-  editing.value ? t("item.editTitle") : t("item.addTitle"),
+  editing.value ? t(copy.value.editTitle) : t("item.addTitle"),
 );
 
 watch(
@@ -134,16 +177,20 @@ async function submit() {
   submitting.value = true;
   try {
     if (props.item) {
-      const updated = await api.updateMyItem(props.item.id, body, photo.value);
+      const updated = await itemApi.value.update(
+        props.item.id,
+        body,
+        photo.value,
+      );
       emit("updated", updated);
       push(t("toast.updated"), "success");
     } else {
-      const created = await api.addMyItem(
+      const created = await itemApi.value.add(
         { ...body, image_url: body.image_url || undefined },
         photo.value,
       );
       emit("added", created);
-      push(t("toast.added"), "success");
+      push(t(copy.value.added), "success");
     }
     emit("close");
   } catch (e: any) {
@@ -157,9 +204,9 @@ async function remove() {
   if (!props.item) return;
   removing.value = true;
   try {
-    await api.deleteMyItem(props.item.id);
+    await itemApi.value.remove(props.item.id);
     emit("removed", props.item.id);
-    push(t("toast.removed"), "success");
+    push(t(copy.value.removed), "success");
     emit("close");
   } catch (e: any) {
     push(e?.message || t("toast.error"), "error");
@@ -290,7 +337,7 @@ async function remove() {
         data-test="wishlist-add-submit"
         :loading="submitting"
       >
-        {{ t("item.submitAdd") }}
+        {{ t(copy.submitAdd) }}
       </Button>
     </form>
 
@@ -307,7 +354,7 @@ async function remove() {
       </a>
       <InlineConfirm
         v-if="confirmingRemoval"
-        :question="t('item.removeConfirm', { title: item.title })"
+        :question="t(copy.removeConfirm, { title: item.title })"
         :confirm-label="t('item.removeYes')"
         :cancel-label="t('item.removeNo')"
         :loading="removing"
@@ -322,7 +369,7 @@ async function remove() {
         data-test="wishlist-delete"
         @click="confirmingRemoval = true"
       >
-        {{ t("item.remove") }}
+        {{ t(copy.remove) }}
       </Button>
     </template>
   </Sheet>

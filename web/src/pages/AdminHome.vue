@@ -26,7 +26,18 @@
       data-test="admin-family"
       :data-name="group.name"
     >
-      <h2 class="mb-2 text-h4">{{ group.name }}</h2>
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h2 class="mb-0 text-h4">{{ group.name }}</h2>
+        <Button
+          v-if="group.id !== FAMILYLESS_GROUP_ID"
+          variant="ghost"
+          data-test="admin-family-open"
+          @click="managed = group"
+        >
+          <Icon name="pencil" :size="18" />
+          {{ t("admin.familySheet.open") }}
+        </Button>
+      </div>
       <ul
         v-if="group.members.length"
         class="m-0 list-none border-t border-divider p-0"
@@ -68,6 +79,12 @@
     @close="adding = false"
     @created="openCreated"
   />
+  <FamilySheet
+    :open="managed !== null"
+    :family="managed"
+    @close="managed = null"
+    @renamed="onRenamed"
+  />
 </template>
 
 <script setup lang="ts">
@@ -76,6 +93,7 @@ import { RouterLink, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import AccountCreateSheet from "../components/admin/AccountCreateSheet.vue";
+import FamilySheet from "../components/admin/FamilySheet.vue";
 import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
@@ -91,7 +109,14 @@ const loading = ref(true);
 const error = ref("");
 const overview = ref<AdminOverview>({ families: [], familyless: [] });
 const adding = ref(false);
+const managed = ref<AdminFamily | null>(null);
 const router = useRouter();
+
+function onRenamed(name: string) {
+  const family = overview.value.families.find((f) => f.id === managed.value?.id);
+  if (family) family.name = name;
+  managed.value = null;
+}
 
 async function openCreated(userId: string) {
   adding.value = false;

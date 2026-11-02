@@ -102,13 +102,6 @@ export const useAuth = defineStore("auth", {
       await this.refreshFamilies();
       return this.user;
     },
-    async rotateFamilyInvite() {
-      if (!this.user) return null;
-
-      const fam = await api.rotateInviteCode();
-      this.myFamily = fam;
-      return fam;
-    },
     /** A 401 is the ordinary answer for a guest, so only a session that was
      *  signed in a moment ago counts as one that expired. */
     installApiGuards(router: Router) {

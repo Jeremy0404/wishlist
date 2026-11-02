@@ -25,10 +25,10 @@ const ADMINS = parseAdminEmails("admin@site.test");
 
 type Row = Record<string, unknown>;
 
-function createUsersDb(rows: Row[]) {
+function createFakeDb(tables: Record<string, Row[]>) {
   return ((table: string) => {
-    if (table !== "users") throw new Error(`Unexpected table ${table}`);
-    let matches = rows;
+    if (!(table in tables)) throw new Error(`Unexpected table ${table}`);
+    let matches = tables[table];
     return {
       select() {
         return this;
@@ -52,13 +52,24 @@ function createUsersDb(rows: Row[]) {
   }) as any;
 }
 
+function createUsersDb(rows: Row[]) {
+  return createFakeDb({ users: rows });
+}
+
 const ADMIN_ROW = { id: ADMIN_ID, email: "admin@site.test", username: null };
+const RELATIVE_ROW = { id: "relative-1", email: null, username: "mamie", name: "Mamie" };
 
 async function withAdminServer(run: (baseUrl: string) => Promise<void>) {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
-  app.use("/admin", createAdminRouter(createUsersDb([ADMIN_ROW]), ADMINS));
+  app.use(
+    "/admin",
+    createAdminRouter(
+      createFakeDb({ users: [ADMIN_ROW, RELATIVE_ROW], family_memberships: [] }),
+      ADMINS,
+    ),
+  );
   app.use(errorHandler);
 
   const server = app.listen(0);
@@ -203,5 +214,33 @@ test("the admin cannot delete their own account", async () => {
     const res = await asAdmin(baseUrl, `/users/${ADMIN_ID}`, "DELETE");
 
     assert.equal(res.status, 409);
+  });
+});
+
+test("a wish added by the admin goes through the owner's validation", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/users/relative-1/items", "POST", {
+      price_eur: 12,
+    });
+
+    assert.equal(res.status, 400);
+  });
+});
+
+test("a wish cannot be added for an unknown account", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/users/nobody/items", "POST", {
+      title: "Plaid",
+    });
+
+    assert.equal(res.status, 404);
+  });
+});
+
+test("a family cannot be renamed to nothing", async () => {
+  await withAdminServer(async (baseUrl) => {
+    const res = await asAdmin(baseUrl, "/families/fam-1", "PATCH", { name: "  " });
+
+    assert.equal(res.status, 400);
   });
 });

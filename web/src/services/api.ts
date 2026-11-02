@@ -143,8 +143,6 @@ export const api = {
     return fam ?? null;
   },
   getFamilyMembers: () => request<FamilyMember[]>("/families/members"),
-  rotateInviteCode: () =>
-    request<Family>("/families/rotate-invite", { method: "POST" }),
   createFamily: (name: string) =>
     request<Family>("/families", { method: "POST", body: { name } }),
   joinFamily: (code: string) =>
@@ -203,6 +201,32 @@ export const api = {
     request<DeletionImpact>(`/admin/users/${userId}/deletion-impact`),
   adminDeleteUser: (userId: string) =>
     request(`/admin/users/${userId}`, { method: "DELETE" }),
+  adminAddItem: (userId: string, body: WishlistItemForm, image?: File | null) =>
+    request<WishlistItem>(`/admin/users/${userId}/items`, {
+      method: "POST",
+      body: itemPayload(body, image),
+    }),
+  adminUpdateItem: (
+    userId: string,
+    itemId: string,
+    body: WishlistItemForm,
+    image?: File | null,
+  ) =>
+    request<WishlistItem>(`/admin/users/${userId}/items/${itemId}`, {
+      method: "PATCH",
+      body: itemPayload(body, image),
+    }),
+  adminDeleteItem: (userId: string, itemId: string) =>
+    request(`/admin/users/${userId}/items/${itemId}`, { method: "DELETE" }),
+  adminRenameFamily: (familyId: string, name: string) =>
+    request<{ id: string; name: string }>(`/admin/families/${familyId}`, {
+      method: "PATCH",
+      body: { name },
+    }),
+  adminRotateInvite: (familyId: string) =>
+    request<Family>(`/admin/families/${familyId}/rotate-invite`, {
+      method: "POST",
+    }),
 };
 
 export function onUnauthorized(handler: UnauthorizedHandler) {
