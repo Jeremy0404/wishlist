@@ -102,6 +102,16 @@
         {{ t("admin.password") }}
       </Button>
       <Button
+        v-if="!isOwnList"
+        variant="secondary"
+        block
+        data-test="admin-move"
+        @click="moving = true"
+      >
+        <Icon name="users" :size="20" />
+        {{ t("admin.move.open") }}
+      </Button>
+      <Button
         v-if="!isOwnList && !impact"
         variant="ghost-danger"
         block
@@ -134,6 +144,13 @@
       @close="editing = false"
       @saved="onSaved"
     />
+    <FamilyMoveSheet
+      :open="moving"
+      :user="detail.user"
+      :family-id="detail.family?.id ?? null"
+      @close="moving = false"
+      @moved="onMoved"
+    />
     <PasswordSheet
       :open="settingPassword"
       :user-id="userId"
@@ -157,6 +174,7 @@ import { RouterLink, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
 import AccountEditSheet from "../components/admin/AccountEditSheet.vue";
+import FamilyMoveSheet from "../components/admin/FamilyMoveSheet.vue";
 import PasswordSheet from "../components/admin/PasswordSheet.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
@@ -186,6 +204,7 @@ const detail = ref<AdminUserDetail | null>(null);
 const revealed = ref(false);
 const editing = ref(false);
 const settingPassword = ref(false);
+const moving = ref(false);
 const impact = ref<DeletionImpact | null>(null);
 const deleting = ref(false);
 const itemOpen = ref(false);
@@ -196,6 +215,11 @@ const router = useRouter();
 function onSaved(user: AdminProfile) {
   if (detail.value) detail.value.user = user;
   editing.value = false;
+}
+
+async function onMoved() {
+  moving.value = false;
+  await load();
 }
 
 async function askDeletion() {
