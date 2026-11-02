@@ -10,8 +10,45 @@
 
   <ListSkeleton v-else-if="loading" />
 
+  <div
+    v-if="locked"
+    class="flex flex-col gap-3 rounded-card bg-accent-100 p-4"
+    data-test="browse-locked"
+  >
+    <p class="mb-0 flex items-start gap-2.5">
+      <Icon name="lock" :size="20" class="mt-0.5 shrink-0 text-accent" />
+      <span>{{ lockedMessage }}</span>
+    </p>
+    <div class="flex items-center gap-3">
+      <div
+        class="h-2 flex-1 overflow-hidden rounded-full bg-accent-200"
+        role="progressbar"
+        :aria-valuenow="wishesHeld"
+        aria-valuemin="0"
+        :aria-valuemax="unlock.wishesRequired"
+      >
+        <div
+          class="h-full rounded-full bg-accent"
+          :style="{ width: `${(wishesHeld / unlock.wishesRequired) * 100}%` }"
+        />
+      </div>
+      <span class="text-caption text-muted" data-test="browse-locked-progress">
+        {{
+          t("browse.locked.progress", {
+            have: wishesHeld,
+            required: unlock.wishesRequired,
+          })
+        }}
+      </span>
+    </div>
+    <Button variant="primary" to="/me" data-test="browse-locked-add">
+      <Icon name="plus" :size="20" />
+      {{ t("browse.locked.add") }}
+    </Button>
+  </div>
+
   <ul
-    v-else-if="rows.length"
+    v-if="!error && !loading && rows.length"
     class="m-0 list-none border-t border-divider p-0"
   >
     <li
@@ -21,14 +58,13 @@
       data-test="browse-card"
     >
       <component
-        :is="row.item_count ? RouterLink : 'div'"
-        v-bind="row.item_count ? { to: `/wishlists/${row.user_id}` } : {}"
-        class="flex items-center gap-3.5 px-1 py-3.5 text-ink no-underline"
+        :is="rowElement(row)"
+        v-bind="rowAttributes(row)"
+        class="flex w-full items-center gap-3.5 px-1 py-3.5 text-left text-ink no-underline"
         :class="
-          row.item_count &&
+          (locked || row.item_count) &&
           'transition-colors hover:bg-neutral-200 active:bg-neutral-300'
         "
-        :data-test="row.item_count ? 'wishlist-open' : 'wishlist-pending'"
       >
         <Avatar
           :name="row.name"
@@ -43,7 +79,14 @@
           </span>
         </span>
         <Icon
-          v-if="row.item_count"
+          v-if="locked"
+          name="lock"
+          :size="20"
+          class="text-neutral-500"
+          data-test="browse-lock"
+        />
+        <Icon
+          v-else-if="row.item_count"
           name="chevronRight"
           :size="20"
           class="text-neutral-500"
@@ -70,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api } from "../services/api";
@@ -78,18 +121,50 @@ import Avatar from "../components/ui/Avatar.vue";
 import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import { useToasts } from "../components/ui/useToasts";
 import InviteSheet from "../components/InviteSheet.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { useAuth } from "../stores/auth.ts";
 import { toneAt } from "../utils/tones";
-import type { FamilyWishlist } from "../types.ts";
+import type { FamilyWishlist, FamilyWishlists } from "../types.ts";
 
 const { t } = useI18n();
 const auth = useAuth();
 const loading = ref(true);
 const rows = ref<FamilyWishlist[]>([]);
+const unlock = ref<Omit<FamilyWishlists, "wishlists">>({
+  wishesRequired: 0,
+  wishesMissing: 0,
+});
 const error = ref("");
 const inviteOpen = ref(false);
+const { push } = useToasts();
+
+const locked = computed(() => unlock.value.wishesMissing > 0);
+const wishesHeld = computed(
+  () => unlock.value.wishesRequired - unlock.value.wishesMissing,
+);
+const lockedMessage = computed(() =>
+  t("browse.locked.message", unlock.value.wishesMissing),
+);
+
+function rowElement(row: FamilyWishlist) {
+  if (locked.value) return "button";
+  return row.item_count ? RouterLink : "div";
+}
+
+function rowAttributes(row: FamilyWishlist) {
+  if (locked.value)
+    return {
+      type: "button",
+      "aria-label": t("browse.locked.rowLabel", { name: row.name }),
+      "data-test": "wishlist-locked",
+      onClick: () => push(lockedMessage.value),
+    };
+  if (row.item_count)
+    return { to: `/wishlists/${row.user_id}`, "data-test": "wishlist-open" };
+  return { "data-test": "wishlist-pending" };
+}
 
 function summary(row: FamilyWishlist) {
   if (!row.item_count) return t("browse.noWish");
@@ -101,7 +176,11 @@ function summary(row: FamilyWishlist) {
 
 onMounted(async () => {
   try {
-    if (auth.inFamily) rows.value = await api.others();
+    if (auth.inFamily) {
+      const { wishlists, ...status } = await api.others();
+      rows.value = wishlists;
+      unlock.value = status;
+    }
   } catch (e: any) {
     error.value = e.message ?? t("toast.error");
   } finally {

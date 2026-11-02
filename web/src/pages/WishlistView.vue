@@ -13,7 +13,16 @@
     <template #lead>{{ t("view.lead", { name: ownerName }) }}</template>
   </PageHeader>
 
-  <p v-if="error" class="text-danger">{{ error }}</p>
+  <PageMessage
+    v-if="locked"
+    icon="lock"
+    :title="t('view.lockedTitle')"
+    :body="t('view.locked')"
+    :action-label="t('browse.locked.add')"
+    action-to="/me"
+  />
+
+  <p v-else-if="error" class="text-danger">{{ error }}</p>
 
   <ListSkeleton v-else-if="loading" />
 
@@ -47,9 +56,10 @@
 import { onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { api } from "../services/api";
+import { api, ApiError } from "../services/api";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
+import PageMessage from "../components/ui/PageMessage.vue";
 import PageHeader from "../components/PageHeader.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
@@ -65,8 +75,10 @@ const ownerName = ref("");
 const loading = ref(true);
 const items = ref<WishlistItem[]>([]);
 const error = ref("");
+const locked = ref(false);
 
 const props = defineProps<{ userId: string }>();
+const HTTP_FORBIDDEN = 403;
 
 async function load() {
   try {
@@ -74,7 +86,8 @@ async function load() {
     ownerName.value = list.owner?.name ?? "";
     items.value = list.items ?? [];
   } catch (e: any) {
-    error.value = e.message ?? t("toast.error");
+    if (e instanceof ApiError && e.status === HTTP_FORBIDDEN) locked.value = true;
+    else error.value = e.message ?? t("toast.error");
   } finally {
     loading.value = false;
   }

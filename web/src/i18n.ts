@@ -170,6 +170,13 @@ const fr = {
     wishCount: "{count} envie | {count} envies",
     noWish: "Pas encore d’envie",
     givingCount: "tu en offres {count}",
+    locked: {
+      message:
+        "Ajoute encore {count} envie à ta liste pour voir celles de ta famille. | Ajoute encore {count} envies à ta liste pour voir celles de ta famille.",
+      progress: "{have} sur {required}",
+      add: "Ajouter une envie",
+      rowLabel: "Liste de {name}, encore fermée",
+    },
   },
   view: {
     title: "Les envies de {name}",
@@ -181,6 +188,8 @@ const fr = {
     takenByOther: "Quelqu’un s’en occupe déjà",
     link: "Voir la page",
     empty: "{name} n’a encore rien noté.",
+    lockedTitle: "Cette liste est encore fermée",
+    locked: "Ajoute d’abord quelques envies à ta liste pour voir celles de ta famille.",
   },
   welcome: {
     title: "Bienvenue !",
@@ -194,6 +203,11 @@ const fr = {
     entry: "Administration",
     title: "Administration",
     lead: "Toutes les familles et leurs membres.",
+    settings: {
+      title: "Réglages",
+      minItemsLabel: "Envies à noter avant de voir les listes des autres",
+      minItemsHelp: "0 pour ne rien demander.",
+    },
     familyless: "Sans famille",
     noMember: "Personne dans cette famille",
     wishCount: "{count} envie | {count} envies",
