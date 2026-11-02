@@ -144,6 +144,21 @@ jobs:
               "${repo}@${digest}"
           done
 
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The server runs this tag's compose file and scripts, not a stale copy:
+      # a variable added to the compose file would otherwise never reach a container.
+      - name: Sync deploy files to the server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: deploy/*
+          target: wishlist
+          overwrite: true
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         env:

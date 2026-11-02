@@ -71,7 +71,8 @@ The loopback port is only for host-local health checks (`rollback.sh`) and debug
 ## Deployment
 
 Every tag push deploys automatically. `release.yml`'s `deploy` job verifies both images' cosign
-signatures, then runs `rollback.sh` over SSH (rewrite `RELEASE_VERSION`, pull, restart `web` and
+signatures, copies this tag's `deploy/` files over the server's (`.env` is untracked, so it is never
+touched), then runs `rollback.sh` over SSH (rewrite `RELEASE_VERSION`, pull, restart `web` and
 `api`, poll the health endpoint); `verify-deploy` then confirms the running containers match the
 exact digests it verified, not whatever the mutable tag resolved to.
 
