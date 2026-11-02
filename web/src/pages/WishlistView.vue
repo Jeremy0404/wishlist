@@ -26,27 +26,39 @@
 
   <ListSkeleton v-else-if="loading" />
 
-  <ul
-    v-else-if="items.length"
-    class="m-0 list-none border-t border-divider p-0"
-  >
-    <li
-      v-for="it in items"
-      :key="it.id"
-      class="border-b border-divider"
-      data-test="wishlist-item"
-      :data-id="it.id"
-    >
-      <PersonWishlistItem
-        :item="it"
-        :viewer-id="auth.user?.id"
-        :tone="toneFor(it.id)"
-        :busy="busy.has(it.id)"
-        @reserve="reserve(it)"
-        @unreserve="unreserve(it.id)"
-      />
-    </li>
-  </ul>
+  <template v-else-if="items.length">
+    <GiftFilters
+      v-if="items.length >= FILTERS_FROM"
+      v-model:filter="filter"
+      v-model:by-price="byPrice"
+    />
+
+    <ul v-if="shown.length" class="m-0 list-none border-t border-divider p-0">
+      <li
+        v-for="it in shown"
+        :key="it.id"
+        class="border-b border-divider"
+        data-test="wishlist-item"
+        :data-id="it.id"
+      >
+        <PersonWishlistItem
+          :item="it"
+          :viewer-id="auth.user?.id"
+          :tone="toneFor(it.id)"
+          :busy="busy.has(it.id)"
+          @reserve="reserve(it)"
+          @unreserve="unreserve(it.id)"
+        />
+      </li>
+    </ul>
+
+    <div v-else class="py-8 text-center" data-test="filter-empty">
+      <p class="mb-3 text-muted">{{ t("view.filters.none") }}</p>
+      <Button variant="secondary" data-test="filter-reset" @click="filter = 'all'">
+        {{ t("view.filters.showAll") }}
+      </Button>
+    </div>
+  </template>
 
   <p v-else class="py-8 text-center text-muted" data-test="empty-state">
     {{ t("view.empty", { name: ownerName }) }}
@@ -54,20 +66,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { api, ApiError } from "../services/api";
+import Button from "../components/ui/Button.vue";
 import Icon from "../components/ui/Icon.vue";
 import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import LoadError from "../components/ui/LoadError.vue";
 import PageMessage from "../components/ui/PageMessage.vue";
 import PageHeader from "../components/PageHeader.vue";
+import GiftFilters from "../components/wishlist/GiftFilters.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth.ts";
 import { toneFor } from "../utils/tones";
-import type { WishlistItem } from "../types.ts";
+import type { GiftFilter, WishlistItem } from "../types.ts";
 
 const { t } = useI18n();
 const { push } = useToasts();
@@ -85,6 +99,26 @@ const HTTP_FORBIDDEN = 403;
 const HTTP_CONFLICT = 409;
 
 const busy = ref(new Set<string>());
+
+const FILTERS_FROM = 6;
+const UNPRICED_LAST = Number.POSITIVE_INFINITY;
+const filter = ref<GiftFilter>("all");
+const byPrice = ref(false);
+
+function matches(item: WishlistItem, wanted: GiftFilter) {
+  if (wanted === "open") return !item.reserved;
+  if (wanted === "mine") return !!item.reserved && item.reserver_user_id === auth.user?.id;
+  return true;
+}
+
+function priceOf(item: WishlistItem) {
+  return item.price_eur == null ? UNPRICED_LAST : Number(item.price_eur);
+}
+
+const shown = computed(() => {
+  const kept = items.value.filter((item) => matches(item, filter.value));
+  return byPrice.value ? [...kept].sort((a, b) => priceOf(a) - priceOf(b)) : kept;
+});
 
 /** A failed refresh keeps the list on screen and says so in a toast. */
 async function load() {
