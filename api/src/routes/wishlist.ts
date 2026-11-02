@@ -24,6 +24,7 @@ import {
   updateItem,
   type ItemOwner,
 } from "../wishlist-items.js";
+import { refuseWhileListsLocked, unlockStatus } from "../unlock-threshold.js";
 
 const router = Router();
 
@@ -203,12 +204,15 @@ router.get(
       module: "wishlist",
       action: "list-family",
     });
-    const rows = await listFamilyWishlists(db, req.familyId!, req.user!.id);
+    const [rows, unlock] = await Promise.all([
+      listFamilyWishlists(db, req.familyId!, req.user!.id),
+      unlockStatus(db, req.user!.id, req.familyId!),
+    ]);
     log.info(
-      { familyId: req.familyId, count: rows.length },
+      { familyId: req.familyId, count: rows.length, ...unlock },
       "Listed family wishlists",
     );
-    res.json(rows);
+    res.json({ wishlists: rows, ...unlock });
   }),
 );
 
@@ -223,6 +227,7 @@ router.get(
       action: "view-other",
     });
     const { userId } = req.params;
+    await refuseWhileListsLocked(db, req.user!.id, req.familyId!);
 
     const wl = await db("wishlists")
       .where({ user_id: userId, family_id: req.familyId! })
@@ -271,6 +276,7 @@ router.post(
       .first();
     if (myWl && myWl.id === row.wishlist_id)
       throw new BadRequestError("cannot reserve your own item");
+    await refuseWhileListsLocked(db, req.user!.id, req.familyId!);
 
     const existing = await db("reservations").where({ item_id: id }).first();
     if (existing) throw new ConflictError("already reserved");
