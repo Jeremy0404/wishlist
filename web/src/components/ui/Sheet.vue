@@ -54,25 +54,29 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
           :aria-label="title"
           tabindex="-1"
           data-test="sheet"
-          class="sheet-panel relative flex max-h-[88dvh] w-full flex-col gap-4 overflow-y-auto rounded-t-[20px] bg-surface px-5 pb-8 pt-3 shadow-lg md:max-w-md md:rounded-[20px] md:pt-5"
+          class="sheet-panel relative flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-[20px] bg-surface shadow-lg md:max-w-md md:rounded-[20px]"
         >
-          <span
-            aria-hidden="true"
-            class="h-1.5 w-10 self-center rounded-full bg-neutral-400 md:hidden"
-          ></span>
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="mb-0 text-h2">{{ title }}</h2>
-            <button
-              type="button"
-              class="pressable grid h-11 w-11 flex-none place-items-center rounded-full bg-neutral-200 text-ink hover:bg-neutral-300 active:bg-neutral-400"
-              data-test="sheet-close"
-              :aria-label="t('common.close')"
-              @click="emit('close')"
-            >
-              <Icon name="close" :size="20" />
-            </button>
+          <div class="flex flex-none flex-col gap-4 px-5 pb-4 pt-3 md:pt-5">
+            <span
+              aria-hidden="true"
+              class="h-1.5 w-10 self-center rounded-full bg-neutral-400 md:hidden"
+            ></span>
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="mb-0 text-h2">{{ title }}</h2>
+              <button
+                type="button"
+                class="pressable grid h-11 w-11 flex-none place-items-center rounded-full bg-neutral-200 text-ink hover:bg-neutral-300 active:bg-neutral-400"
+                data-test="sheet-close"
+                :aria-label="t('common.close')"
+                @click="emit('close')"
+              >
+                <Icon name="close" :size="20" />
+              </button>
+            </div>
           </div>
-          <slot />
+          <div class="sheet-body flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-8">
+            <slot />
+          </div>
         </div>
       </div>
     </Transition>
@@ -80,6 +84,11 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 </template>
 
 <style scoped>
+.sheet-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-400) transparent;
+}
+
 .sheet-enter-active,
 .sheet-leave-active {
   transition: opacity 200ms ease-out;
