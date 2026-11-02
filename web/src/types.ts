@@ -47,6 +47,8 @@ export interface WishlistItemForm {
   image_url?: string;
 }
 
+export type GiftFilter = "all" | "open" | "mine";
+
 export interface WishlistItem {
   id: string;
   title: string;
