@@ -59,6 +59,7 @@ import Icon from "../ui/Icon.vue";
 import Input from "../ui/Input.vue";
 import { useToasts } from "../ui/useToasts";
 import { useAuth } from "../../stores/auth";
+import { errorMessage } from "../../utils/errors";
 
 const props = defineProps<{ redirect: string }>();
 
@@ -79,8 +80,8 @@ async function submit() {
   try {
     await auth.requestMagicLink(address, props.redirect);
     sentTo.value = address;
-  } catch (e: any) {
-    push(e?.message, "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     submitting.value = false;
   }

@@ -8,6 +8,7 @@ import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
 import type { AdminProfile } from "../../types.ts";
 import { TAKEN_MESSAGE_KEY, takenField, type IdentifierField } from "./takenField";
+import { errorMessage } from "../../utils/errors";
 
 const props = defineProps<{ open: boolean; user: AdminProfile }>();
 const emit = defineEmits<{ close: []; saved: [user: AdminProfile] }>();
@@ -47,10 +48,10 @@ async function submit() {
     });
     push(t("admin.saved"), "success");
     emit("saved", user);
-  } catch (e: any) {
+  } catch (e) {
     const field = takenField(e);
     if (field) errors[field] = t(TAKEN_MESSAGE_KEY[field]);
-    else push(e?.message || t("toast.error"), "error");
+    else push(errorMessage(e, t("toast.error")), "error");
   } finally {
     saving.value = false;
   }

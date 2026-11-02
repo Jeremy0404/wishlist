@@ -8,6 +8,7 @@ import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
 import Input from "../components/ui/Input.vue";
 import FamilyOptIn from "../components/FamilyOptIn.vue";
+import { errorMessage } from "../utils/errors";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -33,8 +34,8 @@ async function submit() {
     const family = await api.joinFamily(code.value);
     joined.value = t("familyJoin.joined", { name: family.name ?? "" });
     await auth.refreshFamilies();
-  } catch (e: any) {
-    error.value = e?.message || t("familyJoin.error");
+  } catch (e) {
+    error.value = errorMessage(e, t("familyJoin.error"));
   } finally {
     submitting.value = false;
   }

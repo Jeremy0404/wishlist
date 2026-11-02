@@ -81,7 +81,7 @@ import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth.ts";
 import { toneFor } from "../utils/tones";
-import type { GiftFilter, WishlistItem } from "../types.ts";
+import type { GiftFilter, ViewedItem } from "../types.ts";
 
 const { t } = useI18n();
 const { push } = useToasts();
@@ -89,7 +89,7 @@ const auth = useAuth();
 
 const ownerName = ref("");
 const loading = ref(true);
-const items = ref<WishlistItem[]>([]);
+const items = ref<ViewedItem[]>([]);
 const loaded = ref(false);
 const loadFailed = ref(false);
 const locked = ref(false);
@@ -105,13 +105,13 @@ const UNPRICED_LAST = Number.POSITIVE_INFINITY;
 const filter = ref<GiftFilter>("all");
 const byPrice = ref(false);
 
-function matches(item: WishlistItem, wanted: GiftFilter) {
+function matches(item: ViewedItem, wanted: GiftFilter) {
   if (wanted === "open") return !item.reserved;
   if (wanted === "mine") return !!item.reserved && item.reserver_user_id === auth.user?.id;
   return true;
 }
 
-function priceOf(item: WishlistItem) {
+function priceOf(item: ViewedItem) {
   return item.price_eur == null ? UNPRICED_LAST : Number(item.price_eur);
 }
 
@@ -157,7 +157,7 @@ async function act(id: string, request: () => Promise<void>) {
   }
 }
 
-function reserve(item: WishlistItem) {
+function reserve(item: ViewedItem) {
   return act(item.id, async () => {
     await api.reserve(item.id);
     push(t("toast.giving", { title: item.title }), "success");

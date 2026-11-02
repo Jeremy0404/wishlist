@@ -12,19 +12,20 @@ import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
 import { toHttpUrl } from "../../utils/link";
 import { isFavorite, priorityFor } from "../../utils/favorite";
-import type { WishlistItem, WishlistItemForm } from "../../types.ts";
+import type { OwnItem, WishlistItemForm } from "../../types.ts";
+import { errorMessage } from "../../utils/errors";
 
 /** Without an owner the sheet edits the caller's own list; with one, the admin
  *  edits that user's list through the admin routes. */
 const props = defineProps<{
   open: boolean;
-  item: WishlistItem | null;
+  item: OwnItem | null;
   ownerId?: string;
 }>();
 const emit = defineEmits<{
   close: [];
-  added: [WishlistItem];
-  updated: [WishlistItem];
+  added: [OwnItem];
+  updated: [OwnItem];
   removed: [string];
 }>();
 
@@ -226,8 +227,8 @@ async function submit() {
       push(t(copy.value.added), "success");
     }
     emit("close");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     submitting.value = false;
   }
@@ -241,8 +242,8 @@ async function remove() {
     emit("removed", props.item.id);
     push(t(copy.value.removed), "success");
     emit("close");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     removing.value = false;
   }

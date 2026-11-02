@@ -5,6 +5,7 @@ import Button from "../ui/Button.vue";
 import Input from "../ui/Input.vue";
 import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
+import { errorMessage } from "../../utils/errors";
 
 const MAX_MIN_ITEMS_TO_VIEW = 50;
 
@@ -22,8 +23,8 @@ async function save() {
     });
     minItemsToView.value = saved.minItemsToView;
     push(t("admin.saved"), "success");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     saving.value = false;
   }

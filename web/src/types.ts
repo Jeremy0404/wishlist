@@ -60,7 +60,8 @@ export interface Gift {
   owner_name: string;
 }
 
-export interface WishlistItem {
+/** A wish as its owner sees it: the API never sends them reservation data. */
+export interface OwnItem {
   id: string;
   title: string;
   url?: string | null;
@@ -69,11 +70,15 @@ export interface WishlistItem {
   priority?: number | null;
   image_url?: string | null;
   original_title?: string | null;
-  reserved?: boolean;
+  created_at?: string | null;
+}
+
+/** A wish on someone else's list, as another member or the admin sees it. */
+export interface ViewedItem extends OwnItem {
+  reserved: boolean;
   reserver_user_id?: string | null;
   reserver_name?: string | null;
   reservation_status?: ReservationStatus | null;
-  created_at?: string | null;
 }
 
 export interface AdminMember {
@@ -105,7 +110,7 @@ export interface AdminProfile {
 export interface AdminUserDetail {
   user: AdminProfile;
   family: { id: string; name: string } | null;
-  items: WishlistItem[];
+  items: ViewedItem[];
 }
 
 export interface AdminAccountForm {

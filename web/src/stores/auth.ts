@@ -52,11 +52,7 @@ export const useAuth = defineStore("auth", {
     },
     async login(identifier: string, password: string) {
       const res = await api.login(identifier, password);
-      const user = (
-        res && typeof res === "object" && "user" in res
-          ? (res as any).user
-          : res
-      ) as User;
+      const user = res && "user" in res ? res.user : res;
       this.user = user ?? null;
       await this.refreshFamilies();
       return this.user;

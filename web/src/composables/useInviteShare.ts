@@ -21,7 +21,10 @@ export type ShareResult =
 
 type ShareOpts = { name: string; code: string };
 
-function buildMessage(t: (k: string, p?: any) => string, opts: ShareOpts) {
+function buildMessage(
+  t: (k: string, p?: Record<string, unknown>) => string,
+  opts: ShareOpts,
+) {
   const url = buildJoinUrl(opts.code);
   const subject = t("family.shareSubject", { name: opts.name });
   const text = t("family.shareBody", {
@@ -64,10 +67,10 @@ export function useInviteShare() {
       try {
         await nav.share(payload);
         return { ok: true, method: "web-share", url, subject, text };
-      } catch (e: any) {
+      } catch (e) {
         const canceled =
-          e?.name === "AbortError" ||
-          /AbortError/i.test(String(e?.message ?? ""));
+          e instanceof Error &&
+          (e.name === "AbortError" || /AbortError/i.test(e.message));
 
         return { ok: false, error: e, canceled, url, subject, text };
       }

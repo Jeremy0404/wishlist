@@ -5,9 +5,9 @@ import Icon from "../ui/Icon.vue";
 import ItemTile from "./ItemTile.vue";
 import { fmtEUR } from "../../utils/money";
 import { isFavorite } from "../../utils/favorite";
-import type { WishlistItem } from "../../types.ts";
+import type { OwnItem } from "../../types.ts";
 
-const props = defineProps<{ item: WishlistItem; tone: string }>();
+const props = defineProps<{ item: OwnItem; tone: string }>();
 const emit = defineEmits<{ open: [] }>();
 
 const { t } = useI18n();

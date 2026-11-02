@@ -11,6 +11,7 @@ import InviteShareButton from "../components/InviteShareButton.vue";
 import { useAuth } from "../stores/auth";
 import { useToasts } from "../components/ui/useToasts";
 import type { Family } from "../types.ts";
+import { errorMessage } from "../utils/errors";
 
 const COPIED_FEEDBACK_MS = 2000;
 
@@ -31,8 +32,8 @@ async function submit() {
   try {
     family.value = await api.createFamily(name.value);
     await auth.refreshFamilies();
-  } catch (e: any) {
-    push(e?.message || t("familyCreate.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("familyCreate.error")), "error");
   } finally {
     submitting.value = false;
   }
