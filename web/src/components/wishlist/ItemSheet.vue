@@ -56,6 +56,8 @@ const resolvedUrl = ref<string | null>(null);
 const titleError = ref("");
 const confirmingRemoval = ref(false);
 const removing = ref(false);
+let sheetSession = 0;
+let pendingPreview: { url: string; done: Promise<void> } | null = null;
 
 const OWNER_COPY = {
   editTitle: "item.editTitle",
@@ -104,6 +106,9 @@ watch(
   (open) => {
     if (!open) return;
     const item = props.item;
+    sheetSession++;
+    pendingPreview = null;
+    resolving.value = false;
     form.title = item?.title ?? "";
     form.url = item?.url ?? "";
     form.price_eur = item?.price_eur ?? undefined;
@@ -126,12 +131,25 @@ function toPrice(value: number | string | undefined): number | "" {
   return isEmpty(value) ? "" : Number(value);
 }
 
+/** A preview answers for one link in one opening of the sheet: a newer link or
+ *  a reopened sheet makes it stale. */
+function isStale(url: string, session: number) {
+  return session !== sheetSession || pendingPreview?.url !== url;
+}
+
+function resolve(url: string) {
+  if (pendingPreview?.url === url) return pendingPreview.done;
+  pendingPreview = { url, done: fillFromPreview(url, sheetSession) };
+  return pendingPreview.done;
+}
+
 /** Fills what the page says about itself into the fields left empty.
  *  A value the user typed is never overwritten, and a failed fetch is silent. */
-async function resolve(url: string) {
+async function fillFromPreview(url: string, session: number) {
   resolving.value = true;
   try {
     const preview = await api.previewItemUrl(url);
+    if (isStale(url, session)) return;
     if (preview.title && form.title.trim() === url) form.title = preview.title;
     if (isEmpty(form.price_eur) && preview.price_eur != null)
       form.price_eur = preview.price_eur;
@@ -142,9 +160,12 @@ async function resolve(url: string) {
   } catch {
     /* the fetch is a convenience, never a gate */
   } finally {
-    if (!form.url) form.url = url;
-    resolvedUrl.value = url;
-    resolving.value = false;
+    if (!isStale(url, session)) {
+      if (!form.url) form.url = url;
+      resolvedUrl.value = url;
+      resolving.value = false;
+      pendingPreview = null;
+    }
   }
 }
 
@@ -162,20 +183,20 @@ async function submit() {
     return;
   }
 
-  const typedUrl = editing.value ? null : toHttpUrl(entered);
-  if (typedUrl && typedUrl !== resolvedUrl.value) await resolve(typedUrl);
-
-  const body = {
-    title: form.title.trim(),
-    url: form.url || typedUrl || "",
-    price_eur: toPrice(form.price_eur),
-    notes: form.notes,
-    priority: priorityFor(form.favorite),
-    image_url: form.image_url,
-  };
-
   submitting.value = true;
   try {
+    const typedUrl = editing.value ? null : toHttpUrl(entered);
+    if (typedUrl && typedUrl !== resolvedUrl.value) await resolve(typedUrl);
+
+    const body = {
+      title: form.title.trim(),
+      url: form.url || typedUrl || "",
+      price_eur: toPrice(form.price_eur),
+      notes: form.notes,
+      priority: priorityFor(form.favorite),
+      image_url: form.image_url,
+    };
+
     if (props.item) {
       const updated = await itemApi.value.update(
         props.item.id,
