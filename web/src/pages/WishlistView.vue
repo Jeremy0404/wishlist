@@ -31,7 +31,7 @@
     class="m-0 list-none border-t border-divider p-0"
   >
     <li
-      v-for="(it, index) in items"
+      v-for="it in items"
       :key="it.id"
       class="border-b border-divider"
       data-test="wishlist-item"
@@ -40,7 +40,7 @@
       <PersonWishlistItem
         :item="it"
         :viewer-id="auth.user?.id"
-        :tone="toneAt(index)"
+        :tone="toneFor(it.id)"
         :busy="busy.has(it.id)"
         @reserve="reserve(it)"
         @unreserve="unreserve(it.id)"
@@ -66,7 +66,7 @@ import PageHeader from "../components/PageHeader.vue";
 import PersonWishlistItem from "../components/wishlist/PersonWishlistItem.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth.ts";
-import { toneAt } from "../utils/tones";
+import { toneFor } from "../utils/tones";
 import type { WishlistItem } from "../types.ts";
 
 const { t } = useI18n();

@@ -192,6 +192,7 @@ const fr = {
     cancel: "Annuler",
     takenByOther: "Quelqu’un s’en occupe déjà",
     link: "Voir la page",
+    photo: "Agrandir la photo de « {title} »",
     empty: "{name} n’a encore rien noté.",
     lockedTitle: "Cette liste est encore fermée",
     locked: "Ajoute d’abord quelques envies à ta liste pour voir celles de ta famille.",

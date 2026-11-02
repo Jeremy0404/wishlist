@@ -52,7 +52,7 @@
     class="m-0 list-none border-t border-divider p-0"
   >
     <li
-      v-for="(row, index) in rows"
+      v-for="row in rows"
       :key="row.user_id"
       class="border-b border-divider"
       data-test="browse-card"
@@ -69,7 +69,7 @@
         <Avatar
           :name="row.name"
           size="lg"
-          :tone="toneAt(index)"
+          :tone="toneFor(row.user_id)"
           aria-hidden="true"
         />
         <span class="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -126,7 +126,7 @@ import { useToasts } from "../components/ui/useToasts";
 import InviteSheet from "../components/InviteSheet.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { useAuth } from "../stores/auth.ts";
-import { toneAt } from "../utils/tones";
+import { toneFor } from "../utils/tones";
 import type { FamilyWishlist, FamilyWishlists } from "../types.ts";
 
 const { t } = useI18n();
