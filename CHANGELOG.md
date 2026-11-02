@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/Jeremy0404/wishlist/compare/v0.6.0...v0.6.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* keep sheet corners rounded when its content scrolls ([#151](https://github.com/Jeremy0404/wishlist/issues/151)) ([43520b9](https://github.com/Jeremy0404/wishlist/commit/43520b985909151eb532f02d2df6264103867c4f))
+
 ## [0.6.0](https://github.com/Jeremy0404/wishlist/compare/v0.5.0...v0.6.0) (2026-11-02)
 
 
