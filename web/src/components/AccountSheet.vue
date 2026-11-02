@@ -65,6 +65,11 @@ async function onPrint() {
   await print(items.value);
 }
 
+async function onAdmin() {
+  emit("close");
+  await router.push("/admin");
+}
+
 async function onLogout() {
   emit("close");
   await auth.logout();
@@ -144,6 +149,17 @@ async function onLogout() {
         >
           <Icon name="printer" :size="22" class="text-muted" />
           {{ t("account.print") }}
+        </button>
+      </li>
+      <li v-if="auth.isAdmin" class="border-b border-divider">
+        <button
+          type="button"
+          class="account-row"
+          data-test="account-admin"
+          @click="onAdmin"
+        >
+          <Icon name="users" :size="22" class="text-muted" />
+          {{ t("admin.entry") }}
         </button>
       </li>
       <li class="border-b border-divider">

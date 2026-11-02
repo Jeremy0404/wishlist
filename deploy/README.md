@@ -36,6 +36,9 @@ as a side effect of `rollback.sh` restarting the container.
    - `SMTP_URL` / `MAIL_FROM` — the relay the magic link is sent through. **Left blank, sign-in
      silently breaks for anyone without a live session**: the API logs the message instead of
      sending it.
+   - `ADMIN_EMAILS` — comma-separated addresses that may open the admin screen. Read from the
+     database on every request, so editing an account's email takes effect at once. Left blank,
+     nobody is admin.
    - `BACKUP_AGE_RECIPIENT` — an `age` public key. The matching private key is generated off-server
      and handed to the operator once — never written to the server or committed anywhere.
    - `BACKUP_OFFHOST_DESTINATION` — blank for now: backups are local-only and `backup.sh` warns on

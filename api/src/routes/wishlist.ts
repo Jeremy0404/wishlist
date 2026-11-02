@@ -88,6 +88,23 @@ export async function listFamilyWishlists(
     .orderBy("u.name", "asc");
 }
 
+/** Never for the owner's own eyes: only another member, or the admin screen,
+ *  may see who gives what. */
+export function listItemsWithReservations(dbConn: Knex, wishlistId: string) {
+  return dbConn("wishlist_items as i")
+    .leftJoin("reservations as r", "r.item_id", "i.id")
+    .leftJoin("users as ur", "ur.id", "r.reserver_user_id")
+    .select(
+      "i.*",
+      dbConn.raw("CASE WHEN r.id IS NULL THEN false ELSE true END AS reserved"),
+      "r.status as reservation_status",
+      "ur.id as reserver_user_id",
+      "ur.name as reserver_name",
+    )
+    .where("i.wishlist_id", wishlistId)
+    .orderBy("i.priority", "asc");
+}
+
 router.get(
   "/me",
   authRequired,
@@ -330,18 +347,7 @@ router.get(
       .where({ id: userId })
       .first();
 
-    const items = await db("wishlist_items as i")
-      .leftJoin("reservations as r", "r.item_id", "i.id")
-      .leftJoin("users as ur", "ur.id", "r.reserver_user_id")
-      .select(
-        "i.*",
-        db.raw("CASE WHEN r.id IS NULL THEN false ELSE true END AS reserved"),
-        "r.status as reservation_status",
-        "ur.id as reserver_user_id",
-        "ur.name as reserver_name",
-      )
-      .where("i.wishlist_id", wl.id)
-      .orderBy("i.priority", "asc");
+    const items = await listItemsWithReservations(db, wl.id);
 
     log.info(
       { wishlistId: wl.id, ownerId: owner?.id },

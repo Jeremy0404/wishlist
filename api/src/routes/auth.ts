@@ -13,6 +13,7 @@ import {
 } from "../auth/magic-link.js";
 import { magicLinkEmail } from "../mail/magic-link-email.js";
 import { sendMail } from "../mail/mailer.js";
+import { isAdminEmail } from "../middleware/admin.js";
 import { authRequired } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import {
@@ -34,15 +35,15 @@ const addressRateLimit = magicLinkAddressRateLimit();
 
 const PUBLIC_USER_COLUMNS = ["id", "email", "username", "name"];
 
-type PublicUser = {
+type UserRow = {
   id: string;
   email: string | null;
   username: string | null;
   name: string;
 };
 
-function publicUser({ id, email, username, name }: PublicUser): PublicUser {
-  return { id, email, username, name };
+function publicUser({ id, email, username, name }: UserRow) {
+  return { id, email, username, name, isAdmin: isAdminEmail(email) };
 }
 
 /** Usernames are stored lower-case and can never contain "@", so the
@@ -201,7 +202,7 @@ router.get(
       .where({ id: req.user!.id })
       .first();
     if (!u) throw new NotFoundError("user not found");
-    res.json(u);
+    res.json(publicUser(u));
   }),
 );
 
@@ -238,7 +239,7 @@ router.patch(
     if (!user) throw new NotFoundError("user not found");
 
     log.info({ userId: user.id }, "User changed their display name");
-    res.json(user);
+    res.json(publicUser(user));
   }),
 );
 

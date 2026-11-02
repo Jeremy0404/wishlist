@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
+import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import familyRoutes from "./routes/family.js";
 import wishlistRoutes from "./routes/wishlist.js";
@@ -85,6 +86,7 @@ app.use("/auth", authRoutes);
 app.use("/families", familyRoutes);
 
 app.use("/wishlists", wishlistRoutes);
+app.use("/admin", adminRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

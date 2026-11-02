@@ -53,6 +53,31 @@ export interface WishlistItem {
   created_at?: string | null;
 }
 
+export interface AdminMember {
+  id: string;
+  name: string;
+  email: string | null;
+  username: string | null;
+  wish_count: number;
+}
+
+export interface AdminFamily {
+  id: string;
+  name: string;
+  members: AdminMember[];
+}
+
+export interface AdminOverview {
+  families: AdminFamily[];
+  familyless: AdminMember[];
+}
+
+export interface AdminUserDetail {
+  user: { id: string; name: string; email: string | null; username: string | null };
+  family: { id: string; name: string } | null;
+  items: WishlistItem[];
+}
+
 export interface LinkPreview {
   title: string | null;
   price_eur: number | null;
