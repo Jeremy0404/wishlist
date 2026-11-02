@@ -106,6 +106,8 @@ const fr = {
     action: "Inviter un proche",
     title: "Inviter un proche",
     body: "Envoie ce lien à qui tu veux. En cliquant dessus, la personne rejoint « {name} » et peut faire sa liste à son tour.",
+    privacy:
+      "Ta famille verra ta liste et pourra t’offrir tes envies. Toi, tu ne sauras jamais qui offre quoi.",
     send: "Envoyer le lien",
     copy: "Copier le lien",
     copied: "Lien copié, tu peux le coller où tu veux",
