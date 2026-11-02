@@ -183,6 +183,15 @@ const fr = {
       rowLabel: "Liste de {name}, encore fermée",
     },
   },
+  gifts: {
+    title: "Ce que j’offre",
+    lead: "Tout ce que tu as prévu d’offrir, personne par personne.",
+    open: "Ce que j’offre",
+    count: "{count} cadeau | {count} cadeaux",
+    total: "Total prévu : {amount}",
+    empty: "Tu n’offres rien pour l’instant.",
+    browse: "Voir les listes de la famille",
+  },
   view: {
     title: "Les envies de {name}",
     lead: "{name} ne saura pas ce que tu lui offres.",
