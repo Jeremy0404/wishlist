@@ -49,6 +49,17 @@ export interface WishlistItemForm {
 
 export type GiftFilter = "all" | "open" | "mine";
 
+/** A wish the caller reserves on another member's list. */
+export interface Gift {
+  id: string;
+  title: string;
+  price_eur?: number | null;
+  url?: string | null;
+  image_url?: string | null;
+  owner_id: string;
+  owner_name: string;
+}
+
 export interface WishlistItem {
   id: string;
   title: string;
