@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      jspdf: path.resolve(__dirname, 'src/vendor/jspdf.ts'),
+      jspdf: path.resolve(import.meta.dirname, 'src/vendor/jspdf.ts'),
     },
   },
 })

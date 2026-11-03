@@ -1,6 +1,5 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { jsPDF } from "jspdf";
 import { brandMarkDataUrl } from "../components/ui/brandMark";
 import { useToasts } from "../components/ui/useToasts";
 import {
@@ -9,7 +8,6 @@ import {
   type ExportDocument,
   type ExportRow,
 } from "../components/wishlist/exportDocument";
-import { PAPER, renderExportPdf } from "../components/wishlist/pdfUtils";
 import { fmtEUR } from "../utils/money";
 import { isFavorite } from "../utils/favorite";
 import { absoluteImageUrl, isStoredImage, toJpegDataUrl } from "../utils/image";
@@ -18,6 +16,13 @@ import type { WishlistItem } from "../types.ts";
 
 const MARK_PIXELS = 48;
 const PHOTO_PIXELS = 96;
+
+function loadPdfRenderer() {
+  return Promise.all([
+    import("jspdf"),
+    import("../components/wishlist/pdfUtils"),
+  ]);
+}
 
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -67,11 +72,11 @@ export function usePrintList() {
     };
   }
 
-  async function withPhotos(exportDoc: ExportDocument) {
+  async function withPhotos(exportDoc: ExportDocument, paper: string) {
     await Promise.all(
       exportDoc.rows.map(async (row) => {
         if (!row.embedUrl) return;
-        row.photoData = await toJpegDataUrl(row.embedUrl, PHOTO_PIXELS, PAPER);
+        row.photoData = await toJpegDataUrl(row.embedUrl, PHOTO_PIXELS, paper);
       }),
     );
     return exportDoc;
@@ -81,7 +86,8 @@ export function usePrintList() {
     if (printing.value) return;
     printing.value = true;
     try {
-      const exportDoc = await withPhotos(buildDocument(items));
+      const [{ jsPDF }, { PAPER, renderExportPdf }] = await loadPdfRenderer();
+      const exportDoc = await withPhotos(buildDocument(items), PAPER);
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
       const mark = await toJpegDataUrl(
         brandMarkDataUrl(MARK_PIXELS),

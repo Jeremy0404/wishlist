@@ -13,8 +13,6 @@ import SignIn from "./pages/SignIn.vue";
 import Welcome from "./pages/Welcome.vue";
 import NotFound from "./pages/NotFound.vue";
 import SessionExpired from "./pages/SessionExpired.vue";
-import AdminHome from "./pages/AdminHome.vue";
-import AdminUser from "./pages/AdminUser.vue";
 
 const routes = [
   // Signing in and signing up are the same act, on the same screen as the pitch.
@@ -44,10 +42,14 @@ const routes = [
   { path: "/family/invite", redirect: "/wishlists" },
 
   // Admin
-  { path: "/admin", component: AdminHome, meta: { adminOnly: true } },
+  {
+    path: "/admin",
+    component: () => import("./pages/AdminHome.vue"),
+    meta: { adminOnly: true },
+  },
   {
     path: "/admin/users/:userId",
-    component: AdminUser,
+    component: () => import("./pages/AdminUser.vue"),
     props: true,
     meta: { adminOnly: true },
   },
