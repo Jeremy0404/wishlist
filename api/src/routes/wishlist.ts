@@ -66,6 +66,25 @@ export async function listFamilyWishlists(
     .orderBy("u.name", "asc");
 }
 
+/** Only the caller's own reservations, across the other lists of the family. */
+export function listMyGifts(dbConn: Knex, familyId: string, userId: string) {
+  return dbConn("reservations as r")
+    .join("wishlist_items as i", "i.id", "r.item_id")
+    .join("wishlists as w", "w.id", "i.wishlist_id")
+    .join("users as u", "u.id", "w.user_id")
+    .where({ "r.reserver_user_id": userId, "w.family_id": familyId })
+    .select(
+      "i.id",
+      "i.title",
+      "i.price_eur",
+      "i.url",
+      "i.image_url",
+      "u.id as owner_id",
+      "u.name as owner_name",
+    )
+    .orderBy([{ column: "u.name" }, { column: "i.title" }]);
+}
+
 /** Never for the owner's own eyes: only another member, or the admin screen,
  *  may see who gives what. */
 export function listItemsWithReservations(dbConn: Knex, wishlistId: string) {
@@ -213,6 +232,22 @@ router.get(
       "Listed family wishlists",
     );
     res.json({ wishlists: rows, ...unlock });
+  }),
+);
+
+router.get(
+  "/gifts",
+  authRequired,
+  familyContext,
+  familyRequired,
+  asyncHandler(async (req, res) => {
+    const log = getRequestLogger(req, {
+      module: "wishlist",
+      action: "list-gifts",
+    });
+    const gifts = await listMyGifts(db, req.familyId!, req.user!.id);
+    log.info({ count: gifts.length }, "Listed gifts the caller gives");
+    res.json(gifts);
   }),
 );
 

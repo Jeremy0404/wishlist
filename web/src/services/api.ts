@@ -8,6 +8,7 @@ import type {
   Family,
   FamilyMember,
   FamilyWishlists,
+  Gift,
   LinkPreview,
   MoveImpact,
   UnlockSettings,
@@ -203,6 +204,7 @@ export const api = {
 
   // --- Others / viewing ---
   others: () => request<FamilyWishlists>("/wishlists"),
+  myGifts: () => request<Gift[]>("/wishlists/gifts"),
   viewWishlist: (userId: string) =>
     request<{ owner?: { name?: string }; items: WishlistItem[] }>(
       `/wishlists/${userId}`,
