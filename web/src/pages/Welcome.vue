@@ -8,6 +8,7 @@ import Input from "../components/ui/Input.vue";
 import { useToasts } from "../components/ui/useToasts";
 import { useAuth } from "../stores/auth";
 import { inAppRedirect } from "../utils/redirect.ts";
+import { errorMessage } from "../utils/errors";
 
 const { t } = useI18n();
 const { push } = useToasts();
@@ -25,8 +26,8 @@ async function submit() {
   try {
     await auth.updateName(name.value);
     await router.replace(next);
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     submitting.value = false;
   }

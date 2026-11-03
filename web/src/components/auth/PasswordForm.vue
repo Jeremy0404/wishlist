@@ -58,6 +58,7 @@ import Button from "../ui/Button.vue";
 import Input from "../ui/Input.vue";
 import { useToasts } from "../ui/useToasts";
 import { useAuth } from "../../stores/auth";
+import { errorMessage } from "../../utils/errors";
 
 const props = defineProps<{ redirect: string }>();
 
@@ -85,8 +86,8 @@ async function submit() {
       push(t("auth.loginSuccess"), "success");
     }
     emit("done", props.redirect);
-  } catch (e: any) {
-    push(e?.message, "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     submitting.value = false;
   }

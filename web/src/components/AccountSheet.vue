@@ -11,7 +11,8 @@ import { useToasts } from "./ui/useToasts";
 import { usePrintList } from "../composables/usePrintList";
 import { api } from "../services/api";
 import { useAuth } from "../stores/auth";
-import type { WishlistItem } from "../types.ts";
+import type { OwnItem } from "../types.ts";
+import { errorMessage } from "../utils/errors";
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: [] }>();
@@ -26,7 +27,7 @@ const renaming = ref(false);
 const draft = ref("");
 const saving = ref(false);
 const field = ref<InstanceType<typeof Input> | null>(null);
-const items = ref<WishlistItem[]>([]);
+const items = ref<OwnItem[]>([]);
 
 watch(
   () => props.open,
@@ -54,8 +55,8 @@ async function saveName() {
     await auth.updateName(draft.value);
     renaming.value = false;
     push(t("account.nameSaved"), "success");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     saving.value = false;
   }

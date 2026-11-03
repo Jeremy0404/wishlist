@@ -7,6 +7,7 @@ import Sheet from "../ui/Sheet.vue";
 import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
 import type { AdminProfile, MoveImpact } from "../../types.ts";
+import { errorMessage } from "../../utils/errors";
 
 const NO_FAMILY = "";
 
@@ -49,8 +50,8 @@ watch(
     try {
       families.value = (await api.adminOverview()).families;
       destination.value = options.value[0]?.value ?? NO_FAMILY;
-    } catch (e: any) {
-      push(e?.message || t("toast.error"), "error");
+    } catch (e) {
+      push(errorMessage(e, t("toast.error")), "error");
     }
   },
 );
@@ -63,8 +64,8 @@ async function check() {
   checking.value = true;
   try {
     impact.value = await api.adminMoveImpact(props.user.id, targetFamilyId.value);
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     checking.value = false;
   }
@@ -76,8 +77,8 @@ async function move() {
     await api.adminMoveUser(props.user.id, targetFamilyId.value);
     push(t("admin.move.moved", { name: props.user.name }), "success");
     emit("moved");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     moving.value = false;
   }

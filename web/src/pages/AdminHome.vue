@@ -104,6 +104,7 @@ import ListSkeleton from "../components/ui/ListSkeleton.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { toneFor } from "../utils/tones";
 import type { AdminFamily, AdminMember, AdminOverview } from "../types.ts";
+import { errorMessage } from "../utils/errors";
 
 const FAMILYLESS_GROUP_ID = "familyless";
 
@@ -146,8 +147,8 @@ function summary(member: AdminMember) {
 onMounted(async () => {
   try {
     overview.value = await api.adminOverview();
-  } catch (e: any) {
-    error.value = e.message ?? t("toast.error");
+  } catch (e) {
+    error.value = errorMessage(e, t("toast.error"));
   } finally {
     loading.value = false;
   }

@@ -63,17 +63,17 @@ import ItemSheet from "../components/wishlist/ItemSheet.vue";
 import WishlistRow from "../components/wishlist/WishlistRow.vue";
 import PageHeader from "../components/PageHeader.vue";
 import { toneFor } from "../utils/tones";
-import type { WishlistItem } from "../types.ts";
+import type { OwnItem } from "../types.ts";
 
 const { t } = useI18n();
 
 const loading = ref(true);
 const loadFailed = ref(false);
-const items = ref<WishlistItem[]>([]);
+const items = ref<OwnItem[]>([]);
 const sheetOpen = ref(false);
-const editing = ref<WishlistItem | null>(null);
+const editing = ref<OwnItem | null>(null);
 
-function normalizeItem(item: WishlistItem): WishlistItem {
+function normalizeItem(item: OwnItem): OwnItem {
   return { ...item, original_title: item.original_title ?? item.title };
 }
 
@@ -95,16 +95,16 @@ function openAdd() {
   sheetOpen.value = true;
 }
 
-function openEdit(item: WishlistItem) {
+function openEdit(item: OwnItem) {
   editing.value = item;
   sheetOpen.value = true;
 }
 
-function onAdded(created: WishlistItem) {
+function onAdded(created: OwnItem) {
   items.value.unshift(normalizeItem(created));
 }
 
-function onUpdated(updated: WishlistItem) {
+function onUpdated(updated: OwnItem) {
   items.value = items.value.map((it) =>
     it.id === updated.id
       ? normalizeItem({ ...it, ...updated, original_title: it.original_title })

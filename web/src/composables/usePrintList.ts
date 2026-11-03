@@ -12,7 +12,7 @@ import { fmtEUR } from "../utils/money";
 import { isFavorite } from "../utils/favorite";
 import { absoluteImageUrl, isStoredImage, toJpegDataUrl } from "../utils/image";
 import { useAuth } from "../stores/auth";
-import type { WishlistItem } from "../types.ts";
+import type { OwnItem } from "../types.ts";
 
 const MARK_PIXELS = 48;
 const PHOTO_PIXELS = 96;
@@ -39,7 +39,7 @@ export function usePrintList() {
   const auth = useAuth();
   const printing = ref(false);
 
-  function toRow(item: WishlistItem): ExportRow {
+  function toRow(item: OwnItem): ExportRow {
     return {
       embedUrl: isStoredImage(item.image_url)
         ? absoluteImageUrl(item.image_url)
@@ -50,7 +50,7 @@ export function usePrintList() {
     };
   }
 
-  function buildDocument(items: WishlistItem[]): ExportDocument {
+  function buildDocument(items: OwnItem[]): ExportDocument {
     const date = fmtExportDate.format(new Date());
     const sorted = [...items].sort(
       (a, b) => Number(isFavorite(b.priority)) - Number(isFavorite(a.priority)),
@@ -82,7 +82,7 @@ export function usePrintList() {
     return exportDoc;
   }
 
-  async function print(items: WishlistItem[]) {
+  async function print(items: OwnItem[]) {
     if (printing.value) return;
     printing.value = true;
     try {

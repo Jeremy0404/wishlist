@@ -191,8 +191,9 @@ import type {
   AdminProfile,
   AdminUserDetail,
   DeletionImpact,
-  WishlistItem,
+  ViewedItem,
 } from "../types.ts";
+import { errorMessage } from "../utils/errors";
 
 const props = defineProps<{ userId: string }>();
 
@@ -208,7 +209,7 @@ const moving = ref(false);
 const impact = ref<DeletionImpact | null>(null);
 const deleting = ref(false);
 const itemOpen = ref(false);
-const editedItem = ref<WishlistItem | null>(null);
+const editedItem = ref<ViewedItem | null>(null);
 const { push } = useToasts();
 const router = useRouter();
 
@@ -225,8 +226,8 @@ async function onMoved() {
 async function askDeletion() {
   try {
     impact.value = await api.adminDeletionImpact(props.userId);
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   }
 }
 
@@ -236,8 +237,8 @@ async function deleteAccount() {
     await api.adminDeleteUser(props.userId);
     push(t("admin.deleted"), "success");
     await router.push("/admin");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     deleting.value = false;
   }
@@ -254,7 +255,7 @@ const lead = computed(() => {
     .join(" · ");
 });
 
-function meta(item: WishlistItem) {
+function meta(item: ViewedItem) {
   return [
     item.price_eur != null ? fmtEUR.format(item.price_eur) : "",
     item.notes ?? "",
@@ -263,7 +264,7 @@ function meta(item: WishlistItem) {
     .join(" · ");
 }
 
-function reservation(item: WishlistItem) {
+function reservation(item: ViewedItem) {
   if (!item.reserved) return t("admin.free");
   const name = item.reserver_name ?? "";
   return item.reservation_status === "purchased"
@@ -274,14 +275,14 @@ function reservation(item: WishlistItem) {
 async function load() {
   try {
     detail.value = await api.adminUser(props.userId);
-  } catch (e: any) {
-    error.value = e.message ?? t("toast.error");
+  } catch (e) {
+    error.value = errorMessage(e, t("toast.error"));
   } finally {
     loading.value = false;
   }
 }
 
-function openItem(item: WishlistItem | null) {
+function openItem(item: ViewedItem | null) {
   editedItem.value = item;
   itemOpen.value = true;
 }
