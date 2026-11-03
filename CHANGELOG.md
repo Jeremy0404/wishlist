@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.0](https://github.com/Jeremy0404/wishlist/compare/v0.6.1...v0.7.0) (2026-11-03)
+
+
+### Features
+
+* filter and sort a long family list ([#163](https://github.com/Jeremy0404/wishlist/issues/163)) ([1f02a35](https://github.com/Jeremy0404/wishlist/commit/1f02a356f4dc9ee7fa1a06524c612f1a44172fd1))
+* give price and notes their own lines on a family list ([#160](https://github.com/Jeremy0404/wishlist/issues/160)) ([66293e0](https://github.com/Jeremy0404/wishlist/commit/66293e0d386d60ac3d11f14f4bff2292a90e434d))
+* make the add flow honest about link previews and forgiving ([#161](https://github.com/Jeremy0404/wishlist/issues/161)) ([39a7d03](https://github.com/Jeremy0404/wishlist/commit/39a7d0391c50ea5f1c8dc7b9e5c275e7fe845de1))
+* say who sees what when inviting someone ([#162](https://github.com/Jeremy0404/wishlist/issues/162)) ([4f38b42](https://github.com/Jeremy0404/wishlist/commit/4f38b42589c06e657d0fc05e40771807d5870d6b))
+* show everything I give across the family ([#166](https://github.com/Jeremy0404/wishlist/issues/166)) ([ec473aa](https://github.com/Jeremy0404/wishlist/commit/ec473aad1dfebdab1162a9dff78eaf82cce1dbf9))
+
+
+### Bug Fixes
+
+* hide reservations from the owner on the member view ([#153](https://github.com/Jeremy0404/wishlist/issues/153)) ([cc791c4](https://github.com/Jeremy0404/wishlist/commit/cc791c450285bb7d1a3215fbba5f3f6f106b60b6))
+* ignore link previews that answer too late ([#159](https://github.com/Jeremy0404/wishlist/issues/159)) ([74c7988](https://github.com/Jeremy0404/wishlist/commit/74c7988707287a00544a425711381536e6f1eb95))
+* keep keyboard focus inside an open sheet ([#158](https://github.com/Jeremy0404/wishlist/issues/158)) ([0608d92](https://github.com/Jeremy0404/wishlist/commit/0608d92faa209d4cbbdca513347fb2507110d758))
+* let clearing an item link, price or notes stick ([#155](https://github.com/Jeremy0404/wishlist/issues/155)) ([1acbad6](https://github.com/Jeremy0404/wishlist/commit/1acbad6c1d89dd68a72781dae0e02bbb1e9d2ca0))
+* tell a failed load apart from an empty list ([#157](https://github.com/Jeremy0404/wishlist/issues/157)) ([c2483a3](https://github.com/Jeremy0404/wishlist/commit/c2483a34ed7b57cff3b60862c179bc8baf3916ed))
+* turn competing reservations into a clear conflict ([#156](https://github.com/Jeremy0404/wishlist/issues/156)) ([891c6f3](https://github.com/Jeremy0404/wishlist/commit/891c6f3a84f892220436e15f41641b9f27ea4eca))
+
 ## [0.6.1](https://github.com/Jeremy0404/wishlist/compare/v0.6.0...v0.6.1) (2026-11-02)
 
 
