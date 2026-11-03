@@ -47,6 +47,18 @@
     </Button>
   </div>
 
+  <RouterLink
+    v-if="!loadFailed && !loading && givingCount"
+    to="/wishlists/gifts"
+    class="pressable mb-3 flex min-h-12 items-center gap-3 rounded-card bg-tone-green px-4 text-tone-green-ink no-underline hover:brightness-95"
+    data-test="gifts-open"
+  >
+    <Icon name="gift" :size="20" />
+    <span class="flex-1 font-semibold">{{ t("gifts.open") }}</span>
+    <span class="text-caption">{{ t("gifts.count", givingCount) }}</span>
+    <Icon name="chevronRight" :size="20" />
+  </RouterLink>
+
   <ul
     v-if="!loadFailed && !loading && rows.length"
     class="m-0 list-none border-t border-divider p-0"
@@ -142,6 +154,9 @@ const inviteOpen = ref(false);
 const { push } = useToasts();
 
 const locked = computed(() => unlock.value.wishesMissing > 0);
+const givingCount = computed(() =>
+  rows.value.reduce((sum, row) => sum + row.reserved_by_me_count, 0),
+);
 const alone = computed(
   () => !loading.value && !loadFailed.value && rows.value.length === 0,
 );

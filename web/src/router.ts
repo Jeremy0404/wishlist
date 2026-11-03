@@ -8,6 +8,7 @@ import FamilyJoin from "./pages/FamilyJoin.vue";
 import MyWishlist from "./pages/MyWishlist.vue";
 import Others from "./pages/Others.vue";
 import WishlistView from "./pages/WishlistView.vue";
+import MyGifts from "./pages/MyGifts.vue";
 import SignIn from "./pages/SignIn.vue";
 import Welcome from "./pages/Welcome.vue";
 import NotFound from "./pages/NotFound.vue";
@@ -36,6 +37,7 @@ const routes = [
   // Wishlists
   { path: "/me", component: MyWishlist },
   { path: "/wishlists", component: Others },
+  { path: "/wishlists/gifts", component: MyGifts },
   { path: "/wishlists/:userId", component: WishlistView, props: true },
 
   // Invites
