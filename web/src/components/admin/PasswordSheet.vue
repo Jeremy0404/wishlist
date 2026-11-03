@@ -6,6 +6,7 @@ import Input from "../ui/Input.vue";
 import Sheet from "../ui/Sheet.vue";
 import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
+import { errorMessage } from "../../utils/errors";
 
 const props = defineProps<{ open: boolean; userId: string }>();
 const emit = defineEmits<{ close: [] }>();
@@ -29,8 +30,8 @@ async function submit() {
     await api.adminSetPassword(props.userId, password.value);
     push(t("admin.passwordSaved"), "success");
     emit("close");
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     saving.value = false;
   }

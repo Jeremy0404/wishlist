@@ -1,6 +1,5 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { jsPDF } from "jspdf";
 import { brandMarkDataUrl } from "../components/ui/brandMark";
 import { useToasts } from "../components/ui/useToasts";
 import {
@@ -9,15 +8,21 @@ import {
   type ExportDocument,
   type ExportRow,
 } from "../components/wishlist/exportDocument";
-import { PAPER, renderExportPdf } from "../components/wishlist/pdfUtils";
 import { fmtEUR } from "../utils/money";
 import { isFavorite } from "../utils/favorite";
 import { absoluteImageUrl, isStoredImage, toJpegDataUrl } from "../utils/image";
 import { useAuth } from "../stores/auth";
-import type { WishlistItem } from "../types.ts";
+import type { OwnItem } from "../types.ts";
 
 const MARK_PIXELS = 48;
 const PHOTO_PIXELS = 96;
+
+function loadPdfRenderer() {
+  return Promise.all([
+    import("jspdf"),
+    import("../components/wishlist/pdfUtils"),
+  ]);
+}
 
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -34,7 +39,7 @@ export function usePrintList() {
   const auth = useAuth();
   const printing = ref(false);
 
-  function toRow(item: WishlistItem): ExportRow {
+  function toRow(item: OwnItem): ExportRow {
     return {
       embedUrl: isStoredImage(item.image_url)
         ? absoluteImageUrl(item.image_url)
@@ -45,7 +50,7 @@ export function usePrintList() {
     };
   }
 
-  function buildDocument(items: WishlistItem[]): ExportDocument {
+  function buildDocument(items: OwnItem[]): ExportDocument {
     const date = fmtExportDate.format(new Date());
     const sorted = [...items].sort(
       (a, b) => Number(isFavorite(b.priority)) - Number(isFavorite(a.priority)),
@@ -67,21 +72,22 @@ export function usePrintList() {
     };
   }
 
-  async function withPhotos(exportDoc: ExportDocument) {
+  async function withPhotos(exportDoc: ExportDocument, paper: string) {
     await Promise.all(
       exportDoc.rows.map(async (row) => {
         if (!row.embedUrl) return;
-        row.photoData = await toJpegDataUrl(row.embedUrl, PHOTO_PIXELS, PAPER);
+        row.photoData = await toJpegDataUrl(row.embedUrl, PHOTO_PIXELS, paper);
       }),
     );
     return exportDoc;
   }
 
-  async function print(items: WishlistItem[]) {
+  async function print(items: OwnItem[]) {
     if (printing.value) return;
     printing.value = true;
     try {
-      const exportDoc = await withPhotos(buildDocument(items));
+      const [{ jsPDF }, { PAPER, renderExportPdf }] = await loadPdfRenderer();
+      const exportDoc = await withPhotos(buildDocument(items), PAPER);
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
       const mark = await toJpegDataUrl(
         brandMarkDataUrl(MARK_PIXELS),

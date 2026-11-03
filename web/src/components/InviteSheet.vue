@@ -10,6 +10,7 @@ import { useInviteShare } from "../composables/useInviteShare";
 import { api } from "../services/api";
 import { useAuth } from "../stores/auth";
 import { buildJoinUrl } from "../utils/buildJoinUrl";
+import { errorMessage } from "../utils/errors";
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: [] }>();
@@ -47,8 +48,8 @@ async function createFamily() {
   try {
     await api.createFamily(name);
     await auth.refreshFamilies();
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     creating.value = false;
   }

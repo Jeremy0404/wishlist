@@ -109,10 +109,10 @@ import { itemImageSrc } from "../../utils/image";
 import { fmtEUR } from "../../utils/money";
 import { isFavorite } from "../../utils/favorite";
 import { QUIET_TONE } from "../../utils/tones";
-import type { WishlistItem } from "../../types.ts";
+import type { ViewedItem } from "../../types.ts";
 
 const props = defineProps<{
-  item: WishlistItem;
+  item: ViewedItem;
   viewerId?: string;
   tone: string;
   busy?: boolean;

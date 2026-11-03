@@ -7,6 +7,7 @@ import InlineConfirm from "../ui/InlineConfirm.vue";
 import Sheet from "../ui/Sheet.vue";
 import { useToasts } from "../ui/useToasts";
 import { api } from "../../services/api";
+import { errorMessage } from "../../utils/errors";
 
 const props = defineProps<{
   open: boolean;
@@ -38,8 +39,8 @@ async function rename() {
     const family = await api.adminRenameFamily(props.family.id, name.value.trim());
     push(t("admin.familySheet.renamed"), "success");
     emit("renamed", family.name);
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     saving.value = false;
   }
@@ -52,8 +53,8 @@ async function rotate() {
     await api.adminRotateInvite(props.family.id);
     push(t("admin.familySheet.rotated"), "success");
     confirmingRotation.value = false;
-  } catch (e: any) {
-    push(e?.message || t("toast.error"), "error");
+  } catch (e) {
+    push(errorMessage(e, t("toast.error")), "error");
   } finally {
     rotating.value = false;
   }

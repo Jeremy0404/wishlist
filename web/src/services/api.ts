@@ -13,7 +13,8 @@ import type {
   MoveImpact,
   UnlockSettings,
   Wishlist,
-  WishlistItem,
+  OwnItem,
+  ViewedItem,
   WishlistItemForm,
 } from "../types.ts";
 
@@ -138,10 +139,9 @@ export type MagicLinkSession = User & { created: boolean };
 export const api = {
   // --- Auth ---
   async me(): Promise<User | null> {
-    const data = await request<any>("/auth/me");
-    if (data && typeof data === "object" && "user" in data)
-      return (data.user as User) ?? null;
-    return (data as User) ?? null;
+    const data = await request<User | { user: User | null } | null>("/auth/me");
+    if (data && "user" in data) return data.user ?? null;
+    return data ?? null;
   },
   login: (identifier: string, password: string) =>
     request<User | { user: User }>("/auth/login", {
@@ -181,7 +181,7 @@ export const api = {
 
   // --- Wishlist (mine) ---
   getMyWishlist: () =>
-    request<{ wishlist: Wishlist | null; items: WishlistItem[] }>(
+    request<{ wishlist: Wishlist | null; items: OwnItem[] }>(
       "/wishlists/me",
     ),
   previewItemUrl: (url: string) =>
@@ -190,12 +190,12 @@ export const api = {
       body: { url },
     }),
   addMyItem: (body: WishlistItemForm, image?: File | null) =>
-    request<WishlistItem>("/wishlists/me/items", {
+    request<OwnItem>("/wishlists/me/items", {
       method: "POST",
       body: itemPayload(body, image),
     }),
   updateMyItem: (id: string, body: WishlistItemForm, image?: File | null) =>
-    request<WishlistItem>(`/wishlists/me/items/${id}`, {
+    request<OwnItem>(`/wishlists/me/items/${id}`, {
       method: "PATCH",
       body: itemPayload(body, image),
     }),
@@ -206,7 +206,7 @@ export const api = {
   others: () => request<FamilyWishlists>("/wishlists"),
   myGifts: () => request<Gift[]>("/wishlists/gifts"),
   viewWishlist: (userId: string) =>
-    request<{ owner?: { name?: string }; items: WishlistItem[] }>(
+    request<{ owner?: { name?: string }; items: ViewedItem[] }>(
       `/wishlists/${userId}`,
     ),
   reserve: (itemId: string) =>
@@ -246,7 +246,7 @@ export const api = {
       body: { familyId },
     }),
   adminAddItem: (userId: string, body: WishlistItemForm, image?: File | null) =>
-    request<WishlistItem>(`/admin/users/${userId}/items`, {
+    request<OwnItem>(`/admin/users/${userId}/items`, {
       method: "POST",
       body: itemPayload(body, image),
     }),
@@ -256,7 +256,7 @@ export const api = {
     body: WishlistItemForm,
     image?: File | null,
   ) =>
-    request<WishlistItem>(`/admin/users/${userId}/items/${itemId}`, {
+    request<OwnItem>(`/admin/users/${userId}/items/${itemId}`, {
       method: "PATCH",
       body: itemPayload(body, image),
     }),
