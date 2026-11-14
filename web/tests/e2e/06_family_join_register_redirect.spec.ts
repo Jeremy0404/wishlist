@@ -6,7 +6,7 @@ import {
   usePasswordForm,
 } from "./helpers";
 
-test("family join link keeps invite code through register flow", async ({ browser }) => {
+test("an invite link joins the family once the guest has registered", async ({ browser }) => {
   const ownerContext = await browser.newContext();
   const ownerPage = await ownerContext.newPage();
 
@@ -30,6 +30,21 @@ test("family join link keeps invite code through register flow", async ({ browse
   await guestPage.fill('input[name="new-password"]', password);
   await guestPage.click('button[type="submit"]');
 
-  await expect(guestPage).toHaveURL(new RegExp(`/family/join\\?code=${inviteCode}`));
-  await expect(guestPage.locator('input[name="code"]')).toHaveValue(inviteCode);
+  await expect(guestPage).toHaveURL(/\/me$/);
+  await expect(guestPage.getByText("Tu as rejoint Redirect Test Family.")).toBeVisible();
+
+  const family = await (await guestPage.request.get("/api/families/me")).json();
+  expect(family?.name).toBe("Redirect Test Family");
+});
+
+test("an invite link with a dead code leaves the code on screen with the error", async ({
+  page,
+}) => {
+  await registerUser(page);
+
+  await page.goto("/family/join?code=DEAD-CODE00");
+
+  await expect(page.locator('input[name="code"]')).toHaveValue("DEAD-CODE00");
+  await expect(page.locator('[data-test="field-error"]')).toBeVisible();
+  expect(await (await page.request.get("/api/families/me")).json()).toBeNull();
 });

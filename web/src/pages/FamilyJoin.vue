@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "../stores/auth.ts";
 import api from "../services/api.ts";
@@ -8,32 +8,37 @@ import Button from "../components/ui/Button.vue";
 import Card from "../components/ui/Card.vue";
 import Input from "../components/ui/Input.vue";
 import FamilyOptIn from "../components/FamilyOptIn.vue";
+import { useToasts } from "../components/ui/useToasts";
 import { errorMessage } from "../utils/errors";
 
+const HOME_AFTER_JOIN = "/me";
+
 const { t } = useI18n();
+const { push } = useToasts();
 const route = useRoute();
+const router = useRouter();
 const auth = useAuth();
 
 const code = ref("");
 const error = ref("");
-const joined = ref("");
 const submitting = ref(false);
 
 onMounted(() => {
   const q = route.query.code;
   if (typeof q === "string" && q.trim()) {
     code.value = q.trim();
+    void submit();
   }
 });
 
 async function submit() {
   error.value = "";
-  joined.value = "";
   submitting.value = true;
   try {
     const family = await api.joinFamily(code.value);
-    joined.value = t("familyJoin.joined", { name: family.name ?? "" });
     await auth.refreshFamilies();
+    push(t("familyJoin.joined", { name: family.name ?? "" }), "success");
+    await router.replace(HOME_AFTER_JOIN);
   } catch (e) {
     error.value = errorMessage(e, t("familyJoin.error"));
   } finally {
@@ -71,14 +76,6 @@ async function submit() {
           {{ t("familyJoin.joinBtn") }}
         </Button>
       </form>
-
-      <p
-        v-if="joined"
-        class="mb-0 text-caption text-accent-2-700"
-        data-test="family-join-success"
-      >
-        {{ joined }}
-      </p>
     </Card>
   </FamilyOptIn>
 </template>
