@@ -236,16 +236,8 @@ export async function joinFamily(
   await page.fill('input[data-test="family-code-input"]', inviteCode);
   await page.click('[data-test="family-join-submit"]');
 
-  // Wait for success message
-  await page.waitForSelector('[data-test="family-join-success"]', {
-    timeout: 5000,
-  });
-
-  // Wait for auth refresh to complete (the component calls auth.refreshFamilies())
+  await page.waitForURL(/\/me$/, { timeout: 5000 });
   await page.waitForLoadState("networkidle");
-
-  // Small additional wait to ensure state is fully updated
-  await page.waitForTimeout(500);
 }
 
 /** Add a wishlist item with all or minimal fields */

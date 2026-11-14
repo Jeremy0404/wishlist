@@ -12,6 +12,12 @@ async function stubMagicLinkSession(page: Page, created: boolean) {
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({ json: { ...user, name: "Guest Renamed" } }),
   );
+  await page.route("**/api/families/join", (route) =>
+    route.fulfill({ json: { id: "fam-1", name: "Famille Test", invite_code: "FAM-ABC123" } }),
+  );
+  await page.route("**/api/wishlists/me", (route) =>
+    route.fulfill({ json: { items: [] } }),
+  );
 }
 
 test("asking for a link from an invite sends the invite along", async ({ page }) => {
@@ -31,20 +37,21 @@ test("asking for a link from an invite sends the invite along", async ({ page })
   });
 });
 
-test("an existing account signing in from an invite lands on the invite", async ({
+test("an existing account signing in from an invite joins the family", async ({
   page,
 }) => {
   await stubMagicLinkSession(page, false);
+  const joined = page.waitForRequest("**/api/families/join");
 
   await page.goto(
     `/auth/magic?token=t&redirect=${encodeURIComponent(INVITE_PATH)}`,
   );
 
-  await expect(page).toHaveURL(INVITE_PATH);
-  await expect(page.locator('input[name="code"]')).toHaveValue("FAM-ABC123");
+  expect((await joined).postDataJSON()).toEqual({ code: "FAM-ABC123" });
+  await expect(page).toHaveURL(/\/me$/);
 });
 
-test("a new account from an invite names itself, then lands on the invite", async ({
+test("a new account from an invite names itself, then joins the family", async ({
   page,
 }) => {
   await stubMagicLinkSession(page, true);
@@ -55,17 +62,15 @@ test("a new account from an invite names itself, then lands on the invite", asyn
 
   await expect(page.locator('[data-test="welcome-name"]')).toBeVisible();
   await page.fill('[data-test="welcome-name-input"]', "Guest Renamed");
+  const joined = page.waitForRequest("**/api/families/join");
   await page.click('[data-test="welcome-name-submit"]');
 
-  await expect(page).toHaveURL(INVITE_PATH);
-  await expect(page.locator('input[name="code"]')).toHaveValue("FAM-ABC123");
+  expect((await joined).postDataJSON()).toEqual({ code: "FAM-ABC123" });
+  await expect(page).toHaveURL(/\/me$/);
 });
 
 test("a link pointing off the app falls back to the own list", async ({ page }) => {
   await stubMagicLinkSession(page, false);
-  await page.route("**/api/wishlists/me", (route) =>
-    route.fulfill({ json: { items: [] } }),
-  );
 
   await page.goto(
     `/auth/magic?token=t&redirect=${encodeURIComponent("//evil.test/")}`,
