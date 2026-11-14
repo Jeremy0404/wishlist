@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/Jeremy0404/wishlist/compare/v0.7.0...v0.7.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* join the family straight from an invite link ([#168](https://github.com/Jeremy0404/wishlist/issues/168)) ([98acca1](https://github.com/Jeremy0404/wishlist/commit/98acca15bce26bdf2428dddf0d8eff474f2cf242))
+
 ## [0.7.0](https://github.com/Jeremy0404/wishlist/compare/v0.6.1...v0.7.0) (2026-11-03)
 
 
