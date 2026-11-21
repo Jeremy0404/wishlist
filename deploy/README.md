@@ -14,7 +14,9 @@ proxies `/api/` to the API), `api` (Node, self-migrating on startup), and `postg
   values; never commit `.env`.
 - `rollback.sh <version>` — points the stack at an already-published image tag and restarts `web`
   and `api` together. Never touches the database.
-- `backup.sh` — dumps Postgres *and* archives the uploads volume, encrypts both with `age`.
+- `backup.sh` — dumps Postgres *and* archives the uploads volume, encrypts both with `age`. It finds
+  the uploads volume by its Compose labels and fails, before writing the uploads archive, unless
+  exactly one matches.
 - `backup-freshness-check.sh` — cron-friendly check that fails loudly if either the newest database
   dump or the newest uploads archive is older than a threshold. It alerts through `notify.sh` when
   backups go stale, at most once a day while they stay stale, and once on recovery.
@@ -95,6 +97,10 @@ are only needed once the `deploy` job is actually wired in.
 A restore needs **both** artefacts. The database alone brings wishlist back with every item image
 broken.
 
+Compose names the uploads volume `wishlist_wishlist-uploads`, after the project. Never pass the
+bare `wishlist-uploads` to `docker run`: Docker would create a new empty volume of that name and
+restore into it, out of the `api`'s sight.
+
 ```bash
 # Database
 age -d -i <private-key> wishlist-<timestamp>.sql.age \
@@ -102,6 +108,10 @@ age -d -i <private-key> wishlist-<timestamp>.sql.age \
       exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 
 # Uploads volume
+uploads_volume="$(docker volume ls -q \
+  --filter label=com.docker.compose.project=wishlist \
+  --filter label=com.docker.compose.volume=wishlist-uploads)"
 age -d -i <private-key> wishlist-uploads-<timestamp>.tar.age \
-  | docker run --rm -i -v wishlist-uploads:/data alpine:3 tar -xf - -C /data
+  | docker run --rm -i -v "${uploads_volume:?uploads volume not found}:/data" alpine:3 \
+      tar -xf - -C /data
 ```

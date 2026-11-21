@@ -39,3 +39,4 @@ jobs:
       - uses: actions/checkout@v7
       - run: shellcheck deploy/*.sh
       - run: deploy/backup-freshness-check.test.sh
+      - run: deploy/backup.test.sh
