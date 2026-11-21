@@ -19,6 +19,22 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -
 COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.prod.yml"
 ENV_FILE="${SCRIPT_DIR}/.env"
 BACKUP_DIR="${BACKUP_DIR:-${SCRIPT_DIR}/backups}"
+COMPOSE_PROJECT="wishlist"
+
+# `docker run -v <name>:…` silently creates an empty volume for a name it does
+# not know, so the volume is found by the labels Compose put on it.
+compose_volume() {
+  local key="$1" matches
+  matches="$(docker volume ls -q \
+    --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" \
+    --filter "label=com.docker.compose.volume=${key}")"
+  if [[ -z "${matches}" || "${matches}" == *$'\n'* ]]; then
+    local found="${matches//$'\n'/, }"
+    echo "Expected one Docker volume for Compose volume ${key} of project ${COMPOSE_PROJECT}, found: ${found:-none}." >&2
+    return 1
+  fi
+  echo "${matches}"
+}
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "Missing ${ENV_FILE}. Copy deploy/.env.example to deploy/.env first." >&2
@@ -55,11 +71,11 @@ rm -f "${dump_file}"
 
 # The uploads volume is a named Docker volume, so it is read through a
 # throwaway container rather than straight off the filesystem.
-uploads_volume="wishlist-uploads"
+uploads_volume="$(compose_volume wishlist-uploads)"
 uploads_file="${BACKUP_DIR}/wishlist-uploads-${timestamp}.tar"
 encrypted_uploads_file="${uploads_file}.age"
 
-echo "Archiving the uploads volume..."
+echo "Archiving the uploads volume ${uploads_volume}..."
 docker run --rm -v "${uploads_volume}:/data:ro" alpine:3 \
   tar -cf - -C /data . >"${uploads_file}"
 
